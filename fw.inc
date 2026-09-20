@@ -1,6 +1,7 @@
 <?php
 /* =====================================================================
- *  fw.inc — serverová část frameworku
+ *  fw.inc — serverová část Waggle
+ *  https://github.com/shimmi2/waggle
  *  Protokol: NDJSON, jedna dávka {"v":1,"cmds":[...]} na řádek.
  *  Framework NEŘEŠÍ databázi ani escapování pro cílový kontext.
  *  Garantuje pouze hygienu vstupu: skalární string omezené délky bez NUL.

@@ -1,5 +1,5 @@
 ---
-name: fw-migrate
+name: waggle-migrate
 description:
   "Převod starého PHP projektu (4/5/7) na framework a na PHP 8 — mlčící
   démoni, fatály z odstraněných funkcí, tiché ztráty dat. Načti při

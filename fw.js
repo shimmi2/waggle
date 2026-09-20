@@ -1,5 +1,6 @@
 /* =====================================================================
- *  fw.js — klientská část frameworku
+ *  fw.js — klientská část Waggle
+ *  https://github.com/shimmi2/waggle
  *
  *  Tři vrstvy, záměrně oddělené:
  *    transport  (fetch / v budoucnu WebSocket / lokální)  ->  dávky

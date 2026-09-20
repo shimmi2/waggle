@@ -1,4 +1,12 @@
-# Framework
+# Waggle
+
+> Let's say adieu to the overlayered, fat and slow balls of dirt called high-level frameworks — and open a new era: agentic coding, top speed, safe and simple apps.
+
+Včela, která najde pastvu, se vrátí do úlu a tančí. Ten tanec **je** ten
+příkaz — směr, vzdálenost, kvalita. Ostatní včely se neptají na schéma
+a nedělají dotaz do databáze. Dostanou instrukci a jednají.
+
+Přesně tohle dělá Waggle mezi serverem a prohlížečem.
 
 Tenký klient nad PHP. Server posílá **příkazy** a hotové kusy HTML, klient je
 aplikuje na DOM. Žádný build step, žádné závislosti, žádný SPA router,
@@ -98,13 +106,14 @@ se z `docs/*.md` příkazem `php doc/build.php`.
 `.claude/skills/` obsahuje dva návody psané pro jazykové modely — a
 mimochodem i pro lidi, protože je to prostě sepsaná zkušenost:
 
-* **`fw-page`** — jak napsat endpoint a fragment, v jakém pořadí, co
+* **`waggle-page`** — jak napsat endpoint a fragment, v jakém pořadí, co
   framework garantuje a co ne, a nejčastější pasti
-* **`fw-migrate`** — převod starého projektu a katalog jedenácti pastí
+* **`waggle-migrate`** — převod starého projektu a katalog jedenácti pastí
   starého PHP na osmičce, z reálných nálezů
 
-Framework, jehož konvence se dají předat jedním souborem, se dá předat
-i modelu se stejným výsledkem jako člověku. To je záměr, ne dodatek.
+Úl nemá architekta. Má jednoduchá pravidla a hodně dělníků — dnes stále
+častěji agentů. K tomu není potřeba vysoký framework, ale sada skillů,
+která drží jednotný přístup. Proto jsou tady, ne jako příloha.
 
 ## Rozvoz do projektů
 

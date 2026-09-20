@@ -1,5 +1,23 @@
 # 01 — Motivace a cíle
 
+> Let's say adieu to the overlayered, fat and slow balls of dirt called high-level frameworks — and open a new era: agentic coding, top speed, safe and simple apps.
+
+## Proč Waggle
+
+Včelí *waggle dance* je jediný způsob, jak si včely předají, kam letět.
+Tanec nese směr, vzdálenost i kvalitu zdroje — a je to **příkaz**, ne
+data k interpretaci. Včela ho nedostane jako JSON, který si musí sama
+vyrenderovat.
+
+Stejnou roli hraje protokol Waggle: server pošle hotový příkaz, klient
+ho provede. Žádné schéma, žádná zdvojená logika na obou stranách, žádný
+model, který se musí držet v synchronu.
+
+A je v tom i druhá půlka. Úl nemá architekta ani vysoký framework. Má
+jednoduchá pravidla a hodně dělníků — dnes stále častěji agentů. K tomu
+není potřeba katedrála, ale sada skillů, která drží jednotný přístup.
+Proto jsou v `.claude/skills/` součástí repozitáře, ne přílohou.
+
 ## Odkud to vzešlo
 
 Dvacet let staré PHP aplikace, kde každé tlačítko a každý odkaz odesílá

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Rozvoz frameworku do projektů, které ho používají.
+# Rozvoz Waggle do projektů, které ho používají.
 #
 # Proč kopírovat a ne symlinkovat: fw.inc je soubor, jehož chyba znamená,
 # že projekt nejede vůbec. Se symlinkem by šla změna do všech projektů

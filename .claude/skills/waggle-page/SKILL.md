@@ -1,5 +1,5 @@
 ---
-name: fw-page
+name: waggle-page
 description:
   "Psaní endpointu a fragmentu proti frameworku (NDJSON protokol, okna
   #main/#left_menu/#top_frame/#overlay). Načti, když se přidává nebo
