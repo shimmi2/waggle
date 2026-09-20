@@ -71,7 +71,7 @@ stahni() {
            && [ -s "$dir/$f" ]; then
             :
         elif command -v curl >/dev/null 2>&1 && \
-             curl -fsSL "https://raw.githubusercontent.com/$REPO/$ref/$f" -o "$dir/$f" \
+             curl -fsL "https://raw.githubusercontent.com/$REPO/$ref/$f" -o "$dir/$f" 2>/dev/null \
              && [ -s "$dir/$f" ]; then
             :
         else
