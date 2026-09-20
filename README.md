@@ -18,16 +18,40 @@ kompletní základ i pro nové aplikace.
 
 Vydání **1.0.0**, protokol **v1**.
 
+## Tři vrstvy
+
+Repozitář má tři vrstvy, které se chovají úplně jinak. Než z něj začneš
+něco brát, koukni, do které patří — ušetří to spoustu zbytečných otázek.
+
+| vrstva | co to je | jak často se bere |
+|---|---|---|
+| **knihovna** | `fw.inc`, `fw.js` | **průběžně**, skriptem `tools/fwdeploy.sh` |
+| **kostra** | `api/index.php`, `api/config.inc`, `api/inc/*` | **jednou** při zrodu projektu, pak se rozchází |
+| **dema** | `api/pages/*`, `app/*`, `app2/*` | **nikdy** — jen se čtou |
+
+**Knihovna jsou dva soubory.** V reálném projektu je to zlomek celku:
+`fw.inc` má 10 kB proti stovkám kB stránek, `fw.js` 20 kB proti
+megabajtům šablony. Nikdy se needituje v projektu — každá změna patří
+sem a rozveze se.
+
+**Kostra se rozchází schválně.** Dispatcher demo API má 8 kB, oba
+odvozené portály kolem 6 kB. To není rozjetí, které by se mělo srovnat;
+je to projekt, který si vzal, co potřeboval, a zbytek zahodil.
+
+**Dema jsou referenční text, ne startovací balík.** `app/` a `app2/` jsou
+tatáž aplikace jednou na holém HTML a jednou na AdminLTE — jsou tu, aby
+bylo vidět, že markup je jediné, co se mezi nimi liší.
+
 ```
-fw.js       framework, klient
-fw.inc      framework, server
-docs/       dokumentace, 11 kapitol
-doc/        generátor prohlížitelné dokumentace
+fw.js       knihovna, klient
+fw.inc      knihovna, server
+api/        kostra + dema, jedno API pro oba příklady
 app/        příklad BEZ AdminLTE — holé HTML a vlastní CSS
 app2/       příklad S AdminLTE 4
-api/        jedno API pro oba příklady
-tools/      rozvoz frameworku do projektů
-.claude/    skilly pro práci s frameworkem
+docs/       dokumentace, 11 kapitol
+doc/        generátor prohlížitelné dokumentace
+tools/      rozvoz knihovny do projektů
+.claude/    skilly pro práci s Waggle
 nginx-nchan.conf.example
 ```
 
@@ -123,9 +147,20 @@ projektů naráz a nedalo by se nasazovat po jednom. S kopií je v gitu
 každého projektu vidět, na jaké verzi frameworku běží.
 
 ```bash
-./tools/fwdeploy.sh --check          # co kde běží
-./tools/fwdeploy.sh <cesta>...       # rozvoz, ptá se na každý soubor
+./tools/fwdeploy.sh --check            # co kde běží
+./tools/fwdeploy.sh <cesta>...         # rozvoz z tohohle stromu
+./tools/fwdeploy.sh --from v1.0.0 …    # rozvoz z vydání na GitHubu
 ```
+
+Bez `--from` se bere tenhle strom, takže to jede i bez sítě. S `--from`
+se stáhnou oba soubory z tagu nebo větve — tím se dá rozvážet i na
+server, kde Waggle nemá pracovní kopii. Stažený soubor se před přepsáním
+kontroluje: když v něm není `FW_RELEASE`, skript skončí a nesáhne na nic.
+Useknutý download nemá jak shodit běžící projekt.
+
+Composer ani npm schválně ne. Kvůli dvěma souborům by přibylo `vendor/`
+s autoloadem nebo `node_modules` — tedy přesně ta sněhová koule, kterou
+podtitul posílá k šípku.
 
 Seznam projektů může být v `tools/targets.local` (mimo git, je to místní
 věc). Skript nikdy nezakládá soubor, který v cíli ještě není — jinak by
