@@ -1,0 +1,12 @@
+# Běhový stav dem — obsahuje živé tokeny přihlášených, do gitu nepatří.
+api/data/*.json
+
+# Prohlížitelná dokumentace se generuje: php doc/build.php
+doc/index.html
+
+# Lokální seznam projektů, do kterých se framework rozváží.
+tools/targets.local
+
+# Zálohy editorů a naše vlastní
+*.bak
+*~

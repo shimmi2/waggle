@@ -1,0 +1,49 @@
+* { box-sizing: border-box; }
+body { margin: 0; font: 14px/1.5 system-ui, "Segoe UI", Roboto, sans-serif; color: #24292f; background: #f6f8fa; }
+
+#layout    { display: flex; min-height: 100vh; }
+#left_menu { width: 220px; flex: 0 0 220px; background: #1f2937; color: #cbd5e1; padding: 16px 0; }
+#right     { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+#top_frame { background: #fff; border-bottom: 1px solid #d0d7de; padding: 12px 20px; }
+#main      { flex: 1; padding: 20px; }
+
+#left_menu h3 { margin: 0 0 12px; padding: 0 16px; font-size: 12px; text-transform: uppercase;
+                letter-spacing: .08em; color: #64748b; }
+#left_menu a  { display: block; padding: 8px 16px; color: #cbd5e1; text-decoration: none; }
+#left_menu a:hover { background: #374151; color: #fff; }
+
+#fw_error { display: none; position: fixed; top: 12px; right: 12px; z-index: 999; max-width: 460px;
+            color: #fff; padding: 10px 14px; border-radius: 6px;
+            box-shadow: 0 4px 14px rgba(0,0,0,.25); white-space: pre-wrap; background: #57606a; }
+.fw-note-error   { background: #b42318 !important; }
+.fw-note-success { background: #1a7f37 !important; }
+.fw-note-warning { background: #9a6700 !important; }
+.fw-note-info    { background: #0969da !important; }
+
+.card  { background: #fff; border: 1px solid #d0d7de; border-radius: 8px; padding: 20px; max-width: 560px; }
+.card h2 { margin-top: 0; }
+label  { display: block; margin: 12px 0 4px; font-weight: 600; }
+input[type=text], input[type=password], input[type=number] {
+       width: 100%; padding: 8px 10px; border: 1px solid #d0d7de; border-radius: 6px; font: inherit; }
+button { margin-top: 16px; padding: 8px 18px; border: 0; border-radius: 6px;
+         background: #1f6feb; color: #fff; font: inherit; cursor: pointer; }
+button:hover { background: #1a5fd0; }
+.err   { color: #b42318; font-weight: 600; }
+.ok    { color: #1a7f37; font-weight: 600; }
+table.kv { border-collapse: collapse; margin-top: 12px; }
+table.kv th, table.kv td { border: 1px solid #d0d7de; padding: 6px 12px; text-align: left; }
+table.kv th { background: #f6f8fa; }
+code { background: #eff1f3; padding: 1px 5px; border-radius: 4px; }
+
+/* --- progress bar a posuvníky (demo stránky) ------------------------ */
+.progress   { background:#e6e9ec; border-radius:6px; height:26px; overflow:hidden; margin:12px 0 6px; }
+.progress-bar { background:#1f6feb; color:#fff; height:100%; width:0;
+                display:flex; align-items:center; justify-content:center;
+                font-size:12px; transition:width .1s linear; }
+.progress-bar.bg-success { background:#1a7f37; }
+#pb_note    { min-height:20px; font-size:13px; color:#57606a; }
+a.disabled  { pointer-events:none; opacity:.5; }
+input[type=range] { width:100%; margin-bottom:14px; }
+.badge      { background:#d0d7de; color:#24292f; border-radius:10px;
+              padding:1px 9px; font-size:12px; font-weight:600; }
+.card.border-success { border-color:#1a7f37; }

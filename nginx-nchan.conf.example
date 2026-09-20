@@ -1,0 +1,87 @@
+# =====================================================================
+#  nchan pro framework
+#
+#  Instalace:
+#      apt install libnginx-mod-nchan
+#      cp nginx-nchan.conf.example /etc/nginx/sites-available/fw-nchan
+#      ln -s ../sites-available/fw-nchan /etc/nginx/sites-enabled/
+#      nginx -t && systemctl reload nginx
+#
+#  POZOR při ručním testování: nchan_subscriber eventsource vyžaduje
+#  hlavičku Accept: text/event-stream. Bez ní vrátí 403, i když je
+#  všechno v pořádku — prohlížeč ji posílá sám, curl ne:
+#      curl -N -H "Accept: text/event-stream" \
+#           "https://www.simek.info:8443/nchan/sub?token=…"
+#
+#  Apache zůstává beze změny. nginx drží jen SSE spojení; PHP do něj
+#  krátkým POSTem publikuje a končí. Žádný trvale běžící PHP proces,
+#  žádný obsazený Apache worker, žádný buffering.
+# =====================================================================
+
+
+# ---------------------------------------------------------------------
+#  1) ODBĚRATELÉ — veřejně, povinně přes TLS.
+#
+#  Aplikace běží na https://. EventSource na http://…:8443 by prohlížeč
+#  zablokoval jako mixed content, bez varování a bez milosti.
+#  Proto tady musí být certifikát, klidně ten samý co má Apache.
+# ---------------------------------------------------------------------
+server {
+    listen              8443 ssl;
+    listen         [::]:8443 ssl;
+    http2               on;
+    server_name         www.simek.info simek.info;
+
+    ssl_certificate     /etc/letsencrypt/live/simek.info-0001/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/simek.info-0001/privkey.pem;
+
+    access_log          /var/log/nginx/fw-nchan.access.log;
+
+    location /nchan/sub {
+        nchan_subscriber                eventsource;
+        nchan_channel_id                $arg_token;   # prázdný token -> nchan vrátí 403
+        nchan_subscriber_first_message  newest;       # při připojení nelít historii
+
+        # CORS řeší nchan sám a odráží Origin požadavku — proto tu
+        # NESMÍ být žádné add_header Access-Control-*. Vznikly by dvě
+        # hlavičky, prohlížeč je spojí čárkou a spojení zablokuje
+        # s hláškou "'Access-Control-Allow-Origin' neodpovídá".
+        #
+        # Omezit na konkrétní origin jde takto (jen JEDNA hodnota,
+        # takže buď s www, nebo bez — proto radši necháváme odraz):
+        #   nchan_access_control_allow_origin "https://simek.info";
+    }
+
+    location / { return 404; }
+}
+
+
+# ---------------------------------------------------------------------
+#  2) PUBLIKACE — jen z localhostu, bez TLS.
+#
+#  Tohle je nejcitlivější místo celého návrhu. Kdo může publikovat,
+#  ten může poslat libovolný příkaz do cizího prohlížeče. Proto
+#  poslech pouze na 127.0.0.1 a navíc explicitní allow/deny.
+#
+#  Bez TLS schválně: spojení nikdy neopustí stroj, a PHP tak nemusí
+#  ověřovat certifikát.
+# ---------------------------------------------------------------------
+server {
+    listen      127.0.0.1:8081;
+    server_name localhost;
+
+    location /nchan/pub {
+        allow 127.0.0.1;
+        deny  all;
+
+        nchan_publisher             http;
+        nchan_channel_id            $arg_token;
+
+        # Krátká paměť kanálu: klient, který se na chvíli odpojí,
+        # si po návratu vyzvedne, co mu uteklo (Last-Event-ID).
+        nchan_message_buffer_length 32;
+        nchan_message_timeout       5m;
+    }
+
+    location / { return 404; }
+}

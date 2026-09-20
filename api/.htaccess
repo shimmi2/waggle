@@ -1,0 +1,4 @@
+# .inc nesmí být nikdy servírován přímo, jen includován.
+<FilesMatch "\.inc$">
+    Require all denied
+</FilesMatch>
