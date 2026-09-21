@@ -100,6 +100,23 @@ které flushují po naplnění bufferu; na Apache s `mod_proxy_fcgi` **nepomůž
 Stream drží proces webserveru po celou dobu. U čehokoli delšího než pár
 sekund je lepší push.
 
+## Zaneprázdněno
+
+```php
+fw_busy('#seznam', 'Kompletuji data…');        // kolečko
+fw_busy('#seznam', 'Zpracovávám…', 40);        // pruh na 40 %
+fw_busy_done('#seznam', 'Hotovo');             // zeleně a za 0,7 s pryč
+fw_busy_off('#seznam');                        // okamžitě pryč
+```
+
+Jsou to jen stavitelé příkazu — samy nic neodesílají. Užitečné jsou
+teprve tehdy, když se dostanou ke klientovi **dřív** než výsledek.
+Ve stejné dávce jako pomalá práce nedělají nic, protože dávka dorazí
+až s ní. Chování překryvu popisuje [03 — Protokol](03-protokol.md).
+
+Na šťastné cestě není potřeba posílat `fw_busy_off()`. Překryv zmizí
+sám ve chvíli, kdy do jeho okna dorazí výsledek.
+
 ## Push
 
 ```php

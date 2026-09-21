@@ -102,6 +102,43 @@ na kterou stejně nikdo nechce klikat:
 {"op":"history","url":"#?function=page_hosting_aliases"}
 ```
 
+### Zaneprázdněno
+
+| op | pole | co dělá |
+|---|---|---|
+| `busy` | `sel`, `text`, `pct`, `state` | překryv „pracuji" nad prvkem |
+
+`state` chybí = běží, `done` = zeleně potvrdí a za 0,7 s zmizí,
+`off` = okamžitě pryč. `pct` chybí = kolečko, `pct` je číslo 0–100 = pruh.
+
+```json
+{"op":"busy","sel":"main","text":"Připravuji…"}
+{"op":"busy","sel":"main","text":"Počítám…","pct":40}
+{"op":"busy","sel":"main","state":"done","text":"Hotovo"}
+```
+
+Kolečko a pruh **nejsou dva typy**. Jde začít bez `pct`, dokud není známo,
+kolik toho bude, a přepnout na procenta ve chvíli, kdy to je jasné.
+
+Tři pravidla, která drží framework, aby je nemusel řešit server:
+
+1. **Jedno okno = jeden překryv.** Volající proto může posílat
+   „připravuji / počítám / dokončuji" za sebou bez jakéhokoli stavu
+   na klientovi.
+2. **Cokoli jiného, co do toho okna přijde, překryv sundá.** Není proto
+   nutné posílat `state: off` na šťastné cestě — překryv zmizí ve chvíli,
+   kdy dorazí výsledek. Hlídá se to v dispatcheru, ne v operaci.
+3. **Prvních 300 ms se nekreslí nic.** Operace, která doběhne dřív,
+   neukáže vůbec nic. Záblesk působí pomaleji než ticho.
+
+Vzhled se mění přepsáním `Fw.busyRender(host, box, stav)`, stejně jako
+u `notify`. Řadič `Fw.busy()` se nepřepisuje — je v něm právě to
+účetnictví z bodů 1 až 3.
+
+**Poslaný ve stejné dávce jako pomalá práce je k ničemu**, protože dávka
+dorazí až s výsledkem. Musí jít napřed: streamem, nebo pushem. Viz
+[10 — Nasazení](10-nasazeni.md).
+
 ### Vlastní operace
 
 Projekt si přidá svoje přes `Fw.register('jmeno', fn)`. Registr je jediné

@@ -21,6 +21,9 @@
             <a href="#?function=progress" data-fw class="nav-link">
                 <i class="nav-icon bi bi-hourglass-split"></i><p>Progress bar</p></a></li>
         <li class="nav-item">
+            <a href="#?function=busy" data-fw class="nav-link">
+                <i class="nav-icon bi bi-hourglass"></i><p>Zaneprázdněno</p></a></li>
+        <li class="nav-item">
             <a href="#?function=sync" data-fw class="nav-link">
                 <i class="nav-icon bi bi-window-stack"></i><p>Sync mezi okny</p></a></li>
         <li class="nav-item">

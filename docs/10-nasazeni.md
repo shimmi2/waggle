@@ -99,6 +99,34 @@ vyzvedne, co mu uteklo — `EventSource` pošle `Last-Event-ID` sám.
 Bez TLS schválně: spojení nikdy neopustí stroj a PHP nemusí ověřovat
 certifikát.
 
+## Posílání do prohlížeče mimo odpověď
+
+Apache drží streamovanou odpověď, ale **pushe se to netýká**.
+`fw_publish()` je krátký POST na nchan na localhostu — Apache v té cestě
+vůbec není. Uvnitř běžícího requestu tedy stačí:
+
+```php
+fw_publish(STREAM_PUB_URL, $tok, [fw_busy('main', 'Kompletuji data…')]);
+$data = dlouhy_dotaz();          // prohlížeč už kolečko točí
+```
+
+Žádný stream, žádný worker, žádná změna konfigurace Apache.
+
+Pro to, co PHP request udělat neumí, je `tools/async_sender.php`:
+
+```bash
+php tools/async_sender.php --token=TOKEN --busy='Zálohuji…' --pct=40
+echo '{"op":"notify","kind":"success","message":"Hotovo"}' \
+  | php tools/async_sender.php --token=TOKEN
+```
+
+Hodí se pro démona, cron nebo shellový skript, který chce něco napsat
+do otevřené stránky správce, pro práci pokračující po konci odpovědi,
+a pro jazyk, který není PHP — ten pošle JSON na stdin a je hotovo.
+Token je klíč kanálu z příkazu `subscribe`, ne přihlašovací údaj.
+Návratový kód: 0 odesláno, 1 chyba vstupu, 2 broker neodpověděl.
+**Kontroluj ho** — tichý neúspěch je horší než hlasitý.
+
 ## Výkon
 
 Naměřeno na demu, 101 kroků po 0,1 s:

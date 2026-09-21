@@ -19,6 +19,21 @@ přesně po 0,1 s. Drží to Apache `mod_proxy_fcgi`.
 bufferu. Pouhé `ob_flush()` by dávku jen přesypalo do implicitního 4 kB
 bufferu PHP-FPM a klient by ji viděl až po jeho naplnění.
 
+## Kolečko „pracuji" se ukáže až s výsledkem
+
+Příkaz `busy` poslaný ve **stejné dávce** jako pomalá práce nic neřeší —
+dávka dorazí celá naráz, tedy až bude hotovo. Musí jít napřed:
+
+* **pushem** — `fw_publish()` před dlouhou operací; je to POST na
+  localhost, Apache v cestě není a nic ho nedrží. Tohle je ta snadná
+  cesta;
+* **streamem** — `fw_stream_start()` a `flush_answer()`, jenže pak
+  narazíš na předchozí bod o blocích.
+
+Druhá možnost, proč se neukáže nic: operace doběhla do 300 ms. To není
+chyba, to je záměr — pod tou hranicí se překryv nekreslí, protože
+záblesk působí pomaleji než ticho.
+
 ## CORS: „Access-Control-Allow-Origin neodpovídá"
 
 **Projev:** prohlížeč zablokuje SSE spojení a v hlášce je **víc originů

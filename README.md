@@ -16,7 +16,7 @@ Vznikl kvůli migraci dvacet let starých PHP projektů, které při každém kl
 reloadovaly celou stránku. Ale není to berlička pro staré kódy — je to
 kompletní základ i pro nové aplikace.
 
-Vydání **1.0.0**, protokol **v1**.
+Vydání **1.1.0**, protokol **v1**.
 
 ## Tři vrstvy
 
@@ -50,7 +50,7 @@ app/        příklad BEZ AdminLTE — holé HTML a vlastní CSS
 app2/       příklad S AdminLTE 4
 docs/       dokumentace, 11 kapitol
 doc/        generátor prohlížitelné dokumentace
-tools/      rozvoz knihovny do projektů
+tools/      rozvoz knihovny do projektů + odesílač do prohlížeče
 .claude/    skilly pro práci s Waggle
 nginx-nchan.conf.example
 ```

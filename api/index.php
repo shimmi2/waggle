@@ -44,6 +44,18 @@ function screen(string $PAGES, ?array $user, string $serial, string $body, array
     ];
 }
 
+/* Společný začátek: vydat token a ověřit, že broker opravdu běží.
+   Dokud neodešel první bajt, můžeme vrátit poctivý HTTP status. */
+function busy_kanal(?array $user, string $session): string {
+    if ($user === null) throw_http_error(401, 'Nejste přihlášen');
+    $tok = stream_token($session, 'main');
+    if ($tok === '') throw_http_error(500, 'Nepodařilo se vydat token kanálu');
+    if (!fw_publish(STREAM_PUB_URL, $tok, [['op' => 'debug', 'message' => 'busy: kanál živý']]))
+        throw_http_error(503, 'nchan neběží na ' . STREAM_PUB_URL
+                            . ' — viz nginx-nchan.conf.example');
+    return $tok;
+}
+
 /* ---------------------------------------------------------------------
  *  Zkratka page_* — přímé servírování stránek přes output buffer.
  *  Cesta je bezpečná z konstrukce: is_word() nepustí '/', '.' ani NUL.
@@ -108,6 +120,7 @@ case 'do_logout':
 case 'form_test':
 case 'sync':
 case 'progress':
+case 'busy':
     send_answer([
         ['op' => 'html', 'sel' => 'main', 'content' => render("$PAGES/$function.inc", ['user' => $user])],
         ['op' => 'history', 'url' => "#?function=$function"],
@@ -128,6 +141,60 @@ case 'save_form_test':
     send_answer(['op' => 'html', 'sel' => 'main',
                  'content' => render("$PAGES/form_done.inc",
                      ['nazev' => $nazev, 'pocet' => $pocet, 'poznamka' => $pozn, 'user' => $user])]);
+    break;
+
+/* ------------------------------------------------------------------ *
+ *  Zaneprázdněno: jedna operace, čtyři chování.
+ *
+ *  Všechny čtyři doručují pushem, a to je tu ta pointa. fw_publish()
+ *  je krátký POST na nchan na localhostu — Apache v té cestě není,
+ *  takže ho jeho buffering nedrží. PHP si klidně drží request a mezi
+ *  kroky publikuje; není potřeba ani fw_stream_start(), ani worker.
+ * ------------------------------------------------------------------ */
+
+case 'busy_quick':                       // doběhne dřív, než se cokoli nakreslí
+    $tok = busy_kanal($user, $session);
+    fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', 'Tohle nikdo neuvidí…')]);
+    usleep(150000);                      // 150 ms < prodleva 300 ms
+    send_answer(['op' => 'html', 'sel' => '#busy_out',
+                 'content' => 'Hotovo za 150 ms — překryv se ani nenakreslil.']);
+    break;
+
+case 'busy_phases':                      // tři obyčejná volání za sebou
+    $tok = busy_kanal($user, $session);
+    foreach (['Připravuji…', 'Počítám…', 'Dokončuji…'] as $faze) {
+        fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', $faze)]);
+        usleep(900000);
+    }
+    fw_publish(STREAM_PUB_URL, $tok, [fw_busy_done('#busy_zone', 'Hotovo')]);
+    send_answer(['op' => 'html', 'sel' => '#busy_out',
+                 'content' => 'Tři fáze, jeden překryv, žádný stav na klientovi.']);
+    break;
+
+case 'busy_bar':                         // kolečko, které se promění v pruh
+    $tok = busy_kanal($user, $session);
+    /* Zatím nevíme, kolik toho bude — tedy bez pct, tedy kolečko. */
+    fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', 'Prohledávám…')]);
+    usleep(1200000);
+    /* Teď to víme. Stačí poslat pct a z kolečka je pruh. */
+    for ($i = 0; $i <= 100; $i += 4) {
+        fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', "Zpracovávám 240 položek…", $i)]);
+        usleep(120000);
+    }
+    fw_publish(STREAM_PUB_URL, $tok, [fw_busy_done('#busy_zone', 'Zpracováno 240 položek')]);
+    send_answer(['op' => 'html', 'sel' => '#busy_out',
+                 'content' => 'Kolečko se změnilo v pruh ve chvíli, kdy dorazilo první pct.']);
+    break;
+
+case 'busy_clear':                       // překreslení okna překryv sundá
+    $tok = busy_kanal($user, $session);
+    fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', 'Tenhle překryv nikdo nevypne…')]);
+    usleep(1800000);
+    /* Nikdo neposílá busy state=off. Překryv zmizí proto, že do jeho
+       okna přišlo html — hlídá to Fw.apply v dispatcheru. */
+    send_answer(['op' => 'html', 'sel' => '#busy_zone', 'content' =>
+        '<div style="padding:24px;text-align:center">Okno bylo překresleno.'
+      . '<div id="busy_out"><small>Překryv zmizel sám, bez state=off.</small></div></div>']);
     break;
 
 /* ------------------------------------------------------------------ *

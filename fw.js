@@ -15,7 +15,7 @@
 
 var RE_WORD  = /^[A-Za-z0-9_-]+$/;
 var FW_V     = 1;          // verze protokolu na drátě
-var RELEASE  = '1.0.0';    // vydání knihovny, mění se nezávisle na protokolu
+var RELEASE  = '1.1.0';    // vydání knihovny, mění se nezávisle na protokolu
 
 var Fw = {
     release: RELEASE,
@@ -122,6 +122,160 @@ Fw.register('notify', function (c) { Fw.notify(c.kind || 'info', c.message); });
 Fw.register('error', function (c) { Fw.notify('error', (c.code ? c.code + ': ' : '') + c.message); });
 Fw.register('debug', function (c) { Fw.debug(c.message, c.data); });
 
+/* ------------------------------------------------- ZANEPRÁZDNĚNO
+
+   Překryv „pracuji" nad libovolným prvkem. Na drátě jedna operace:
+
+       {"op":"busy","sel":"main","text":"Připravuji…"}
+       {"op":"busy","sel":"main","text":"Počítám…","pct":40}
+       {"op":"busy","sel":"main","state":"done","text":"Hotovo"}
+       {"op":"busy","sel":"main","state":"off"}
+
+   Chybějící state znamená „běží". Chybějící pct znamená kolečko;
+   jakmile pct přijde, kolečko se promění v pruh — proto to nejsou dva
+   typy, ale jeden s volitelným číslem.
+
+   Rozděleno na dvě půlky ze stejného důvodu jako notify: Fw.busy je
+   řadič (účetnictví, prodlevy, úklid) a nepřepisuje se, Fw.busyRender
+   je vykreslení a přepsat se má. Projekt si tak nasadí vlastní vzhled,
+   aniž by musel znovu řešit, kdy se co objeví a zmizí.
+
+   Tři věci, které tohle dělá a zvenčí by se dělaly špatně:
+
+   1. Jedno okno = jeden překryv. Volající proto může posílat
+      „připravuji / počítám / dokončuji" za sebou bez jakéhokoli stavu
+      na klientovi.
+   2. Cokoli jiného, co do toho okna přijde, překryv sundá. Hlídá se to
+      v Fw.apply, tedy v dispatcheru — a právě proto to patří dovnitř
+      frameworku a ne do projektu.
+   3. Prvních BUSY_DELAY ms se nekreslí nic. Když operace doběhne za
+      osminu vteřiny, problikne jen záblesk a ten působí hůř než nic. */
+
+var BUSY_DELAY = 300;    // než se překryv vůbec ukáže
+var BUSY_DONE  = 700;    // jak dlouho svítí „hotovo", než zmizí
+
+Fw._busy = [];
+
+function busyRec(host)  { for (var i=0;i<Fw._busy.length;i++) if (Fw._busy[i].host===host) return Fw._busy[i]; return null; }
+function busyDrop(r) {
+    clearTimeout(r.timer); clearTimeout(r.doneTimer);
+    if (r.box && r.box.parentNode) r.box.parentNode.removeChild(r.box);
+    if (r.prevPos !== null && r.host) r.host.style.position = r.prevPos;
+    var i = Fw._busy.indexOf(r); if (i >= 0) Fw._busy.splice(i, 1);
+}
+
+/* Sundá překryv nad prvkem i nad čímkoli, co v něm leží. Volá se
+   z dispatcheru a z beforeReplace, takže překryv zmizí i tehdy, když
+   někdo překreslí celé okno. */
+Fw.busyClear = function (node) {
+    for (var i = Fw._busy.length - 1; i >= 0; i--) {
+        var r = Fw._busy[i];
+        if (!r.host || !document.contains(r.host)) { busyDrop(r); continue; }
+        if (node && (r.host === node || node.contains(r.host))) busyDrop(r);
+    }
+};
+
+/* Vykreslení. Přepsatelné — dostane hostitele, vlastní box a stav.
+   Box je prázdný jen při prvním volání; potom se jen aktualizuje. */
+Fw.busyRender = function (host, box, st) {
+    var bar = box.querySelector('.fw-busy-bar'), spin = box.querySelector('.fw-busy-spin'),
+        txt = box.querySelector('.fw-busy-text');
+    if (!txt) {
+        box.innerHTML = '<div class="fw-busy-spin"></div>'
+                      + '<div class="fw-busy-track"><div class="fw-busy-bar"></div></div>'
+                      + '<div class="fw-busy-text"></div>';
+        bar  = box.querySelector('.fw-busy-bar');
+        spin = box.querySelector('.fw-busy-spin');
+        txt  = box.querySelector('.fw-busy-text');
+    }
+    var mapct = typeof st.pct === 'number';
+    spin.style.display = mapct ? 'none' : 'block';
+    box.querySelector('.fw-busy-track').style.display = mapct ? 'block' : 'none';
+    if (mapct) bar.style.width = Math.max(0, Math.min(100, st.pct)) + '%';
+    txt.textContent = st.text || '';
+    box.className = 'fw-busy' + (st.state === 'done' ? ' fw-busy-done' : '');
+};
+
+/* Řadič. sel = cíl, st = {text, pct, state}. */
+Fw.busy = function (sel, st) {
+    st = st || {};
+    var hosts = Fw.nodes(sel || 'main');
+    if (!hosts.length) return;
+
+    hosts.forEach(function (host) {
+        var r = busyRec(host);
+
+        if (st.state === 'off') { if (r) busyDrop(r); return; }
+
+        if (st.state === 'done') {
+            /* Nic se nestihlo ukázat -> nic neblikne. */
+            if (!r || !r.box) { if (r) busyDrop(r); return; }
+            clearTimeout(r.timer);
+            Fw.busyRender(host, r.box, { text: st.text, pct: st.pct, state: 'done' });
+            clearTimeout(r.doneTimer);
+            r.doneTimer = setTimeout(function () { busyDrop(r); }, BUSY_DONE);
+            return;
+        }
+
+        if (!r) {
+            r = { host: host, box: null, timer: null, doneTimer: null, prevPos: null, st: {} };
+            Fw._busy.push(r);
+        }
+        /* Text a procenta se slučují, aby šlo poslat jen nové pct
+           a text zůstal viset. */
+        if (st.text !== undefined) r.st.text = st.text;
+        if (st.pct  !== undefined) r.st.pct  = st.pct;
+
+        if (r.box) { Fw.busyRender(host, r.box, r.st); return; }
+        if (r.timer) return;                       // čeká se na prodlevu
+
+        r.timer = setTimeout(function () {
+            r.timer = null;
+            if (!document.contains(host)) { busyDrop(r); return; }
+            /* Překryv se kotví k hostiteli, ten proto nesmí být static. */
+            var pos = getComputedStyle(host).position;
+            if (pos === 'static') { r.prevPos = host.style.position; host.style.position = 'relative'; }
+            r.box = document.createElement('div');
+            r.box.className = 'fw-busy';
+            host.appendChild(r.box);
+            Fw.busyRender(host, r.box, r.st);
+        }, BUSY_DELAY);
+    });
+};
+
+Fw.register('busy', function (c) { Fw.busy(c.sel, c); });
+
+/* Překreslení obsahu prvku překryv ruší. Pokrývá html i url, protože
+   obojí jde přes Fw.setHtml. */
+Fw.on('beforeReplace', function (el) { Fw.busyClear(el); });
+
+/* Výchozí vzhled. Vloží se jednou a projekt ho může přebít vlastním
+   CSS — třídy jsou stabilní součást rozhraní. */
+Fw.busyStyle = function () {
+    if (document.getElementById('fw_busy_css')) return;
+    var st = document.createElement('style');
+    st.id = 'fw_busy_css';
+    st.textContent =
+      '.fw-busy{position:absolute;inset:0;z-index:1050;display:flex;flex-direction:column;'
+    + 'align-items:center;justify-content:center;gap:.6rem;'
+    + 'background:rgba(255,255,255,.72);backdrop-filter:blur(1px);'
+    + 'font:500 14px/1.4 system-ui,sans-serif;color:#333}'
+    + '@media (prefers-color-scheme:dark){.fw-busy{background:rgba(24,24,27,.72);color:#eee}}'
+    + '.fw-busy-spin{width:34px;height:34px;border:3px solid currentColor;border-top-color:transparent;'
+    + 'border-radius:50%;opacity:.55;animation:fw-busy-rot .8s linear infinite}'
+    + '@keyframes fw-busy-rot{to{transform:rotate(360deg)}}'
+    + '.fw-busy-track{width:min(260px,70%);height:8px;border-radius:4px;'
+    + 'background:currentColor;opacity:.25;overflow:hidden}'
+    + '.fw-busy-bar{height:100%;width:0;border-radius:4px;background:#0e6a72;'
+    + 'transition:width .25s ease}'
+    + '.fw-busy-done .fw-busy-spin{animation:none;border-top-color:currentColor;color:#198754}'
+    + '.fw-busy-done .fw-busy-bar{background:#198754;width:100%}'
+    + '.fw-busy-done .fw-busy-text{color:#198754}'
+    + '@media (prefers-reduced-motion:reduce){.fw-busy-spin{animation:none}'
+    + '.fw-busy-bar{transition:none}}';
+    document.head.appendChild(st);
+};
+
 Fw.resolve = function (path) {
     var p = String(path).split('.'), o = global;
     for (var i = 0; i < p.length && o; i++) o = o[p[i]];
@@ -139,6 +293,11 @@ Fw.apply = function (cmd, ctx) {
     });
     return chain.then(function (ok) {
         if (ok === false) { Fw.debug('guard zrušil ' + cmd.op); return; }
+        /* Přijde-li do okna cokoli jiného než busy, překryv končí. Tohle
+           je ten důvod, proč busy patří do frameworku: zvenčí by se to
+           dalo udělat jen opičí záplatou na Fw.ops.*. */
+        if (cmd.op !== 'busy' && cmd.sel && Fw._busy.length)
+            Fw.nodes(cmd.sel).forEach(function (el) { Fw.busyClear(el); });
         return fn(cmd, ctx);
     });
 };
@@ -483,6 +642,7 @@ Fw.init = function (cfg) {
     if (Fw.cfg.channel !== false)
         Fw.openChannel(Fw.cfg.channel || ('fw:' + location.pathname));
     try { Fw.session = localStorage.getItem('fw_session') || null; } catch (e) {}
+    Fw.busyStyle();
     Fw.bind();
     Fw.debug('init, serial=' + Fw.serial + ', session=' + (Fw.session ? 'ano' : 'ne'));
     return Fw.send('index', {}, { history: false });

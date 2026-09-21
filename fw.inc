@@ -12,7 +12,7 @@
 /* FW_RELEASE je vydání knihovny, FW_V je verze protokolu na drátě.
    Mění se nezávisle: protokol zůstává 1, dokud se nezmění formát dávky.
    Bez tohohle čísla se u běžícího projektu nedalo zjistit, co v něm je. */
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.0.0');
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.1.0');
 defined('FW_V')          || define('FW_V', 1);
 defined('FW_MAXLEN')     || define('FW_MAXLEN', 65536);   // strop délky jednoho pole
 defined('FW_DEBUG')      || define('FW_DEBUG', false);    // true = chyby prozradí cesty
@@ -150,6 +150,31 @@ function fw_stream_start(): void {
     fw_start_output();
     echo str_repeat(' ', FW_STREAM_PAD), "\n";
     fw_pump();
+}
+
+/* ---------------------------------------------------------------------
+ *  ZANEPRÁZDNĚNO — překryv „pracuji" nad prvkem.
+ *
+ *  Sám o sobě je to jen stavitel jednoho příkazu. Užitečný je až tehdy,
+ *  když se dostane ke klientovi DŘÍV než výsledek — tedy streamem
+ *  (fw_stream_start + fw_pump) nebo pushem (fw_publish). Poslaný ve
+ *  stejné dávce jako pomalá práce nic neřeší, protože dávka dorazí
+ *  až s ní.
+ * ------------------------------------------------------------------- */
+
+function fw_busy(string $sel, string $text = '', ?int $pct = null): array {
+    $c = ['op' => 'busy', 'sel' => $sel];
+    if ($text !== '')     $c['text'] = $text;
+    if ($pct !== null)    $c['pct']  = $pct;
+    return $c;
+}
+
+function fw_busy_done(string $sel, string $text = 'Hotovo'): array {
+    return ['op' => 'busy', 'sel' => $sel, 'state' => 'done', 'text' => $text];
+}
+
+function fw_busy_off(string $sel): array {
+    return ['op' => 'busy', 'sel' => $sel, 'state' => 'off'];
 }
 
 /* ---------------------------------------------------------------------
