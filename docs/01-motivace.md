@@ -115,3 +115,44 @@ systémech. V aplikaci typu „formulář, seznam, detail" prakticky nikdy.
 Databázi, šablonovací jazyk, autentizaci, routing na serveru, validaci,
 lokalizaci. To všechno je věc projektu. Framework dělá jedno:
 **doručí příkaz ze serveru do DOMu, čtyřmi transporty a jedním formátem.**
+
+## Na čem stojí a na čem nesmí stát
+
+Tohle je hranice knihovny a drží se **tvrdě**. Je snadné ji rozmělnit
+jedním „to se přece hodí", a pak už se to nevrátí.
+
+**Tvrdá závislost je jediná: HTML, CSS a JavaScript v prohlížeči.**
+Nic dalšího `fw.js` nepotřebuje — žádný build step, žádný balíčkovač,
+žádnou knihovnu třetí strany.
+
+**Volitelná je jedna: nchan.** Jenom kvůli pushi. Bez něj funguje
+všechno ostatní, jen se průběh dlouhé operace doručí streamem, nebo
+vůbec.
+
+Co do knihovny **nepatří a patřit nebude**:
+
+| | proč to není závislost |
+|---|---|
+| AdminLTE, Bootstrap, jakákoli šablona | `app2/` je **příklad**, ne součást. `app/` dokazuje, že to jde i bez nich. |
+| PHP | `fw.inc` je **referenční implementace** serverové strany, ne její definice. Definicí je [03 — Protokol](03-protokol.md). Přepsat ji do Pythonu nebo Go je práce na den. |
+| naše konkrétní projekty | Jejich knihovny zůstávají u nich. Do repozitáře se nikdy nedostane nic, co ví, jak vypadá naše databáze. |
+
+Zbytek obsahu repozitáře jsou **příklady a nástroje**, ne knihovna:
+`app/`, `app2/`, `api/`, `tools/fwdeploy.sh`, `tools/async_sender.php`.
+Nástroj smí být v PHP, smí předpokládat nchan, smí si dělat, co chce —
+protože ho nikdo nemusí použít. Knihovna ne.
+
+Zkouška, která to rozsoudí: **co přestane fungovat, když ta věc zítra
+zmizí?**
+
+* zmizí AdminLTE → jen `app2/`
+* zmizí PHP → serverová strana se přepíše, protokol platí dál
+* zmizí nchan → jen push; fetch i stream jedou
+
+Když je odpověď „framework", je to závislost a nepatří tam.
+
+**Jedno místo tuhle čistotu dnes porušuje**, ať se na to nepřijde jako
+na překvapení: výchozí překryv operace `busy` má `z-index: 1050`, což je
+bootstrapí číslo pro pozadí modálu. Funguje to i jinde, ale je to
+hodnota vycucaná z cizí knihovny. Správně by to měla být proměnná
+s touhle výchozí hodnotou.

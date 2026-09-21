@@ -73,8 +73,15 @@ sekund a zahodil rozepsaný obsah polí jinde v divu.
 
 Platí obecně: nejmenší cíl, který stačí.
 
-## 12. Framework neví nic o projektu
+## 12. Framework neví nic o projektu ani o technologii kolem
 
 Žádná databáze, žádné šablony, žádná autentizace. Vzhled, stránky
 i přihlášení jsou v `api/` a v aplikaci. Proto může `fw.js` obsluhovat
 holé HTML i AdminLTE beze změny jediného řádku.
+
+Totéž platí o technologiích. Tvrdá závislost je **jedna** — HTML, CSS
+a JavaScript v prohlížeči. Volitelná je **jedna** — nchan, a jen kvůli
+pushi. AdminLTE je příklad, PHP je referenční implementace serveru,
+naše projekty do repozitáře nepatří vůbec. Příklady a nástroje si smí
+dovolit cokoli, protože je nikdo nemusí použít; knihovna ne.
+Rozvedeno v [01 — Motivace](01-motivace.md).

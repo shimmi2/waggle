@@ -44,7 +44,7 @@ bylo vidět, že markup je jediné, co se mezi nimi liší.
 
 ```
 fw.js       knihovna, klient
-fw.inc      knihovna, server
+fw.inc      knihovna, server (referenční implementace v PHP)
 api/        kostra + dema, jedno API pro oba příklady
 app/        příklad BEZ AdminLTE — holé HTML a vlastní CSS
 app2/       příklad S AdminLTE 4
