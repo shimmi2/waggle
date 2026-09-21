@@ -15,7 +15,7 @@
 
 var RE_WORD  = /^[A-Za-z0-9_-]+$/;
 var FW_V     = 1;          // verze protokolu na drátě
-var RELEASE  = '1.1.0';    // vydání knihovny, mění se nezávisle na protokolu
+var RELEASE  = '1.2.0';    // vydání knihovny, mění se nezávisle na protokolu
 
 var Fw = {
     release: RELEASE,
@@ -486,6 +486,26 @@ Fw.parseTarget = function (s) {
     return out;
 };
 
+/* data-busy="text" — překryv po dobu požadavku. Tohle NEPOTŘEBUJE
+   server ani push: prohlížeč sám ví, že odeslal a čeká. Pokrývá tím
+   ten nejčastější případ („strpení prosím, kompletuji data") bez
+   jediného řádku navíc na straně BFF a bez jakékoli infrastruktury.
+
+   Operace busy je pro to druhé: průběh, který zná JEN server —
+   procenta, fáze, počty. Ty se pushnout musí.
+
+   Cíl je data-busy-sel, jinak main. Úklid řeší dispatcher ve chvíli,
+   kdy do okna dorazí odpověď; state=off za promise je jen pojistka
+   pro případ, že odpověď cílí jinam nebo požadavek selže. */
+function busyBehem(el, promise) {
+    if (!el.hasAttribute('data-busy')) return promise;
+    var sel = el.getAttribute('data-busy-sel') || 'main';
+    Fw.busy(sel, { text: el.getAttribute('data-busy') || 'Pracuji…' });
+    var konec = function () { Fw.busy(sel, { state: 'off' }); };
+    if (promise && promise.then) promise.then(konec, konec);
+    return promise;
+}
+
 Fw.bind = function () {
     /* Delegace na document: přežije jakékoli překreslení, nic se nepřevazuje. */
     document.addEventListener('click', function (ev) {
@@ -498,7 +518,7 @@ Fw.bind = function () {
             && !confirm(el.getAttribute('data-confirm') || 'Opravdu provést tuto akci?')) return;
         var t = Fw.parseTarget(el.getAttribute('href') || el.getAttribute('data-fw'));
         if (!t.fn) { Fw.warn('data-fw bez function'); return; }
-        Fw.send(t.fn, t.params, { history: true });
+        busyBehem(el, Fw.send(t.fn, t.params, { history: true }));
     });
 
     document.addEventListener('submit', function (ev) {
@@ -510,7 +530,7 @@ Fw.bind = function () {
         var t  = Fw.parseTarget(f.getAttribute('action') || f.getAttribute('data-fw'));
         var fd = new FormData(f);                       // zadarmo funguje i <input type=file>
         for (var k in t.params) if (!fd.has(k)) fd.set(k, t.params[k]);
-        Fw.send(t.fn, fd, { history: false });          // POST se do historie nikdy nedává
+        busyBehem(f, Fw.send(t.fn, fd, { history: false }));   // POST se do historie nedává
     });
 
     /* Prvek s data-fw-sync rozešle svou hodnotu do ostatních oken.

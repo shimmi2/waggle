@@ -26,6 +26,9 @@
       <i class="bi bi-bar-chart-steps me-1"></i>Kolečko → pruh s procenty</a>
     <a href="#?function=busy_clear"  data-fw class="btn btn-outline-danger btn-sm">
       <i class="bi bi-eraser me-1"></i>Překreslení okna překryv sundá</a>
+    <a href="#?function=busy_slow"   data-fw class="btn btn-dark btn-sm"
+       data-busy="Kompletuji data…" data-busy-sel="#busy_zone">
+      <i class="bi bi-mouse me-1"></i>data-busy — bez serveru</a>
   </div>
 </div>
 
@@ -46,6 +49,15 @@
   <b>Kolečko a pruh nejsou dva typy.</b> Bez <code>pct</code> se točí, s <code>pct</code>
   se to promění v pruh. Proto jde začít „prohledávám…" a přepnout na procenta
   ve chvíli, kdy je konečně známé, kolik toho je.
+</div>
+
+<div class="alert alert-primary border mt-2 mb-0 small">
+  <i class="bi bi-mouse me-1"></i>
+  <b>Poslední tlačítko neposílá žádný busy.</b> Má jen
+  <code>data-busy="Kompletuji data…"</code> a překryv si pustí prohlížeč sám —
+  ví přece, že odeslal a čeká. Tímhle se pokryje ten nejčastější případ bez
+  jediného řádku na straně serveru a bez nchanu. Operace <code>busy</code>
+  je pro to, co zná <b>jen</b> server: procenta, fáze, počty.
 </div>
 
 <div class="alert alert-success border mt-2 mb-0 small">

@@ -14,7 +14,9 @@
     <a href="#?function=busy_quick"  data-fw>Krátká operace (150 ms)</a> &nbsp;
     <a href="#?function=busy_phases" data-fw>Tři fáze, kolečko</a> &nbsp;
     <a href="#?function=busy_bar"    data-fw>Kolečko → pruh s procenty</a> &nbsp;
-    <a href="#?function=busy_clear"  data-fw>Překreslení okna překryv sundá</a>
+    <a href="#?function=busy_clear"  data-fw>Překreslení okna překryv sundá</a> &nbsp;
+    <a href="#?function=busy_slow"   data-fw
+       data-busy="Kompletuji data…" data-busy-sel="#busy_zone">data-busy — bez serveru</a>
   </p>
 
   <p><small>
@@ -24,7 +26,12 @@
     bez <code>pct</code> se točí, s <code>pct</code> se promění v pruh.
   </small></p>
 
-  <p><small><b>Doručuje se pushem, ne streamem.</b> PHP si drží request a mezi kroky
+  <p><small><b>Poslední odkaz neposílá žádný busy.</b> Má jen
+     <code>data-busy</code> a překryv si pustí prohlížeč sám — ví přece, že
+     odeslal a čeká. Bez serveru, bez nchanu. Operace <code>busy</code> je pro
+     to, co zná jen server: procenta, fáze, počty.</small></p>
+
+  <p><small><b>Ostatní se doručuje pushem, ne streamem.</b> PHP si drží request a mezi kroky
      volá <code>fw_publish()</code>, což je krátký POST na nchan na localhostu.
      Apache v té cestě není, takže jeho buffering nic nedrží — nejsou proto potřeba
      ani <code>fw_stream_start()</code>, ani worker na pozadí. Bez nchanu vrátí

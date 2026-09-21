@@ -48,6 +48,8 @@ Delegace na `document`, takže se nic nepřevazuje po překreslení.
 <a href="#?function=smazat&id=7" data-fw data-confirm="Opravdu smazat?">Smazat</a>
 <select name="filtr" data-fw-submit>…</select>   <!-- odešle formulář při změně -->
 
+<a href="#?function=sestava" data-fw data-busy="Kompletuji data…">Sestava</a>
+
 <button data-fw-clear="#overlay">Zavřít</button>  <!-- vyprázdní okno, bez serveru -->
 <div data-fw-esc="#overlay">…</div>               <!-- a totéž udělá Escape -->
 ```
@@ -60,6 +62,16 @@ kvůli prázdnému divu by byl zbytečný. Prochází stejnou cestou jako operac
 
 `data-confirm` na odkazu nebo formuláři se zeptá před odesláním; prázdná
 hodnota použije obecný text.
+
+`data-busy` pustí po dobu požadavku překryv „pracuji" nad `main`, nebo nad
+tím, co určí `data-busy-sel`. **Nepotřebuje k tomu server ani push** —
+prohlížeč sám ví, že odeslal a čeká. Tímhle se pokryje ten nejčastější
+případ, tedy „strpení prosím, kompletuji data", bez jediného řádku navíc
+na straně serveru. Překryv zmizí, jakmile dorazí odpověď.
+
+Operace [`busy`](03-protokol.md) je pro to druhé: průběh, který zná **jen**
+server — procenta, fáze, počty. Ten se doručit musí, a tedy pushem. Obojí
+je tentýž překryv, liší se jen tím, kdo ho ovládá.
 
 Parametry se čtou z `href` / `action` za `?` nebo `#`. `function` je název
 endpointu, všechno ostatní jsou parametry — nikde se nedeklarují.

@@ -139,6 +139,11 @@ u `notify`. Řadič `Fw.busy()` se nepřepisuje — je v něm právě to
 dorazí až s výsledkem. Musí jít napřed: streamem, nebo pushem. Viz
 [10 — Nasazení](10-nasazeni.md).
 
+Pro pouhé „čekej, pracuje se" ale server vůbec nepotřebuješ — na to je
+atribut `data-busy`, viz [04 — Klient](04-klient.md). Operaci `busy` posílej
+tehdy, když máš co říct: procenta, fázi, počet. To je informace, kterou zná
+jen server.
+
 ### Vlastní operace
 
 Projekt si přidá svoje přes `Fw.register('jmeno', fn)`. Registr je jediné

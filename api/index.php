@@ -186,6 +186,14 @@ case 'busy_bar':                         // kolečko, které se promění v pruh
                  'content' => 'Kolečko se změnilo v pruh ve chvíli, kdy dorazilo první pct.']);
     break;
 
+case 'busy_slow':                        // nic nepublikuje: překryv řídí klient
+    if ($user === null) throw_http_error(401, 'Nejste přihlášen');
+    usleep(2200000);                     // tady by byl ten dlouhý dotaz
+    send_answer(['op' => 'html', 'sel' => '#busy_out',
+                 'content' => 'Hotovo za 2,2 s. Server o překryvu nevěděl vůbec nic — '
+                            . 'odkaz má jen data-busy a zbytek si obstaral prohlížeč.']);
+    break;
+
 case 'busy_clear':                       // překreslení okna překryv sundá
     $tok = busy_kanal($user, $session);
     fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', 'Tenhle překryv nikdo nevypne…')]);
