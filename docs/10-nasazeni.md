@@ -99,6 +99,26 @@ vyzvedne, co mu uteklo — `EventSource` pošle `Last-Event-ID` sám.
 Bez TLS schválně: spojení nikdy neopustí stroj a PHP nemusí ověřovat
 certifikát.
 
+### Frontend na víc doménách
+
+URL odběru se odvozuje z hostu, na kterém aplikace běží. Jede-li frontend
+na dvou doménách, musí je nchan umět obě — jinak prohlížeč spojení odmítne
+na certifikátu a v konzoli není nic než neúspěšný `EventSource`.
+
+**Víc certifikátů v jednom server bloku nejde.** Několik direktiv
+`ssl_certificate` vedle sebe je jen pro několik typů klíče (RSA + ECDSA)
+k témuž jménu. Na různé domény je od toho SNI, a to v nginxu znamená
+**samostatný server blok** se svým `server_name` a svým certifikátem.
+Společný `location /nchan/sub` patří do snippetu, který oba bloky
+includují — viz `nginx-nchan.conf.example`.
+
+Jeden wildcard certifikát často pokryje víc projektů naráz, takže bloků
+nemusí být tolik, kolik je domén. Ověř si, co v něm doopravdy je:
+
+```bash
+openssl x509 -in fullchain.pem -noout -ext subjectAltName
+```
+
 ## Posílání do prohlížeče mimo odpověď
 
 Apache drží streamovanou odpověď, ale **pushe se to netýká**.

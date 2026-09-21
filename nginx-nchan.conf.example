@@ -57,6 +57,54 @@ server {
 
 
 # ---------------------------------------------------------------------
+#  1b) VÍC DOMÉN = VÍC SERVER BLOKŮ
+#
+#  Víc certifikátů v jednom bloku nejde. Několik direktiv
+#  ssl_certificate vedle sebe je jen pro několik typů klíče (RSA
+#  + ECDSA) k témuž jménu, ne pro různé domény. Na různé domény je od
+#  toho SNI a to v nginxu znamená samostatný server blok se svým
+#  server_name a svým certifikátem.
+#
+#  Aplikace odvozuje URL odběru z hostu, na kterém běží (stream.inc,
+#  funkce stream_sub_url). Když tedy frontend jede na dvou doménách,
+#  musí nchan umět obě — jinak prohlížeč spojení odmítne na certifikátu
+#  a v konzoli není nic než neúspěšný EventSource.
+#
+#  Tělo se neduplikuje: location patří do snippetu, který oba bloky
+#  includují.
+#
+#      # /etc/nginx/snippets/fw-nchan-sub.conf
+#      location /nchan/sub {
+#          nchan_subscriber                eventsource;
+#          nchan_channel_id                $arg_token;
+#          nchan_subscriber_first_message  newest;
+#      }
+#      location / { return 404; }
+#
+#  a v obou server blocích pak jen:
+#
+#      include snippets/fw-nchan-sub.conf;
+#
+#  Jeden wildcard certifikát často pokryje víc projektů naráz, takže
+#  bloků nemusí být tolik, kolik je domén — ověř si, co certifikát
+#  doopravdy obsahuje:
+#
+#      openssl x509 -in fullchain.pem -noout -ext subjectAltName
+# ---------------------------------------------------------------------
+# server {
+#     listen              8443 ssl;
+#     listen         [::]:8443 ssl;
+#     http2               on;
+#     server_name         *.priklad.cz priklad.cz;
+#
+#     ssl_certificate     /etc/letsencrypt/live/priklad.cz/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/priklad.cz/privkey.pem;
+#
+#     include snippets/fw-nchan-sub.conf;
+# }
+
+
+# ---------------------------------------------------------------------
 #  2) PUBLIKACE — jen z localhostu, bez TLS.
 #
 #  Tohle je nejcitlivější místo celého návrhu. Kdo může publikovat,
