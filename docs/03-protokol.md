@@ -131,8 +131,16 @@ Tři pravidla, která drží framework, aby je nemusel řešit server:
 3. **Prvních 300 ms se nekreslí nic.** Operace, která doběhne dřív,
    neukáže vůbec nic. Záblesk působí pomaleji než ticho.
 
+U prvku vyššího než obrazovka se obsah překryvu **nekreslí do jeho
+geometrického středu** — ten by byl klidně mimo výřez a uživatel by koukal
+na rozostřenou plochu bez jediné informace. Obsah sedí ve vnitřním pásu
+`.fw-busy-in` s `position: sticky`, takže ho prohlížeč sám drží ve viditelné
+části a zároveň nepustí mimo překryv. Žádné měření scrollu, žádný listener
+na resize; u krátkého prvku se nic nemění.
+
 Vzhled se mění přepsáním `Fw.busyRender(host, box, stav)`, stejně jako
-u `notify`. Řadič `Fw.busy()` se nepřepisuje — je v něm právě to
+u `notify`. Pokud si vlastní vykreslení napíšeš, **nech obsah uvnitř
+`.fw-busy-in`** — jinak o tohle chování přijdeš. Řadič `Fw.busy()` se nepřepisuje — je v něm právě to
 účetnictví z bodů 1 až 3.
 
 **Poslaný ve stejné dávce jako pomalá práce je k ničemu**, protože dávka

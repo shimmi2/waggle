@@ -29,6 +29,9 @@
     <a href="#?function=busy_slow"   data-fw class="btn btn-dark btn-sm"
        data-busy="Kompletuji data…" data-busy-sel="#busy_zone">
       <i class="bi bi-mouse me-1"></i>data-busy — bez serveru</a>
+    <a href="#?function=busy_slow"   data-fw class="btn btn-outline-dark btn-sm"
+       data-busy="Hledej mě — jsem vidět i tady dole." data-busy-sel="#busy_tall">
+      <i class="bi bi-arrows-expand me-1"></i>Vysoký div (odscrolluj dolů)</a>
   </div>
 </div>
 
@@ -66,5 +69,20 @@
   <code>fw_publish()</code> — krátký POST na nchan na localhostu. Apache v té
   cestě vůbec není, takže jeho buffering nic nedrží. Proto tady nejsou potřeba
   ani <code>fw_stream_start()</code>, ani worker na pozadí.
+</div>
+<div class="card mt-3">
+  <div class="card-header"><h3 class="card-title">
+    <i class="bi bi-arrows-expand me-1"></i>Div vyšší než obrazovka</h3></div>
+  <div class="card-body">
+    <p class="text-secondary small">
+      Klikni na „Vysoký div", odscrolluj kamkoli a text je pořád vidět. Obsah
+      překryvu sedí ve vnitřním pásu s <code>position:sticky</code>, takže ho
+      prohlížeč sám drží ve výřezu. Bez toho by přistál v geometrickém středu
+      téhle roury — tedy nikde.</p>
+    <div id="busy_tall" class="border rounded bg-body-tertiary p-3" style="height:2400px">
+      <div class="text-secondary">začátek roury</div>
+      <div class="text-secondary" style="margin-top:2300px">konec roury</div>
+    </div>
+  </div>
 </div>
 </div></div>

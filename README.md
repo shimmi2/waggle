@@ -16,7 +16,7 @@ Vznikl kvůli migraci dvacet let starých PHP projektů, které při každém kl
 reloadovaly celou stránku. Ale není to berlička pro staré kódy — je to
 kompletní základ i pro nové aplikace.
 
-Vydání **1.2.0**, protokol **v1**.
+Vydání **1.2.1**, protokol **v1**.
 
 ## Tři vrstvy
 

@@ -15,7 +15,7 @@
 
 var RE_WORD  = /^[A-Za-z0-9_-]+$/;
 var FW_V     = 1;          // verze protokolu na drátě
-var RELEASE  = '1.2.0';    // vydání knihovny, mění se nezávisle na protokolu
+var RELEASE  = '1.2.1';    // vydání knihovny, mění se nezávisle na protokolu
 
 var Fw = {
     release: RELEASE,
@@ -181,9 +181,14 @@ Fw.busyRender = function (host, box, st) {
     var bar = box.querySelector('.fw-busy-bar'), spin = box.querySelector('.fw-busy-spin'),
         txt = box.querySelector('.fw-busy-text');
     if (!txt) {
-        box.innerHTML = '<div class="fw-busy-spin"></div>'
+        /* Obsah je ve vnitřním pásu, ne přímo v překryvu — viz .fw-busy-in
+           v busyStyle(). Ten pás se drží ve viditelné části i u divu
+           vyššího, než je obrazovka. */
+        box.innerHTML = '<div class="fw-busy-in">'
+                      + '<div class="fw-busy-spin"></div>'
                       + '<div class="fw-busy-track"><div class="fw-busy-bar"></div></div>'
-                      + '<div class="fw-busy-text"></div>';
+                      + '<div class="fw-busy-text"></div>'
+                      + '</div>';
         bar  = box.querySelector('.fw-busy-bar');
         spin = box.querySelector('.fw-busy-spin');
         txt  = box.querySelector('.fw-busy-text');
@@ -256,10 +261,23 @@ Fw.busyStyle = function () {
     var st = document.createElement('style');
     st.id = 'fw_busy_css';
     st.textContent =
-      '.fw-busy{position:absolute;inset:0;z-index:1050;display:flex;flex-direction:column;'
-    + 'align-items:center;justify-content:center;gap:.6rem;'
+      /* Překryv kryje celý prvek, ALE obsah sedí ve vnitřním pásu, který
+         je position:sticky. U divu vyššího než obrazovka by jinak text
+         přistál v jeho geometrickém středu, tedy klidně mimo výřez —
+         uživatel by koukal na rozostřenou plochu bez jediné informace.
+
+         Sticky to řeší bez toho, aby framework musel cokoli měřit:
+         prohlížeč sám drží pás u horní hrany výřezu a zároveň ho nepustí
+         mimo překryv. Když je div kratší než obrazovka, min() vrátí 100 %
+         a chová se to jako dřív — vycentrováno v divu. Když je delší,
+         vrátí výšku obrazovky a centruje se v tom, co je vidět.
+         Žádné počítání scrollu, žádný resize listener. */
+      '.fw-busy{position:absolute;inset:0;z-index:1050;'
     + 'background:rgba(255,255,255,.72);backdrop-filter:blur(1px);'
     + 'font:500 14px/1.4 system-ui,sans-serif;color:#333}'
+    + '.fw-busy-in{position:sticky;top:0;height:min(100%,100vh);'
+    + 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem}'
+    + '@supports (height:100dvh){.fw-busy-in{height:min(100%,100dvh)}}'
     + '@media (prefers-color-scheme:dark){.fw-busy{background:rgba(24,24,27,.72);color:#eee}}'
     + '.fw-busy-spin{width:34px;height:34px;border:3px solid currentColor;border-top-color:transparent;'
     + 'border-radius:50%;opacity:.55;animation:fw-busy-rot .8s linear infinite}'
