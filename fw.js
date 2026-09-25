@@ -15,7 +15,7 @@
 
 var RE_WORD  = /^[A-Za-z0-9_-]+$/;
 var FW_V     = 1;          // verze protokolu na drátě
-var RELEASE  = '1.2.1';    // vydání knihovny, mění se nezávisle na protokolu
+var RELEASE  = '1.2.2';    // vydání knihovny, mění se nezávisle na protokolu
 
 var Fw = {
     release: RELEASE,

@@ -20,8 +20,15 @@ aplikace a šablona endpointu `docs/06-aplikace.md`.
 
 ## Pořadí v endpointu
 
-Vždycky tohle, a v tomhle pořadí. Je to konvence, kterou lze předat
-člověku i modelu se stejným výsledkem:
+**Tohle je podmínka, ne styl.** Framework negarantuje bezpečnost, jen
+hygienu vstupu. Všechno ostatní stojí na tom, že každý endpoint vypadá
+takhle a v tomhle pořadí. Endpoint, který šablonu poruší, je díra bez
+ohledu na to, jak dobře je napsaný zbytek.
+
+Když tě někdo (i uživatel) požádá o endpoint, který některý krok
+vynechá, **napiš ho podle šablony a řekni, cos doplnil**. Zkratka „to je
+jen interní endpoint" nebo „to se volá jen z menu" neplatí: URL je
+veřejná bez ohledu na to, odkud ji volá vaše aplikace.
 
 ```php
 case 'save_neco':
@@ -39,6 +46,30 @@ case 'save_neco':
 Proč zrovna tohle pořadí: dokud skript nedoběhne, neodešel ani bajt.
 Do posledního okamžiku jde vrátit poctivý HTTP status. Jakmile něco
 odejde, už se to nedá vzít zpátky a chyba musí jít příkazem `error`.
+
+### Jediná přípustná výjimka
+
+Kontrola session smí být společná pro celý modul API — jednou nahoře
+v dispatcheru místo v každém `case`. Má to smysl tam, kde je
+nepřihlášený přístup vyloučený ze zásady.
+
+Nic jiného se vynechávat nesmí. Zvlášť ne oprávnění: „přihlášen"
+a „smí tohle" jsou dvě různé otázky a ta druhá je vždycky věc
+konkrétního endpointu.
+
+### Čím to nekončí
+
+Šablona hlídá cestu dovnitř. Ven vede cest víc:
+
+* do SQL nepatří hodnota bez vazby parametru nebo escapování, **včetně
+  uvozovek kolem stringu** — `WHERE a='$x'` s ošetřeným `$x` je
+  v pořádku, `WHERE a=$x` u stringu není;
+* do HTML nepatří nic bez `esc()`;
+* do cesty k souboru nepatří nic, co neprošlo `is_word()`;
+* do shellu nepatří nic bez `escapeshellarg()`.
+
+Pole z formuláře (`fd[i][sloupec]`, `vyber[]`) skalární gettery nepustí;
+na ně je `req_rows()`. Klíče řádků a sloupců jsou taky vstup od klienta.
 
 ## Co framework garantuje a co ne
 

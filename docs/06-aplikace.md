@@ -19,7 +19,39 @@ api/
 `pages/` je pro HTTP celý zavřený. Fragmenty čte `index.php` z filesystému,
 nikdy je nestahuje prohlížeč.
 
-## Skiny
+## Tři okna, o která se aplikace dělí
+
+Povinné to není, ale většina firemních aplikací se přirozeně rozpadne
+na tři okna — a když se to přijme, je řízení aplikace triviální:
+
+| okno | co v něm je | jak často se mění |
+|---|---|---|
+| `left_menu` | navigace | zpravidla **jen při přihlášení a odhlášení** |
+| `top_frame` | stavové údaje — počet věcí k vyřízení, rychlé odkazy | občas, a jen ony samy |
+| `main` | vlastní práce | **pořád** |
+
+Z toho plyne, že drtivá většina odpovědí sahá jen na `main`. Menu se
+překresluje dvakrát za sezení a horní rám jen tehdy, když se změní číslo,
+které ukazuje.
+
+`main` se pak vyplatí rozdělit ještě na **okno filtru a okno výsledků**.
+Filtr zůstane stát i s fokusem a překresluje se jen tabulka pod ním, takže
+uživatel může rovnou psát dál. Takhle vypadá typický cyklus:
+
+```json
+{"op":"html","sel":"#goods_results","content":"…tabulka…"}
+```
+
+A to je celé. Žádný stav na klientovi, žádný model k synchronizaci —
+stavový model drží server a klient jen vykresluje, co dostane.
+
+## Skiny — ale jen v příkladu
+
+**Tohle je volba dema, ne doporučení pro produkci.** Dvě sady fragmentů
+tu jsou proto, aby bylo vidět, že se markup dá vyměnit, aniž by se hnulo
+cokoli jiného. Skutečný projekt má zpravidla **jednu šablonu** a těžiště
+úplně jinde: v mnoha jednoduchých endpointech a v tahu na branku.
+Přepínání skinů si přidá ten, kdo ho opravdu potřebuje.
 
 Aplikace posílá skin v každém požadavku:
 
@@ -38,8 +70,14 @@ třetí skin bez jediného zásahu do logiky.
 
 ## Šablona endpointu
 
-Tohle je ta konvence, o které mluví [01 — Motivace](01-motivace.md).
-Dá se předat člověku i jazykovému modelu se stejným výsledkem.
+**Tohle je nejdůležitější stránka celé dokumentace.** Framework
+negarantuje bezpečnost, jen hygienu vstupu — viz
+[02 — Principy](02-principy.md), zásada 10. Všechno ostatní stojí na
+tom, že každý endpoint vypadá takhle a v tomhle pořadí. Je to
+**podmínka, ne styl**.
+
+Dá se přitom předat člověku i jazykovému modelu se stejným výsledkem,
+a právě to je důvod, proč tu žádná vrstva navíc není.
 
 ```php
 case 'save_form_test':
@@ -66,9 +104,46 @@ case 'save_form_test':
     break;
 ```
 
-Pořadí není libovolné. Sémantické kontroly jdou **před** session schválně —
-jsou levné a nestojí lookup. Práce jde **až po** všech kontrolách, aby
-odpověď zůstala atomická.
+Pořadí není libovolné:
+
+* **Vstupy první.** Na `$_REQUEST` se nesahá nikde jinde. Jakmile se
+  jednou zvykne sahat přímo, přestane být pravda, že vstupy jsou
+  ošetřené, a nikdo to nepozná.
+* **Sémantika před session** schválně. Je levná, nestojí lookup do
+  databáze, a nepřihlášený útočník se tak nedostane k ničemu drahému.
+* **Session před oprávněním**, protože bez identity není co ověřovat.
+* **Práce až po všech kontrolách**, aby odpověď zůstala atomická.
+  Dokud skript nedoběhne, neodešel ani bajt, a jde ještě vrátit poctivý
+  HTTP status.
+
+### Jediná přípustná výjimka
+
+Kontrola session smí být **společná pro celý modul API** — jednou
+nahoře v dispatcheru místo v každém `case`. Má to smysl u modulu, kde
+je nepřihlášený přístup vyloučený ze zásady, třeba `admin/*`.
+
+Nic jiného se vynechávat nesmí. Zvlášť ne oprávnění: to je vždycky věc
+konkrétního endpointu, protože „přihlášen" a „smí tohle" jsou dvě různé
+otázky.
+
+### Čím to nekončí
+
+Šablona hlídá **cestu dovnitř**. Ven vede cest víc a každá má vlastní
+pravidlo:
+
+* do SQL nepatří hodnota bez vazby parametru nebo escapování, **a to
+  včetně uvozovek kolem stringu** — `WHERE a='$x'` s ošetřeným `$x` je
+  v pořádku, `WHERE a=$x` u stringu není;
+* do HTML nepatří nic bez `esc()`;
+* do cesty k souboru nepatří nic, co neprošlo `is_word()`;
+* do shellu nepatří nic bez `escapeshellarg()`.
+
+Framework neudělá ani jedno z toho za vás — nemůže, protože neví, kam
+ta hodnota míří. Celé je to rozvedené v
+[09 — Bezpečnost](09-bezpecnost.md).
+
+**Na tomhle stojí a padá bezpečnost celé aplikace.** Endpoint, který
+šablonu poruší, je díra bez ohledu na to, jak dobře je napsaný zbytek.
 
 ## Stránka jako soubor
 

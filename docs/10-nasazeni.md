@@ -56,6 +56,30 @@ dotkne jen tohohle adresáře a ne ostatních webů na stroji.
 **Jednodušší cesta: nepoužívat stream a jít pushem.** Pak Apache v cestě
 streamu vůbec není a problém zmizí.
 
+### nginx jako webserver aplikace
+
+Kdo místo Apache servíruje aplikaci nginxem, má stejný problém
+s bufferem a řeší ho takhle:
+
+```nginx
+location ~ \.php$ {
+    include snippets/fastcgi-php.conf;
+    fastcgi_pass unix:/var/run/php/php8.4-fpm.sock;
+
+    # jen pro streamované odpovědi; bez toho drží nginx výstup stejně
+    # jako Apache a dávky dorazí naráz až na konci
+    fastcgi_buffering off;
+    gzip              off;   # gzip si vyrobí vlastní buffer
+}
+```
+
+Direktivy pro zákaz `.inc` a neveřejných adresářů jsou v
+[09 — Bezpečnost](09-bezpecnost.md); patří do každé instalace, ne jen
+do té streamované.
+
+I tady platí, že **pushem je to jednodušší** — pak se buffering řešit
+nemusí vůbec.
+
 ## nginx + nchan
 
 ```

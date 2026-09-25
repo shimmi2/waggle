@@ -29,6 +29,33 @@ parametr.
 Čísla není potřeba dál kontrolovat. Po `intval()` neexistuje řetězec,
 který by nesl útok.
 
+### Pole z formuláře
+
+Tabulkový formulář posílá `fd[i][sloupec]` a checkboxy `vyber[]`.
+Skalární gettery taková pole schválně nepustí, takže je na ně
+`req_rows()` — a platí pro něj **tytéž tři garance**:
+
+```php
+foreach (req_rows('fd', 500) as $i => $row) {
+    $id  = intval($row['id'] ?? 0);
+    $txt = db_esc($row['name'] ?? '');
+}
+```
+
+Propustí jen dvojúrovňové pole skalárů; hlubší zanoření, objekty ani
+skaláry na první úrovni neprojdou. Stropy jsou dva, na počet řádků
+i na délku hodnoty — bez nich by jediný požadavek uměl vyrobit
+statisíce prvků, což je DoS na jeden parametr.
+
+Dvě věci, na kterých se tu chybuje:
+
+* **Klíče jsou taky vstup od klienta.** `$row['name']` je ošetřená
+  hodnota, ale `$i` a jména sloupců přišly od útočníka stejně jako
+  cokoli jiného. Do SQL ani do HTML nepatří bez ošetření — framework je
+  nepřepisuje, protože jen volající ví, co znamenají.
+* **Chybějící klíč není prázdná hodnota.** Řádek nemusí obsahovat
+  všechny sloupce, takže `?? ''` tam patří vždycky.
+
 ## Výstup: escapuj u cíle
 
 | cíl | čím |
@@ -118,8 +145,30 @@ RedirectMatch 404 (?i)/\.(git|svn|hg|bzr)(/|$)
 curl -o /dev/null -w '%{http_code}\n' https://host/lib/inc/dbconfig.inc
 ```
 
+Totéž pro nginx, kde se to píše do server bloku. Pozor na pořadí:
+`location` s regulárním výrazem má přednost před prefixovým, takže
+tenhle blok musí stát **před** tím, který posílá `.php` na PHP-FPM —
+jinak se `.inc` nejdřív chytí jako PHP a direktiva se neuplatní:
+
+```nginx
+# .inc se nikdy neservíruje ani nespouští
+location ~ \.inc$                                   { return 403; }
+
+# fragmenty, workery a běhová data čte jen index.php
+location ~ ^/(api/pages|api/bin|api/data)/          { return 403; }
+
+# zálohy, výpisy a tečkové soubory
+location ~ \.(bak|old|orig|save|swp|sql|dump|log|tar|tgz|zip)$|~$ { return 403; }
+location ~ /\.                                      { return 403; }
+
+location ~ \.php$ {
+    include snippets/fastcgi-php.conf;
+    fastcgi_pass unix:/var/run/php/php8.4-fpm.sock;
+}
+```
+
 Kde direktivu nasadit nejde (cizí hosting, `AllowOverride None`), je jediná
-funkční náhrada dát souborům příponu `.php` — Apache je spustí místo
+funkční náhrada dát souborům příponu `.php` — server je spustí místo
 odeslání — a doplnit jim strážce, který přímé volání odmítne 404.
 
 ### Adresáře

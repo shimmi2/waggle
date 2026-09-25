@@ -1,22 +1,137 @@
 # Waggle
 
-> Let's say adieu to the overlayered, fat and slow balls of dirt called high-level frameworks — and open a new era: agentic coding, top speed, safe and simple apps.
+> Let's say adieu to the overlayered, fat and slow balls of dirt called
+> high-level frameworks — and open a new era: agentic coding, top speed,
+> safe and simple apps. Apps where data flows in parallel, asynchronous
+> motion, like bees in a waggle dance.
 
-Včela, která najde pastvu, se vrátí do úlu a tančí. Ten tanec **je** ten
-příkaz — směr, vzdálenost, kvalita. Ostatní včely se neptají na schéma
-a nedělají dotaz do databáze. Dostanou instrukci a jednají.
+Vydání **1.2.2**, protokol **v1**.
+
+## Proč vznikl
+
+* **Nemám rád, co z projektů dělají frameworky typu Symfony.** Naházíte
+  do projektu všechny bundly, které byste mohli potřebovat, a pak po
+  každém kliknutí několik vteřin čekáte. Ze zamrzlého prohlížeče
+  vypadne pět položek, ta hledaná mezi nimi není, kliknete na další
+  stránku a čekáte zas. Upravíte filtr a čekáte znovu.
+
+* **Pamatuju dobu, kdy se do prohlížeče natáhlo tisíc položek za půl
+  vteřiny.** Stačilo k tomu SQL, Redis a pár dalších zdrojů dat. Tu
+  dobu chci zpátky.
+
+* **Nemám rád ani mnoho vrstev v kódu.** Za o třicet procent lepší
+  přehlednost se platí třeba Twigem — mezivrstvou, kterou stejně
+  generujete z vrstev nad ní. Je hloupé nechat interpretovaný jazyk,
+  PHP nebo Python, generovat tutéž stránku dvakrát: dnes, zítra,
+  tisíckrát denně, stejně tak za rok. Pak se přidá ORM, navržené pro
+  situaci, kdy jsou všechna data na jednom místě. U většího projektu
+  pak zjistíte, že část operací je neoptimální a musíte ORM obcházet —
+  čímž dokonale obejdete i jeho smysl. A když se rozhodnete vyměnit
+  MySQL za PostgreSQL, stejně to nepůjde a vzdáte to.
+
+* **Agentické kódování to staví do úplně jiného světla.** Pravidla pro
+  týmovou práci patří do projektových a firemních skillů; technologie
+  na jejich vynucení není potřeba. Kdo na vrstvách trvá, narazí na
+  limit tokenů desetkrát dřív, zatímco na jedné úrovni se dá pracovat
+  stylem **jeden prompt = jedna nová vlastnost**.
+
+Proto předkládám Waggle: jednoduchý asynchronní framework prakticky bez
+závislostí, zaměřený na dvě věci.
+
+* Rychlé a bezpečné agentické kódování stylem jeden prompt = jedna nová
+  vlastnost.
+* Snadný převod starých systémů, které při každém kliknutí reloadovaly
+  celou stránku — a to zase agentem.
+
+## Proč Waggle
+
+Waggle je systém asynchronních včeliček. Nezávisle na sobě létají z úlu
+na pastvu, vracejí se a tančí. Ten tanec **je** ten příkaz — směr,
+vzdálenost, cíl — a dohromady z nich vzniká celek. Včely se neptají
+jedna druhé a nečekají na sebe. Dostanou instrukci a jednají.
+
+Vstup do úlu je přitom pevně bráněn.
 
 Přesně tohle dělá Waggle mezi serverem a prohlížečem.
 
-Tenký klient nad PHP. Server posílá **příkazy** a hotové kusy HTML, klient je
-aplikuje na DOM. Žádný build step, žádné závislosti, žádný SPA router,
-žádný Vue ani React.
+## Jak to funguje
 
-Vznikl kvůli migraci dvacet let starých PHP projektů, které při každém kliknutí
-reloadovaly celou stránku. Ale není to berlička pro staré kódy — je to
-kompletní základ i pro nové aplikace.
+Tenký klient má HTML a CSS šablony, bootstrap v JavaScriptu a svůj kód.
+Povinné to není, ale většině firemních aplikací vyhoví základní
+rozdělení na **levé menu, horní rám a hlavní okno**.
 
-Vydání **1.2.1**, protokol **v1**.
+Klient posílá požadavky. Server posílá **příkazy** a s nimi hotové kusy
+co nejabstraktnějšího HTML. (Vím, že se leckomu při téhle větě otevírá
+kudla v kapse. Vydržte — důležitý je účel, bezpečnost a funkce, ne
+ideály.) Klient ty příkazy aplikuje na DOM.
+
+Žádný build step, žádné závislosti, žádný SPA router, žádný Vue ani
+React.
+
+Referenční implementaci serveru přikládám v PHP, ale nic nebrání
+přepsat ji do Pythonu nebo čehokoli dalšího — definicí je
+[protokol](docs/03-protokol.md), ne ten soubor.
+
+## ORM a další vrstvy nahrazují skilly
+
+Stojí to na několika pravidlech.
+
+**Frontend** je o volbě šablony: AdminLTE, Tabler, CoreUI. V příkladech
+je i varianta na čistém HTML a CSS.
+
+**Backend for frontend** je o stavovém modelu aplikace, session,
+oprávněních první vrstvy a o kódu. Platí pro něj tohle:
+
+* Je to jeden nebo několik API modulů na serveru či v cloudu, vhodně
+  rozdělených — `auth/…`, `user/…`.
+* Každý modul je „jeden velký switch" s endpointy: `auth/login`,
+  `auth/change_password`, `my_agenda/dashboard`.
+* **Každý endpoint musí řešit bezpečnost v tomhle pořadí.** Není to
+  doporučení, je to podmínka — viz [06 — Aplikace](docs/06-aplikace.md)
+  a [09 — Bezpečnost](docs/09-bezpecnost.md):
+
+    1. **Import vstupů.** První řádky obalí všechno, co přišlo zvenčí:
+       `req()`, `req_int()`, `req_float()`.
+    2. **Sémantika.** Levné kontroly bez sahání do databáze:
+       `if (!$id) throw_http_error(400, 'Chybí id');`
+    3. **Session**, tedy autentizace — pokud ji modul neřeší globálně:
+       `if ($user === null) throw_http_error(401, 'Nejste přihlášen');`
+       Tohle pořadí mimochodem lépe chrání proti primitivnímu DDoS:
+       útočník se nedostane k ničemu drahému.
+    4. **Oprávnění k endpointu:**
+       `if (!acl_check($user, 'delete_users')) throw_http_error(403, 'Nemáte oprávnění');`
+    5. **Vlastní práce.** Přečte data, udělá, co má. V třívrstvém modelu
+       volá backendové API, které má vlastní kontrolu oprávnění.
+       Ve dvouvrstvém vám stačí SQL, Redis, InfluxDB a další místa, kde
+       data leží. Na vznosné ideály máte agenty, ne ORM.
+
+* Ve **třívrstvém** modelu pracuje třetí vrstva stejně. Liší se jen
+  tím, že vrací atomická čistá data, jak se na API sluší, a může být
+  společná i pro jiné klienty — třeba aplikace pro Android a iOS.
+  Nemívá stavový model a neřeší HTML fragmenty. Klidně to může být
+  existující API. Ale kdo Waggle napojí na líné endpointy od Symfony,
+  jde z deště pod okap.
+* Často dostávám dotaz na **jemné škálování oprávnění v odpovědi**.
+  Není to problém:
+
+  ```php
+  if (!acl_check($user, 'money_boss')) unset($result['real_expenses']);
+
+  foreach ($polozky as $p) {
+      if (!$p['confirmed'] && !acl_check($user, 'see_unconfirmed')) continue;
+      $result[] = $p;
+  }
+  ```
+
+* Kde backendové API vrací datový JSON, tam backend for frontend vrací
+  **sadu příkazů Waggle**.
+* Sada příkazů je jedna nebo víc instrukcí typu „do hlavního okna dej
+  podokna `goods_filter` a `goods_results`". Vyvolá ji třeba kliknutí
+  na položku menu, která pošle do BFF `get_goods`; odpovědí je ta sada.
+* Na úrovni frameworku je podporovaná operace
+  [`busy`](docs/03-protokol.md), takže jde triviálně zobrazit
+  „analyzuji… 10 %" a pak poslat data. Překryv framework uklidí sám,
+  jakmile do téhož okna dorazí výsledek.
 
 ## Tři vrstvy
 
@@ -31,12 +146,10 @@ něco brát, koukni, do které patří — ušetří to spoustu zbytečných ot�
 
 **Knihovna jsou dva soubory.** V reálném projektu je to zlomek celku:
 `fw.inc` má 10 kB proti stovkám kB stránek, `fw.js` 20 kB proti
-megabajtům šablony. Nikdy se needituje v projektu — každá změna patří
-sem a rozveze se.
+megabajtům šablony. Nikdy se needituje v projektu — každá změna patří do nové verze Wagle.
 
 **Kostra se rozchází schválně.** Dispatcher demo API má 8 kB, oba
-odvozené portály kolem 6 kB. To není rozjetí, které by se mělo srovnat;
-je to projekt, který si vzal, co potřeboval, a zbytek zahodil.
+odvozené převedením portálu, zkušebního projektu, kolem 6 kB. 
 
 **Dema jsou referenční text, ne startovací balík.** `app/` a `app2/` jsou
 tatáž aplikace jednou na holém HTML a jednou na AdminLTE — jsou tu, aby

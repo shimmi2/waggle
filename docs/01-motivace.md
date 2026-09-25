@@ -116,6 +116,35 @@ Databázi, šablonovací jazyk, autentizaci, routing na serveru, validaci,
 lokalizaci. To všechno je věc projektu. Framework dělá jedno:
 **doručí příkaz ze serveru do DOMu, čtyřmi transporty a jedním formátem.**
 
+Zní to jako díra. Není — je to **dělba práce**. Co dřív držela vrstva
+technologie, drží teď konvence a skilly. Konvence se dá přečíst za deset
+minut, nedrží se v paměti procesu, nepřidává round-trip a nezastará
+s příští major verzí. A hlavně: dá se předat agentovi stejně dobře jako
+člověku, což se o vrstvě říct nedá. O tom je celé
+[**jeden prompt = jedna nová vlastnost**](../README.md).
+
+## Co k tomu teprve přibude
+
+Tohle je **plán, ne stav** — ať se podle toho nikdo nezařizuje dřív, než
+to bude v repozitáři.
+
+Framework dnes řeší doručení příkazu a hygienu vstupu. Ostatní vrstvy
+aplikace si musí každý napsat sám, byť podle konvence. Chystá se k němu
+proto sada **skillů, šablon a příkladů pro okamžité nasazení**, aby se
+kompletní aplikace dala vybuildit jedním promptem — i s databází,
+správou session a oprávněními.
+
+Ve dvou variantách, podle toho, jak je projekt postavený:
+
+* **Dvouvrstvý model** (typicky portál): frontend a BFF, který sahá
+  rovnou na data. Přibalí se kompletní backend.
+* **Třívrstvý model**, o kterém mluvím jako o ideálu: frontend, BFF
+  a pod ním čisté datové API, sdílené i s jinými klienty — mobilními
+  aplikacemi a podobně. Přibalí se BFF i backend.
+
+Hranice knihovny se tím **nemění**. Skilly, šablony a příklady jsou
+příklady a nástroje, ne závislosti — viz níž.
+
 ## Na čem stojí a na čem nesmí stát
 
 Tohle je hranice knihovny a drží se **tvrdě**. Je snadné ji rozmělnit

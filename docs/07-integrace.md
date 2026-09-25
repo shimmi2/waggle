@@ -7,7 +7,13 @@ Platí pro AdminLTE, Bootstrap Admin, Metronic i vlastní layout.
 ### 1. Shell je statický a nikdy se nepřekresluje
 
 V `index.html` zůstane navbar, sidebar, footer a mřížka. Po drátě jdou
-jen **vnitřky** pojmenovaných prvků:
+jen **vnitřky** pojmenovaných prvků.
+
+Jména `left_menu`, `top_frame` a `main` jsou **zvyklost, ne požadavek**
+— `sel` bere libovolný selektor a oken může být kolik chceš. Proč se to
+takhle dělí a co z toho plyne pro řízení aplikace, je v
+[06 — Aplikace](06-aplikace.md); tady je podstatné jen to, že ta jména
+musí sedět na id v šabloně.
 
 ```html
 <ul class="navbar-nav ms-auto" id="top_frame"></ul>

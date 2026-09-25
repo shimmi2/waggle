@@ -12,7 +12,7 @@
 /* FW_RELEASE je vydání knihovny, FW_V je verze protokolu na drátě.
    Mění se nezávisle: protokol zůstává 1, dokud se nezmění formát dávky.
    Bez tohohle čísla se u běžícího projektu nedalo zjistit, co v něm je. */
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.2.1');
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.2.2');
 defined('FW_V')          || define('FW_V', 1);
 defined('FW_MAXLEN')     || define('FW_MAXLEN', 65536);   // strop délky jednoho pole
 defined('FW_DEBUG')      || define('FW_DEBUG', false);    // true = chyby prozradí cesty
@@ -45,6 +45,38 @@ function is_word(string $s): bool {
 }
 
 /* Hlavička požadavku se stejnou hygienou jako $_REQUEST. */
+/* Tabulkový formulář posílá fd[i][sloupec]. Skalární getter takové pole
+   schválně nepustí, takže je na ně tenhle — a platí pro něj TYTÉŽ tři
+   garance: string omezené délky bez NUL, nic víc.
+
+   Propustí jen dvojúrovňové pole skalárů. Hlubší zanoření, objekty ani
+   skaláry na první úrovni neprojdou; nepadá se na nich, jen se
+   přeskočí. Stropy jsou dva, na počet řádků i na délku hodnoty —
+   bez nich by jediný požadavek mohl vyrobit statisíce prvků.
+
+   Klíče řádků i sloupců zůstávají tak, jak přišly, a jsou to vstup
+   od klienta jako každý jiný: do SQL ani do HTML nepatří bez ošetření.
+   Framework je nepřepisuje, protože jen volající ví, co znamenají. */
+function req_rows(string $name, int $maxRows = 500, int $maxLen = 4096): array {
+    $v = $_REQUEST[$name] ?? null;
+    if (!is_array($v)) return [];
+    $out = [];
+    foreach ($v as $i => $row) {
+        if (count($out) >= $maxRows) break;
+        if (!is_array($row)) continue;
+        $r = [];
+        foreach ($row as $k => $cv) {
+            if (!is_scalar($cv)) continue;
+            $cv = (string)$cv;
+            if (isset($cv[$maxLen]))        $cv = substr($cv, 0, $maxLen);
+            if (strpos($cv, "\0") !== false) $cv = str_replace("\0", '', $cv);
+            $r[(string)$k] = $cv;
+        }
+        $out[(string)$i] = $r;
+    }
+    return $out;
+}
+
 function req_header(string $name, int $max = 1024): string {
     $v = $_SERVER['HTTP_' . strtr(strtoupper($name), '-', '_')] ?? '';
     if (!is_string($v))              return '';

@@ -51,6 +51,32 @@ shody; když selektor nenajde nic, je to varování v konzoli, ne chyba.
 
 ## Reference příkazů
 
+Celá sada je **šestnáct příkazů** a vejde se na jednu obrazovku. Tohle
+je ta tabulka, kterou si stačí vytisknout; podrobnosti jsou pod ní.
+
+| op | pole | co dělá |
+|---|---|---|
+| `html` | `sel`, `content` | nahradí obsah prvku |
+| `append` | `sel`, `content` | přidá na konec |
+| `remove` | `sel` | odstraní prvek |
+| `url` | `sel`, `url` | klient stáhne fragment a vloží ho |
+| `attr` | `sel`, `name`, `value` | nastaví atribut; `null` ho smaže |
+| `value` | `sel`, `value` | hodnota formulářového prvku |
+| `class` | `sel`, `add[]`, `remove[]`, `toggle[]` | třídy prvku |
+| `busy` | `sel`, `text`, `pct`, `state` | překryv „pracuji" nad prvkem |
+| `notify` | `kind`, `message` | hlášení uživateli |
+| `error` | `code`, `message` | totéž s `kind: error` a HTTP kódem |
+| `debug` | `message`, `data` | do konzole, jen když `cfg.debug` |
+| `session` | `value` | nastaví token; `null` = odhlášení |
+| `history` | `url` | `pushState` |
+| `call` | `fn`, `args[]` | zavolá globální funkci |
+| `subscribe` | `name`, `url`, `token` | otevře push kanál |
+| `unsubscribe` | `name` | zavře kanál; bez `name` všechny |
+
+Co v tabulce **není a nikdy nebude**: příkaz, který se odkazuje na
+„prvek, který akci vyvolal", příkaz na vyhodnocení kódu a příkaz, který
+by uměl číst DOM zpátky. Důvody jsou v [02 — Principy](02-principy.md).
+
 ### Obsah DOMu
 
 | op | pole | co dělá |
@@ -72,35 +98,6 @@ nemůže, takže by se neušetřilo nic a zaplatil by se druhý round-trip.
 | `attr` | `sel`, `name`, `value` | nastaví atribut; `value: null` ho smaže |
 | `value` | `sel`, `value` | hodnota formulářového prvku |
 | `class` | `sel`, `add[]`, `remove[]`, `toggle[]` | třídy |
-
-### Stav a řízení
-
-| op | pole | co dělá |
-|---|---|---|
-| `session` | `value` | nastaví token; `null` = odhlášení |
-| `history` | `url` | `pushState`; po submitu formuláře se ignoruje |
-| `call` | `fn`, `args[]` | zavolá globální funkci |
-| `subscribe` | `name`, `url`, `token` | otevře push kanál |
-| `unsubscribe` | `name` | zavře kanál; bez `name` všechny |
-
-### Hlášení
-
-| op | pole | co dělá |
-|---|---|---|
-| `notify` | `kind`, `message` | hlášení uživateli; `kind` = `success`, `info`, `warning`, `error` |
-| `error` | `code`, `message` | totéž s `kind: error` a HTTP kódem |
-| `debug` | `message`, `data` | do konzole, jen když `cfg.debug` |
-
-Hlášení o výsledku operace **nepatří do stránky**. Uložení se ohlásí
-`notify` a do `main` se rovnou vykreslí to, co má uživatel vidět dál —
-typicky seznam, ze kterého přišel. Odpadne tím mezistránka „uloženo",
-na kterou stejně nikdo nechce klikat:
-
-```json
-{"op":"notify","kind":"success","message":"Alias byl uložen."}
-{"op":"html","sel":"main","content":"…seznam…"}
-{"op":"history","url":"#?function=page_hosting_aliases"}
-```
 
 ### Zaneprázdněno
 
@@ -151,6 +148,35 @@ Pro pouhé „čekej, pracuje se" ale server vůbec nepotřebuješ — na to je
 atribut `data-busy`, viz [04 — Klient](04-klient.md). Operaci `busy` posílej
 tehdy, když máš co říct: procenta, fázi, počet. To je informace, kterou zná
 jen server.
+
+### Hlášení
+
+| op | pole | co dělá |
+|---|---|---|
+| `notify` | `kind`, `message` | hlášení uživateli; `kind` = `success`, `info`, `warning`, `error` |
+| `error` | `code`, `message` | totéž s `kind: error` a HTTP kódem |
+| `debug` | `message`, `data` | do konzole, jen když `cfg.debug` |
+
+Hlášení o výsledku operace **nepatří do stránky**. Uložení se ohlásí
+`notify` a do `main` se rovnou vykreslí to, co má uživatel vidět dál —
+typicky seznam, ze kterého přišel. Odpadne tím mezistránka „uloženo",
+na kterou stejně nikdo nechce klikat:
+
+```json
+{"op":"notify","kind":"success","message":"Alias byl uložen."}
+{"op":"html","sel":"main","content":"…seznam…"}
+{"op":"history","url":"#?function=page_hosting_aliases"}
+```
+
+### Stav a řízení
+
+| op | pole | co dělá |
+|---|---|---|
+| `session` | `value` | nastaví token; `null` = odhlášení |
+| `history` | `url` | `pushState`; po submitu formuláře se ignoruje |
+| `call` | `fn`, `args[]` | zavolá globální funkci |
+| `subscribe` | `name`, `url`, `token` | otevře push kanál |
+| `unsubscribe` | `name` | zavře kanál; bez `name` všechny |
 
 ### Vlastní operace
 
