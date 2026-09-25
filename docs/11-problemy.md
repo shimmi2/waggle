@@ -34,6 +34,30 @@ Druhá možnost, proč se neukáže nic: operace doběhla do 300 ms. To není
 chyba, to je záměr — pod tou hranicí se překryv nekreslí, protože
 záblesk působí pomaleji než ticho.
 
+## Po rozvozu knihovny vrací celé API 500
+
+```
+PHP Fatal error: Cannot redeclare function req_rows()
+(previously declared in lib/fw.inc) in lib/inc/app.inc on line 85
+```
+
+Nová verze knihovny přinesla funkci, kterou si projekt už dávno napsal
+sám. PHP na dvojí deklaraci spadne fatální chybou ještě před prvním
+řádkem endpointu, takže **nevrací 500 jedna stránka, ale všechno**.
+
+Stalo se to při vydání 1.2.2, kde do `fw.inc` přibyla `req_rows()` —
+obě odvozené aplikace ji přitom měly ve svém `app.inc`.
+
+**Oprava:** smazat projektovou kopii, knihovna tu funkci má taky.
+Nikdy ne obráceně a nikdy ne přes `function_exists()` — to by znamenalo,
+že se podle verze knihovny tiše volá jednou její implementace a jindy
+projektová.
+
+**Prevence:** `tools/fwdeploy.sh` to od 1.2.2 hlásí předem a rozvoz
+odmítne. Vyplatí se tedy před vydáním pustit `--check` proti všem
+cílům; samotný `php -l` tuhle třídu chyb nenajde, protože každý soubor
+je sám o sobě v pořádku.
+
 ## CORS: „Access-Control-Allow-Origin neodpovídá"
 
 **Projev:** prohlížeč zablokuje SSE spojení a v hlášce je **víc originů

@@ -109,6 +109,29 @@ fi
 V_SRC="$(vydani "$SRC/fw.inc")"
 [ "$V_SRC" != "bez verze" ] || { echo "ve zdroji $SRC/fw.inc není FW_RELEASE" >&2; exit 1; }
 
+# Nová verze knihovny může přinést funkci, kterou si projekt už dávno
+# napsal sám. PHP na dvojí deklaraci spadne fatální chybou a celé API
+# začne vracet 500 — a pozná se to až po nasazení. Proto se to hlídá
+# předem: vezmou se jména funkcí ze zdrojového fw.inc a hledají se
+# v projektu všude jinde než v souboru, který se přepisuje.
+kolize() {
+    local root="$1" cil="$2" f jmena hit nalez=""
+    [ "${cil##*.}" = "inc" ] || return 0
+    jmena="$(grep -oE '^function [a-z_]+\(' "$SRC/fw.inc" 2>/dev/null | sed 's/^function //; s/($//')"
+    [ -n "$jmena" ] || return 0
+    while IFS= read -r f; do
+        [ -n "$f" ] || continue
+        hit="$(grep -rlE "^function +$f *\(" "$root" --include='*.inc' --include='*.php' 2>/dev/null \
+               | grep -v "^$cil$" | head -1)"
+        [ -n "$hit" ] && nalez="$nalez\n        $f()  v  ${hit#$root/}"
+    done <<< "$jmena"
+    [ -z "$nalez" ] && return 0
+    echo "      !! KOLIZE JMEN — nasazení by shodilo celé API na dvojí deklaraci:"
+    printf "%b\n" "$nalez"
+    echo "         Odstraň projektovou kopii, knihovna tu funkci má taky."
+    return 1
+}
+
 najdi() {    # najdi $1=kořen projektu, $2=jméno souboru -> vypiš existující cíl
     local root="$1" f="$2" k
     for k in "lib/$f" "api/$f" "$f" "app/$f" "public/$f"; do
@@ -132,6 +155,7 @@ for root in "${CILE[@]}"; do
     for f in fw.inc fw.js; do
         cil="$(najdi "$root" "$f")" || { echo "      $f — v projektu není, přeskakuji"; continue; }
         rel="${cil#$root/}"
+        if ! kolize "$root" "$cil"; then CHYBY=1; continue; fi
         if cmp -s "$SRC/$f" "$cil"; then
             echo "      $rel — shodné ($(vydani "$cil"))"
             continue
