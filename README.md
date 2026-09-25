@@ -5,15 +5,16 @@
 > safe and simple apps. Apps where data flows in parallel, asynchronous
 > motion, like bees in a waggle dance.
 
-Vydání **1.2.2**, protokol **v1**.
+Vydání **1.3.0**, protokol **v1**.
 
 ## Proč vznikl
 
-* **Nemám rád, co z projektů dělají frameworky typu Symfony.** Naházíte
-  do projektu všechny bundly, které byste mohli potřebovat, a pak po
-  každém kliknutí několik vteřin čekáte. Ze zamrzlého prohlížeče
-  vypadne pět položek, ta hledaná mezi nimi není, kliknete na další
-  stránku a čekáte zas. Upravíte filtr a čekáte znovu.
+* **Nemám rád výsledky, které z projektů udělají frameworky typu
+  Symfony.** Naházíte do projektu všechny bundly, které byste mohli
+  potřebovat, a pak po každém kliknutí několik vteřin čekáte.
+  Ze zamrzlého prohlížeče vypadne pět položek, ta hledaná mezi nimi
+  není, kliknete na další stránku a čekáte zas. Upravíte filtr
+  a čekáte znovu.
 
 * **Pamatuju dobu, kdy se do prohlížeče natáhlo tisíc položek za půl
   vteřiny.** Stačilo k tomu SQL, Redis a pár dalších zdrojů dat. Tu
@@ -24,16 +25,25 @@ Vydání **1.2.2**, protokol **v1**.
   generujete z vrstev nad ní. Je hloupé nechat interpretovaný jazyk,
   PHP nebo Python, generovat tutéž stránku dvakrát: dnes, zítra,
   tisíckrát denně, stejně tak za rok. Pak se přidá ORM, navržené pro
-  situaci, kdy jsou všechna data na jednom místě. U většího projektu
-  pak zjistíte, že část operací je neoptimální a musíte ORM obcházet —
-  čímž dokonale obejdete i jeho smysl. A když se rozhodnete vyměnit
-  MySQL za PostgreSQL, stejně to nepůjde a vzdáte to.
+  situaci, kdy jsou všechna data z mnoha zdrojů na jednom místě. Jaký
+  to skvělý nápad. A i když pominu, kolikrát se ta data musí
+  interpretovaným jazykem překopírovat, za ten výkřik techniky stejně
+  zaplatíte horší optimalizací dotazů. U většího projektu navíc
+  zjistíte, že část operací je nepoužitelná a ORM stejně musíte
+  obcházet — čímž dokonale obejdete i jeho smysl. A když se rozhodnete
+  vyměnit MySQL za PostgreSQL, ukáže se, že to nejde, a vzdáte to.
+
+  Mají i výhody: větší bezpečnost a odolnost proti chybám v kódu —
+  nestane se tak snadno, že zapomenete `WHERE`. Proto i nadále patří
+  tam, kde se pracuje s penězi a přesnými transakcemi. Jenže
+  v průměrném systému je osmdesát procent agend nad jedinou tabulkou.
 
 * **Agentické kódování to staví do úplně jiného světla.** Pravidla pro
   týmovou práci patří do projektových a firemních skillů; technologie
   na jejich vynucení není potřeba. Kdo na vrstvách trvá, narazí na
   limit tokenů desetkrát dřív, zatímco na jedné úrovni se dá pracovat
-  stylem **jeden prompt = jedna nová vlastnost**.
+  stylem **jeden prompt = jedna nová vlastnost**. Kdo mi nevěří, ať si
+  tenhle soubor otevře za dva roky.
 
 Proto předkládám Waggle: jednoduchý asynchronní framework prakticky bez
 závislostí, zaměřený na dvě věci.
@@ -46,11 +56,11 @@ závislostí, zaměřený na dvě věci.
 ## Proč Waggle
 
 Waggle je systém asynchronních včeliček. Nezávisle na sobě létají z úlu
-na pastvu, vracejí se a tančí. Ten tanec **je** ten příkaz — směr,
-vzdálenost, cíl — a dohromady z nich vzniká celek. Včely se neptají
-jedna druhé a nečekají na sebe. Dostanou instrukci a jednají.
+na pastvu, vracejí se a tančí svůj waggle. Ten tanec **je** ten příkaz
+— směr, vzdálenost, cíl — a dohromady z nich vzniká celek. Včely se
+neptají jedna druhé a nečekají na sebe. Dostanou instrukci a jednají.
 
-Vstup do úlu je přitom pevně bráněn.
+Vstup do úlu je přitom pevně bráněn a žádná cizí včela neprojde.
 
 Přesně tohle dělá Waggle mezi serverem a prohlížečem.
 
@@ -69,8 +79,10 @@ ideály.) Klient ty příkazy aplikuje na DOM.
 React.
 
 Referenční implementaci serveru přikládám v PHP, ale nic nebrání
-přepsat ji do Pythonu nebo čehokoli dalšího — definicí je
-[protokol](docs/03-protokol.md), ne ten soubor.
+přepsat ji jedním promptem do Pythonu nebo čehokoli dalšího — definicí
+je [protokol](docs/03-protokol.md), ne ten soubor. A možné je to jen
+díky té jednoduchosti: minimu vrstev a nezávislosti na milionu
+nástrojů.
 
 ## ORM a další vrstvy nahrazují skilly
 
@@ -146,10 +158,11 @@ něco brát, koukni, do které patří — ušetří to spoustu zbytečných ot�
 
 **Knihovna jsou dva soubory.** V reálném projektu je to zlomek celku:
 `fw.inc` má 10 kB proti stovkám kB stránek, `fw.js` 20 kB proti
-megabajtům šablony. Nikdy se needituje v projektu — každá změna patří do nové verze Wagle.
+megabajtům šablony. Nikdy se needituje v projektu — každá změna patří
+do nové verze Waggle.
 
 **Kostra se rozchází schválně.** Dispatcher demo API má 8 kB, oba
-odvozené převedením portálu, zkušebního projektu, kolem 6 kB. 
+odvozené převedením portálu, zkušebního projektu, kolem 6 kB.
 
 **Dema jsou referenční text, ne startovací balík.** `app/` a `app2/` jsou
 tatáž aplikace jednou na holém HTML a jednou na AdminLTE — jsou tu, aby
@@ -262,7 +275,7 @@ každého projektu vidět, na jaké verzi frameworku běží.
 ```bash
 ./tools/fwdeploy.sh --check            # co kde běží
 ./tools/fwdeploy.sh <cesta>...         # rozvoz z tohohle stromu
-./tools/fwdeploy.sh --from v1.0.0 …    # rozvoz z vydání na GitHubu
+./tools/fwdeploy.sh --from v1.3.0 …    # rozvoz z vydání na GitHubu
 ```
 
 Bez `--from` se bere tenhle strom, takže to jede i bez sítě. S `--from`

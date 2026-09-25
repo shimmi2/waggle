@@ -12,7 +12,7 @@
 /* FW_RELEASE je vydání knihovny, FW_V je verze protokolu na drátě.
    Mění se nezávisle: protokol zůstává 1, dokud se nezmění formát dávky.
    Bez tohohle čísla se u běžícího projektu nedalo zjistit, co v něm je. */
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.2.2');
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.3.0');
 defined('FW_V')          || define('FW_V', 1);
 defined('FW_MAXLEN')     || define('FW_MAXLEN', 65536);   // strop délky jednoho pole
 defined('FW_DEBUG')      || define('FW_DEBUG', false);    // true = chyby prozradí cesty
