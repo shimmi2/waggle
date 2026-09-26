@@ -2,6 +2,12 @@
 /* =====================================================================
  *  fw.inc — serverová část Waggle
  *  https://github.com/shimmi2/waggle
+ *
+ *  Copyright 2026 Tomáš Šimek
+ *  SPDX-License-Identifier: Apache-2.0
+ *  Plné znění licence: soubor LICENSE, nebo
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
  *  Protokol: NDJSON, jedna dávka {"v":1,"cmds":[...]} na řádek.
  *  Framework NEŘEŠÍ databázi ani escapování pro cílový kontext.
  *  Garantuje pouze hygienu vstupu: skalární string omezené délky bez NUL.
@@ -12,7 +18,7 @@
 /* FW_RELEASE je vydání knihovny, FW_V je verze protokolu na drátě.
    Mění se nezávisle: protokol zůstává 1, dokud se nezmění formát dávky.
    Bez tohohle čísla se u běžícího projektu nedalo zjistit, co v něm je. */
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.3.0');
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.3.1');
 defined('FW_V')          || define('FW_V', 1);
 defined('FW_MAXLEN')     || define('FW_MAXLEN', 65536);   // strop délky jednoho pole
 defined('FW_DEBUG')      || define('FW_DEBUG', false);    // true = chyby prozradí cesty

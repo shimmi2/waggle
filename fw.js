@@ -2,6 +2,11 @@
  *  fw.js — klientská část Waggle
  *  https://github.com/shimmi2/waggle
  *
+ *  Copyright 2026 Tomáš Šimek
+ *  SPDX-License-Identifier: Apache-2.0
+ *  Plné znění licence: soubor LICENSE, nebo
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
  *  Tři vrstvy, záměrně oddělené:
  *    transport  (fetch / v budoucnu WebSocket / lokální)  ->  dávky
  *    dispatch   (pořadí, guardy)                          ->  příkazy
@@ -15,7 +20,7 @@
 
 var RE_WORD  = /^[A-Za-z0-9_-]+$/;
 var FW_V     = 1;          // verze protokolu na drátě
-var RELEASE  = '1.3.0';    // vydání knihovny, mění se nezávisle na protokolu
+var RELEASE  = '1.3.1';    // vydání knihovny, mění se nezávisle na protokolu
 
 var Fw = {
     release: RELEASE,

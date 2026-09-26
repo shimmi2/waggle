@@ -1,0 +1,18 @@
+Waggle
+Copyright 2026 Tomáš Šimek
+
+Licencováno podle Apache License, Version 2.0 — viz soubor LICENSE.
+
+Knihovnou jsou soubory fw.inc a fw.js. Zbytek repozitáře jsou příklady,
+nástroje a dokumentace.
+
+--------------------------------------------------------------------------
+Kód třetích stran
+
+Příklad app2/ přibaluje pro pohodlí knihovny třetích stran. Nejsou
+součástí Waggle a platí pro ně jejich vlastní licence, které zůstávají
+v jejich adresářích:
+
+  AdminLTE          app2/vendor/adminlte/LICENSE          MIT
+  Bootstrap         app2/vendor/bootstrap/LICENSE         MIT
+  Bootstrap Icons   app2/vendor/bootstrap-icons/LICENSE   MIT

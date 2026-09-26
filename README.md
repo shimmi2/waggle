@@ -5,7 +5,7 @@
 > safe and simple apps. Apps where data flows in parallel, asynchronous
 > motion, like bees in a waggle dance.
 
-Vydání **1.3.0**, protokol **v1**.
+Vydání **1.3.1**, protokol **v1**.
 
 ## Proč vznikl
 
@@ -178,6 +178,8 @@ docs/       dokumentace, 11 kapitol
 doc/        generátor prohlížitelné dokumentace
 tools/      rozvoz knihovny do projektů + odesílač do prohlížeče
 .claude/    skilly pro práci s Waggle
+LICENSE     Apache License 2.0, plné znění
+NOTICE      copyright a licence přibaleného cizího kódu
 nginx-nchan.conf.example
 ```
 
@@ -275,7 +277,7 @@ každého projektu vidět, na jaké verzi frameworku běží.
 ```bash
 ./tools/fwdeploy.sh --check            # co kde běží
 ./tools/fwdeploy.sh <cesta>...         # rozvoz z tohohle stromu
-./tools/fwdeploy.sh --from v1.3.0 …    # rozvoz z vydání na GitHubu
+./tools/fwdeploy.sh --from v1.3.1 …    # rozvoz z vydání na GitHubu
 ```
 
 Bez `--from` se bere tenhle strom, takže to jede i bez sítě. S `--from`
@@ -291,3 +293,23 @@ podtitul posílá k šípku.
 Seznam projektů může být v `tools/targets.local` (mimo git, je to místní
 věc). Skript nikdy nezakládá soubor, který v cíli ještě není — jinak by
 překlep v cestě vyrobil nový soubor místo hlášky.
+
+## Licence
+
+**Apache License 2.0** — plné znění v [`LICENSE`](LICENSE), autorství
+a přibalený cizí kód v [`NOTICE`](NOTICE).
+
+Znamená to, že Waggle smíš použít k čemukoli včetně komerčního nasazení,
+měnit ho a šířit dál. Podmínky jsou tři: nech copyright a `NOTICE`,
+**označ, co jsi změnil**, a neber si práva k názvu — ta licence
+neposkytuje.
+
+To druhé není formalita. Hodnota Waggle je v tom, že je to konvence,
+kterou lze předat člověku i modelu se stejným výsledkem. Fork, který
+potichu změní protokol a nechá si jméno, tuhle hodnotu zničí — a přesně
+proto je tu Apache a ne MIT.
+
+Knihovnou jsou **`fw.inc` a `fw.js`**; oba nesou licenční hlavičku,
+protože se kopírují do cizích projektů a musí být poznat, odkud jsou.
+Příklad `app2/` přibaluje AdminLTE, Bootstrap a Bootstrap Icons — všechno
+MIT, každý se svou licencí ve svém adresáři. Součástí Waggle nejsou.
