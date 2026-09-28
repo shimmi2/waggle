@@ -1,4 +1,4 @@
-# 09 — Bezpečnost
+# 10 — Bezpečnost
 
 ## Základní pravidlo
 

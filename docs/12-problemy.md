@@ -1,4 +1,4 @@
-# 11 — Problémy a pasti
+# 12 — Problémy a pasti
 
 Všechno v téhle kapitole jsou věci, na které jsme při stavbě skutečně
 narazili. Každá stála čas, který tu nemusíš strávit znovu.
@@ -13,7 +13,7 @@ přesně po 0,1 s. Drží to Apache `mod_proxy_fcgi`.
 **Co nepomůže:** výplň na začátku streamu. Zkoušeno až do 64 kB.
 
 **Co pomůže:** `flushpackets=on` u proxy workeru (viz
-[10 — Nasazení](10-nasazeni.md)), nebo místo streamu použít push.
+[11 — Nasazení](11-nasazeni.md)), nebo místo streamu použít push.
 
 **Mimochodem:** `flush_answer()` protlačuje **všechny** úrovně output
 bufferu. Pouhé `ob_flush()` by dávku jen přesypalo do implicitního 4 kB
@@ -121,7 +121,7 @@ trhaná a reakce nejsou okamžité.
 Progress bar mění jen text v jednom `<span>`.
 
 **Řešení:** reinicializovat jen tehdy, když v doručeném kusu skutečně je
-něco, co šablona obsluhuje — viz [07 — Integrace](07-integrace.md).
+něco, co šablona obsluhuje — viz [08 — Integrace](08-integrace.md).
 
 ## Fragment obsahuje `<script>`, který se neprovede
 

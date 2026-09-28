@@ -1,4 +1,4 @@
-# 00 — Slovníček
+# 03 — Slovníček
 
 Jedno jméno pro jednu věc. Tahle kapitola je krátká schválně: pojmů, které
 je potřeba znát, je pět.
@@ -41,7 +41,7 @@ API přes HTTP.
 | **příklad** | `examples/*`. Referenční text, ne závislost. |
 | **fragment** | kus HTML, který BFF složí a pošle jako obsah příkazu. Nikdy ho nestahuje prohlížeč. |
 | **okno** | pojmenovaná oblast stránky, na kterou míří příkazy — `left_menu`, `top_frame`, `main`, `overlay`. Úmluva, ne pravidlo. |
-| **příkaz** | jedna položka odpovědi: `op` plus jeho parametry. Úplný seznam v [03 — Protokol](03-protokol.md). |
+| **příkaz** | jedna položka odpovědi: `op` plus jeho parametry. Úplný seznam v [04 — Protokol](04-protokol.md). |
 
 ## Jména v kódu
 

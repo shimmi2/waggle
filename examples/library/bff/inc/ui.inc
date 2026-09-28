@@ -3,7 +3,7 @@
  *  ui.inc — pomůcky pro skládání fragmentů
  *
  *  Tady se HTML vyrábí, takže tady se taky escapuje. Platí pravidlo
- *  z kapitoly 09: na vstupu validuj a typuj, na VÝSTUPU escapuj podle
+ *  z kapitoly 10: na vstupu validuj a typuj, na VÝSTUPU escapuj podle
  *  cíle. Do HTML nejde nic bez esc().
  * ===================================================================== */
 

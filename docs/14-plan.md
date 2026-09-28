@@ -1,4 +1,4 @@
-# 13 — Co je v plánu
+# 14 — Co je v plánu
 
 ## Framework zůstane jednoduchý
 
@@ -30,7 +30,7 @@ projekt postavený:
 * **Dvouvrstvý model**, kam obvykle dospěje převod dvacet let starého
   monolitu: frontend a BFF, které sahá rovnou na data. Samostatná datová
   vrstva by u něj byla práce navíc bez užitku.
-* **Třívrstvý model**, který je v [12 — Nový projekt](12-novy-projekt.md)
+* **Třívrstvý model**, který je v [13 — Nový projekt](13-novy-projekt.md)
   popsaný jako výchozí: frontend, BFF a pod ním čisté datové API, sdílené
   i s jinými klienty — mobilními aplikacemi a podobně.
 

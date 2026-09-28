@@ -15,7 +15,7 @@
  *  koukat na obrazovku, která už mu nepatří. Přepíšeme ji tedy tak, aby
  *  aplikace spadla zpátky na přihlášení.
  *
- *  Tohle je ten registr operací z kapitoly 03 — žádný zásah do
+ *  Tohle je ten registr operací z kapitoly 04 — žádný zásah do
  *  frameworku, jen jiné chování jedné operace.
  * ------------------------------------------------------------------- */
 Fw.register('error', function (c) {

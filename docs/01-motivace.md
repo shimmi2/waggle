@@ -25,7 +25,7 @@ funkcí, pevná sada příkazů. Pak je generování rychlé vyplňování znám
 šablony a výsledek se dá zkontrolovat pohledem.
 
 Proto je tahle dokumentace zároveň **zadáním pro generátor**.
-[06 — Aplikace](06-aplikace.md) obsahuje šablonu endpointu, kterou lze
+[07 — Aplikace](07-aplikace.md) obsahuje šablonu endpointu, kterou lze
 předat člověku i modelu se stejným výsledkem. Skilly v `.claude/skills/`
 jsou z téhož důvodu součástí repozitáře, ne přílohou.
 
@@ -57,7 +57,7 @@ přepsáním:
 
 Endpointy zůstávají v PHP, generují HTML jako dosud, jen ho posílají jako
 příkaz místo celé stránky. Postup po krocích je v
-[08 — Migrace](08-migrace.md).
+[09 — Migrace](09-migrace.md).
 
 Migrace přitom není strop. Streamované odpovědi, push ze serveru,
 synchronizace mezi okny a jemné adresování prvků jsou věci, které většina
@@ -132,7 +132,7 @@ ten, kdo ho čte. Odpověď frameworku není vrstva, ale **zkrácení bezpečné
 cesty**: `in_int()` je kratší než sáhnout do `$_REQUEST` a přetypovat,
 `is_word()` je kratší než ruční kontrola cesty, `esc()` je kratší než
 `htmlspecialchars()` se třemi argumenty. Podrobně v
-[09 — Bezpečnost](09-bezpecnost.md).
+[10 — Bezpečnost](10-bezpecnost.md).
 
 **ORM tím nekončí a končit nemá.** Zapomenuté `WHERE` odchytí ORM, tady
 ho neodchytí nic. Identity map, unit of work a transakční hranice jsou
@@ -159,7 +159,7 @@ a dá se předat agentovi stejně dobře jako člověku, což se o vrstvě říc
 nedá.
 
 Hotové stavební díly nad rámec knihovny se chystají odděleně, jako
-příklady a komponenty. Viz [13 — Co je v plánu](13-plan.md).
+příklady a komponenty. Viz [14 — Co je v plánu](14-plan.md).
 
 ## Na čem stojí a na čem nesmí stát
 
@@ -182,7 +182,7 @@ Co do knihovny **nepatří a patřit nebude**:
 | | proč to není závislost |
 |---|---|
 | AdminLTE, Bootstrap, jakákoli šablona | `examples/app-adminlte/` je **příklad**, ne součást. `examples/app/` dokazuje, že to jde i bez nich. |
-| PHP | `fw.inc` a `io.inc` jsou **referenční implementace** serverové strany, ne její definice. Definicí je [03 — Protokol](03-protokol.md). Přepsat je do Pythonu nebo Go je práce na den. |
+| PHP | `fw.inc` a `io.inc` jsou **referenční implementace** serverové strany, ne její definice. Definicí je [04 — Protokol](04-protokol.md). Přepsat je do Pythonu nebo Go je práce na den. |
 | konkrétní projekty autora | Jejich knihovny zůstávají u nich. Do repozitáře se nikdy nedostane nic, co ví, jak vypadá cizí databáze. |
 
 Zbytek obsahu repozitáře jsou **příklady a nástroje**, ne knihovna:

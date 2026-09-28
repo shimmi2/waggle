@@ -1,4 +1,4 @@
-# 07 — Integrace šablony
+# 08 — Integrace šablony
 
 ## Obecný postup
 
@@ -12,7 +12,7 @@ jen **vnitřky** pojmenovaných prvků.
 Jména `left_menu`, `top_frame` a `main` jsou **zvyklost, ne požadavek**
 — `sel` bere libovolný selektor a oken může být kolik chceš. Proč se to
 takhle dělí a co z toho plyne pro řízení aplikace, je v
-[06 — Aplikace](06-aplikace.md); tady je podstatné jen to, že ta jména
+[07 — Aplikace](07-aplikace.md); tady je podstatné jen to, že ta jména
 musí sedět na id v šabloně.
 
 ```html

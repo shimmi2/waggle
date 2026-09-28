@@ -1,4 +1,4 @@
-# 03 — Protokol
+# 04 — Protokol
 
 ## Obálka
 
@@ -142,10 +142,10 @@ u `notify`. Pokud si vlastní vykreslení napíšeš, **nech obsah uvnitř
 
 **Poslaný ve stejné dávce jako pomalá práce je k ničemu**, protože dávka
 dorazí až s výsledkem. Musí jít napřed: streamem, nebo pushem. Viz
-[10 — Nasazení](10-nasazeni.md).
+[11 — Nasazení](11-nasazeni.md).
 
 Pro pouhé „čekej, pracuje se" ale server vůbec nepotřebuješ — na to je
-atribut `data-busy`, viz [04 — Klient](04-klient.md). Operaci `busy` posílej
+atribut `data-busy`, viz [05 — Klient](05-klient.md). Operaci `busy` posílej
 tehdy, když máš co říct: procenta, fázi, počet. To je informace, kterou zná
 jen server.
 

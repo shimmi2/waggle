@@ -7,7 +7,7 @@ katalog s filtrem, výpůjčky se stavy, statistika, uživatelé a oprávnění.
 **Nečti to jako demo.** `examples/app` a `examples/app-adminlte` jsou dema,
 ta ukazují protokol. Tady se **začíná nový projekt**: vezmeš to, přejmenuješ
 domény a knihy vyměníš za to, co doopravdy potřebuješ. Jak na to krok za
-krokem je v [12 — Nový projekt z příkladu](../../docs/12-novy-projekt.md).
+krokem je v [13 — Nový projekt z příkladu](../../docs/13-novy-projekt.md).
 
 ---
 

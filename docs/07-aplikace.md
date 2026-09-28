@@ -1,4 +1,4 @@
-# 06 — Aplikace
+# 07 — Aplikace
 
 ## Struktura
 
@@ -140,7 +140,7 @@ pravidlo:
 
 Framework neudělá ani jedno z toho za vás — nemůže, protože neví, kam
 ta hodnota míří. Celé je to rozvedené v
-[09 — Bezpečnost](09-bezpecnost.md).
+[10 — Bezpečnost](10-bezpecnost.md).
 
 **Na tomhle stojí a padá bezpečnost celé aplikace.** Endpoint, který
 šablonu poruší, je díra bez ohledu na to, jak dobře je napsaný zbytek.

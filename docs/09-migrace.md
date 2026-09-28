@@ -1,4 +1,4 @@
-# 08 — Migrace starého projektu
+# 09 — Migrace starého projektu
 
 Hlavní myšlenka: **neměň logiku, změň jen způsob doručení.** Migrace jde
 po stránkách, aplikace mezitím funguje.
@@ -70,7 +70,7 @@ $nazev = in_str('nazev', 128);     // string
 Proč ne `addslashes()`: escapuje čtyři znaky pro jeden kontext a používá se,
 jako by byl univerzální. V číselném kontextu (`WHERE id = $id`) neudělá nic,
 proti traversalu nic, proti XSS nic, a na PHP 8 shodí endpoint na `TypeError`,
-když přijde `?id[]=1`. Podrobně v [09 — Bezpečnost](09-bezpecnost.md).
+když přijde `?id[]=1`. Podrobně v [10 — Bezpečnost](10-bezpecnost.md).
 
 ## Krok 5 — session
 

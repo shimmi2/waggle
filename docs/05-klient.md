@@ -1,4 +1,4 @@
-# 04 — Klient (`fw.js`)
+# 05 — Klient (`fw.js`)
 
 Jeden soubor, žádné závislosti, žádný build. Tři vrstvy, záměrně oddělené:
 
@@ -69,7 +69,7 @@ prohlížeč sám ví, že odeslal a čeká. Tímhle se pokryje ten nejčastěj�
 případ, tedy „strpení prosím, kompletuji data", bez jediného řádku navíc
 na straně serveru. Překryv zmizí, jakmile dorazí odpověď.
 
-Operace [`busy`](03-protokol.md) je pro to druhé: průběh, který zná **jen**
+Operace [`busy`](04-protokol.md) je pro to druhé: průběh, který zná **jen**
 server — procenta, fáze, počty. Ten se doručit musí, a tedy pushem. Obojí
 je tentýž překryv, liší se jen tím, kdo ho ovládá.
 
@@ -129,7 +129,7 @@ Fw.on('afterReplace',  function (el) { /* init widgetů */ });
 ```
 
 Jediné místo, kde se mění obsah prvku, je `Fw.setHtml()` — proto stačí
-navěsit se sem a pokrýt všechny operace. Viz [07 — Integrace](07-integrace.md).
+navěsit se sem a pokrýt všechny operace. Viz [08 — Integrace](08-integrace.md).
 
 ## Guardy
 

@@ -80,7 +80,7 @@ React.
 
 Referenční implementaci serveru přikládám v PHP, ale nic nebrání
 přepsat ji jedním promptem do Pythonu nebo čehokoli dalšího — definicí
-je [protokol](docs/03-protokol.md), ne ten soubor. A možné je to jen
+je [protokol](docs/04-protokol.md), ne ten soubor. A možné je to jen
 díky té jednoduchosti: minimu vrstev a nezávislosti na milionu
 nástrojů.
 
@@ -99,8 +99,8 @@ oprávněních první vrstvy a o kódu. Platí pro něj tohle:
 * Každý modul je „jeden velký switch" s endpointy: `auth/login`,
   `auth/change_password`, `my_agenda/dashboard`.
 * **Každý endpoint musí řešit bezpečnost v tomhle pořadí.** Není to
-  doporučení, je to podmínka — viz [06 — Aplikace](docs/06-aplikace.md)
-  a [09 — Bezpečnost](docs/09-bezpecnost.md):
+  doporučení, je to podmínka — viz [07 — Aplikace](docs/07-aplikace.md)
+  a [10 — Bezpečnost](docs/10-bezpecnost.md):
 
     1. **Import vstupů.** První řádky obalí všechno, co přišlo zvenčí:
        `in_str()`, `in_int()`, `in_float()`.
@@ -141,7 +141,7 @@ oprávněních první vrstvy a o kódu. Platí pro něj tohle:
   podokna `goods_filter` a `goods_results`". Vyvolá ji třeba kliknutí
   na položku menu, která pošle do BFF `get_goods`; odpovědí je ta sada.
 * Na úrovni frameworku je podporovaná operace
-  [`busy`](docs/03-protokol.md), takže jde triviálně zobrazit
+  [`busy`](docs/04-protokol.md), takže jde triviálně zobrazit
   „analyzuji… 10 %" a pak poslat data. Překryv framework uklidí sám,
   jakmile do téhož okna dorazí výsledek.
 
@@ -255,20 +255,20 @@ se z `docs/*.md` příkazem `php doc/build.php`.
 
 | | |
 |---|---|
-| [00 — Slovníček](docs/00-slovnicek.md) | **frontend, BFF, datové API** — jedno jméno pro jednu věc |
 | [01 — Motivace a cíle](docs/01-motivace.md) | proč vznikl, čemu se vyhýbá, vztah k ORM a generovanému kódu |
 | [02 — Principy](docs/02-principy.md) | dvanáct pravidel, na kterých celý návrh stojí |
-| [03 — Protokol](docs/03-protokol.md) | obálka, transporty, úplná reference příkazů |
-| [04 — Klient](docs/04-klient.md) | `fw.js` — API, události, transporty, hooky |
-| [05 — Server](docs/05-server.md) | `fw.inc` — vstupy, fronta odpovědí, chyby, stream, push |
-| [06 — Aplikace](docs/06-aplikace.md) | struktura demo BFF, **šablona endpointu**, skiny |
-| [07 — Integrace](docs/07-integrace.md) | AdminLTE a obecný postup pro jakoukoli šablonu |
-| [08 — Migrace](docs/08-migrace.md) | kuchařka pro převod starého projektu |
-| [09 — Bezpečnost](docs/09-bezpecnost.md) | vstupy, escapování, cesty, tokeny, oprávnění |
-| [10 — Nasazení](docs/10-nasazeni.md) | Apache, nginx, nchan, produkční checklist |
-| [11 — Problémy](docs/11-problemy.md) | pasti, na které jsme narazili, a jak je poznat |
-| [12 — Nový projekt](docs/12-novy-projekt.md) | jak začít z `examples/library` — **kuchařka i pro model** |
-| [13 — Co je v plánu](docs/13-plan.md) | komponenty, MCP server, agentický pomocník v aplikaci |
+| [03 — Slovníček](docs/03-slovnicek.md) | **frontend, BFF, datové API** — jedno jméno pro jednu věc |
+| [04 — Protokol](docs/04-protokol.md) | obálka, transporty, úplná reference příkazů |
+| [05 — Klient](docs/05-klient.md) | `fw.js` — API, události, transporty, hooky |
+| [06 — Server](docs/06-server.md) | `fw.inc` + `io.inc` — vstupy, fronta odpovědí, chyby, stream, push |
+| [07 — Aplikace](docs/07-aplikace.md) | struktura demo BFF, **šablona endpointu**, skiny |
+| [08 — Integrace](docs/08-integrace.md) | AdminLTE a obecný postup pro jakoukoli šablonu |
+| [09 — Migrace](docs/09-migrace.md) | kuchařka pro převod starého projektu |
+| [10 — Bezpečnost](docs/10-bezpecnost.md) | vstupy, escapování, cesty, tokeny, oprávnění |
+| [11 — Nasazení](docs/11-nasazeni.md) | Apache, nginx, nchan, produkční checklist |
+| [12 — Problémy](docs/12-problemy.md) | pasti, na které jsme narazili, a jak je poznat |
+| [13 — Nový projekt](docs/13-novy-projekt.md) | jak začít z `examples/library` — **kuchařka i pro model** |
+| [14 — Co je v plánu](docs/14-plan.md) | komponenty, MCP server, agentický pomocník v aplikaci |
 
 ## Skilly
 

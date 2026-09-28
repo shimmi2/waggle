@@ -1,4 +1,4 @@
-# 05 — Server (`fw.inc` + `io.inc`)
+# 06 — Server (`fw.inc` + `io.inc`)
 
 Dva soubory. Neřeší databázi, šablony ani autentizaci — to je věc projektu.
 
@@ -18,7 +18,7 @@ před prvním řádkem endpointu. Hlídá to `tools/fwdeploy.sh`.
 
 Hotové stavební díly nad rámec knihovny — šablony pro rozjezd,
 komponenty, MCP server nad API — se chystají odděleně. Je to **plán, ne
-stav**; podrobně v [13 — Co je v plánu](13-plan.md). Na hranici knihovny
+stav**; podrobně v [14 — Co je v plánu](14-plan.md). Na hranici knihovny
 to nic nemění: budou to příklady a nástroje, ne závislosti.
 
 ## Start
@@ -65,7 +65,7 @@ Stejná jména používá i datové API v `examples/library`, které `fw.inc`
 schválně nenačítá — aby se ta sada učila jednou. Pozor ale, že jsou to pak
 **dvě definice týchž jmen**: v jednom procesu smí být jen jedna, jinak PHP
 spadne na dvojí deklaraci. Hlídá to `fwdeploy.sh`, viz
-[11 — Problémy](11-problemy.md).
+[12 — Problémy](12-problemy.md).
 
 Původní `req()`, `req_int()`, `req_float()`, `req_rows()` a `req_header()`
 zůstávají jako aliasy a v protokolu v1 se neodeberou — visí na nich stovky
@@ -81,7 +81,7 @@ instalace v prohlížeči — přežije odhlášení i zavření okna a slouží
 k tomu, aby šlo poznat, že požadavek přišel z téhož zařízení. Obě jsou
 vstup od klienta jako každý jiný, takže žádná z nich sama o sobě nic
 nedokazuje; jak se z nich dělá důvěra, je v
-[09 — Bezpečnost](09-bezpecnost.md).
+[10 — Bezpečnost](10-bezpecnost.md).
 
 Tabulkové formuláře posílají `fd[i][sloupec]`, což skalární getter nepustí.
 Na ně je `in_rows()`, který propustí jen dvojúrovňové pole skalárů
@@ -147,7 +147,7 @@ dávka jen spadla do implicitního 4 kB bufferu PHP-FPM.
 
 `fw_stream_start()` pošle 8 kB mezer, které klient zahodí. Pomáhá u proxy,
 které flushují po naplnění bufferu; na Apache s `mod_proxy_fcgi` **nepomůže**
-— viz [11 — Problémy](11-problemy.md).
+— viz [12 — Problémy](12-problemy.md).
 
 Stream drží proces webserveru po celou dobu. U čehokoli delšího než pár
 sekund je lepší push.
@@ -178,7 +178,7 @@ hlídá framework:
   netřeba — a hlavně se nemůže stát, že po chybě někde zůstane viset
   kolečko, protože se zapomnělo na úklid.
 
-Chování překryvu do detailu popisuje [03 — Protokol](03-protokol.md).
+Chování překryvu do detailu popisuje [04 — Protokol](04-protokol.md).
 
 ## Push
 
@@ -204,7 +204,7 @@ obyčejným požadavkem. Waggle tak potřebuje jen to, co SSE nabízí.
 
 Ten kanál nedrží PHP, ale nchan v nginxu. PHP do něj jen krátce
 publikuje a skončí, takže nedrží žádné spojení a neobsazuje worker
-Apache. Nastavení je v [10 — Nasazení](10-nasazeni.md).
+Apache. Nastavení je v [11 — Nasazení](11-nasazeni.md).
 
 ## Konfigurace
 

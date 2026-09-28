@@ -1,6 +1,6 @@
-# 12 — Nový projekt z příkladu
+# 13 — Nový projekt z příkladu
 
-[08 — Migrace](08-migrace.md) je pro projekt, který už existuje. Tahle
+[09 — Migrace](09-migrace.md) je pro projekt, který už existuje. Tahle
 kapitola je pro nový, a hlavní myšlenka je stejně nudná jako účinná:
 **nezakládej prázdný adresář.** Vezmi `examples/library`, kde už jsou tři
 vrstvy, sezení, oprávnění, omezení pokusů, dva instaláky a úklidový cron —

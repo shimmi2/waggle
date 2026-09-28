@@ -15,8 +15,8 @@ Endpoint vrací **příkazy a hotové kusy HTML**, ne data. Klient je jen
 aplikuje. Kdo tohle přijme, nemusí řešit stav na klientovi vůbec.
 
 Úplná reference je v `docs/` — tenhle skill je postup a pasti, ne opis.
-Protokol `docs/03-protokol.md`, server `docs/05-server.md`, struktura
-aplikace a šablona endpointu `docs/06-aplikace.md`.
+Protokol `docs/04-protokol.md`, server `docs/06-server.md`, struktura
+aplikace a šablona endpointu `docs/07-aplikace.md`.
 
 ## Pořadí v endpointu
 

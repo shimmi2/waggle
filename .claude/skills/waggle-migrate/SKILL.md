@@ -14,7 +14,7 @@ description:
 
 Dvě věci naráz: **jiný běh** (celý reload → příkazy frameworku) a **jiné
 PHP**. Dělat obojí v jednom kroku bez testů je cesta k tichým ztrátám dat.
-Postup převodu je v `docs/08-migrace.md`, tady je řemeslo a katalog pastí.
+Postup převodu je v `docs/09-migrace.md`, tady je řemeslo a katalog pastí.
 
 ## Pravidlo: stejné dotazy, stejná sémantika, jiný markup
 

@@ -1,4 +1,4 @@
-# 10 — Nasazení a provoz
+# 11 — Nasazení a provoz
 
 ## Minimální požadavky
 
@@ -74,7 +74,7 @@ location ~ \.php$ {
 ```
 
 Direktivy pro zákaz `.inc` a neveřejných adresářů jsou v
-[09 — Bezpečnost](09-bezpecnost.md); patří do každé instalace, ne jen
+[10 — Bezpečnost](10-bezpecnost.md); patří do každé instalace, ne jen
 do té streamované.
 
 I tady platí, že **pushem je to jednodušší** — pak se buffering řešit

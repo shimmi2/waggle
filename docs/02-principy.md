@@ -65,7 +65,7 @@ Nikdy nepošle „překresli menu" a pak zjistí, že uživatel nemá oprávněn
 
 `in_str()` zaručí skalární string omezené délky bez NUL. Nic víc.
 Escapování je vlastnost **cíle**, ne hodnoty — patří do místa použití.
-Viz [09 — Bezpečnost](09-bezpecnost.md).
+Viz [10 — Bezpečnost](10-bezpecnost.md).
 
 ## 11. Měň prvky, ne kontejnery
 
