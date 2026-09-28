@@ -22,16 +22,33 @@ autentizaci sám a chodí na tytéž endpointy se stejnou kontrolou oprávnění
 
 Co tím získáte, se v kódu udělat nedá:
 
-* Chyba ve fragmentu nemůže vyservírovat konfiguraci datové vrstvy,
-  protože ta leží v **jiném docrootu**, na který ten webserver nevidí.
 * Kdo se dostane do BFF, nedostane se k databázi přímo. Musí projít
   endpointy datového API, a ty kontrolují oprávnění nezávisle na tom, co
   si o nich myslí BFF.
-* Přípona `.inc`, práva souborů a zamčené adresáře jsou pak **druhá**
-  vrstva obrany, ne jediná.
+* Chyba ve fragmentu nedosáhne na konfiguraci **sousední** vrstvy,
+  protože ta leží v jiném docrootu, na který ten webserver nevidí.
 
 Cena je tři virtual hosty, tři konfigurace a CORS mezi frontendem
 a BFF. U nového projektu je to půlhodina a stojí to za to.
+
+### Čím to ale není
+
+Oddělení vrstev **nenahrazuje** nic z toho, co následuje. Ohraničuje
+škodu, nezabraňuje jí. Když se konfigurace servíruje jako text, útočník
+si přečte přístupy k databázi té vrstvy, na kterou dosáhl — a že jsou
+sites tři, mu v tom nezabrání.
+
+Síla je v **součinu opatření**, ne v jednom z nich:
+
+| opatření | co samo o sobě řeší |
+|---|---|
+| zákaz `.inc` na webserveru | **naprostá nutnost.** Bez něj je konfigurace veřejně čitelná. |
+| oddělené vrstvy | ohraničí škodu na jednu vrstvu a odřízne přímou cestu k datům |
+| konfigurace mimo docroot | vyřadí celou třídu chyb — není co špatně naservírovat |
+| vlastní účet a pool na vrstvu | zabrání tomu, aby jedna vrstva četla soubory druhé |
+
+Žádné z nich nestačí samo. Pořadí, ve kterém se vyplatí je zavádět, je
+odshora dolů.
 
 **Dvouvrstvý model tuhle ochranu nemá** — BFF sahá na data přímo, takže
 všechno pod ním visí jen na kázni v kódu. U převodu staršího monolitu to
@@ -213,6 +230,56 @@ location ~ \.php$ {
 Kde direktivu nasadit nejde (cizí hosting, `AllowOverride None`), je jediná
 funkční náhrada dát souborům příponu `.php` — server je spustí místo
 odeslání — a doplnit jim strážce, který přímé volání odmítne 404.
+
+### Konfigurace mimo docroot
+
+Zákaz `.inc` je nutnost, ale pořád je to **pravidlo, které se dá zapomenout
+nasadit** — při stěhování na nový stroj, po upgradu, v novém virtual hostu.
+U jednoho jediného souboru se té závislosti dá zbavit úplně: konfigurace
+s přístupy k databázi nemusí v docrootu ležet vůbec.
+
+```php
+require '/etc/waggle/mujprojekt/bff.inc';   // PHP ano, webserver nikdy
+```
+
+Na hostingu, kde do `/etc` nesmíte, poslouží úroveň nad docrootem —
+docroot je `/home/ucet/www/`, konfigurace `/home/ucet/config/bff.inc`.
+Webserver tam nedosáhne, PHP ano.
+
+Kdo nechce sahat na kostru, může nechat soubor na místě a udělat z něj
+**zavaděč**:
+
+```php
+<?php  /* bff/config.inc — jediný řádek, žádné tajemství */
+require '/etc/waggle/mujprojekt/bff.inc';
+```
+
+I kdyby se tenhle soubor jednou naservíroval jako text, útočník se dozví
+cestu, ne heslo. Za tu jednu řádku to stojí.
+
+Dvě věci k ověření: PHP musí na cestu dosáhnout (`open_basedir` bývá na
+sdíleném hostingu nastavený a `/etc` v něm nebude), a soubor má patřit
+účtu, pod kterým běží PHP-FPM, s právy `0600`.
+
+### Na co se nespoléhat
+
+**Symlink z docrootu ven není ochrana.** Nabízí se to — nechat
+`bff/config.inc` jako odkaz na `/etc/waggle/bff.inc` — jenže jestli
+webserver odkaz následuje, rozhoduje direktiva `Options FollowSymLinks`.
+Když ji máte zapnutou — a v mnoha instalacích je zapnutá — server odkaz
+následuje a **obsah cíle pošle**, jako by tam ležel. Když ji máte
+vypnutou, odkaz odmítne 403; jenže to je pak zásluha direktivy, a kdo umí
+nastavit tuhle, umí zakázat i `.inc`. Tak jako tak rozhoduje konfigurace
+serveru, ne ten symlink. Nejhorší na tom je, že to vypadá jako opatření.
+
+**Proměnné prostředí** (`env[]` v poolu PHP-FPM) docroot obcházejí, ale
+heslo v nich je vidět ve `phpinfo()`, v `/proc/self/environ` pro kohokoli
+na stroji a dědí se do všeho, co spustíte přes `exec()`. Jako náhrada
+konfiguračního souboru to není lepší, jen jinak zranitelné.
+
+**Práva souboru** `0600` chrání před ostatními účty na stroji, ne před
+webserverem — ten běží pod týmž uživatelem jako PHP a soubor přečte.
+Je to doplněk, ne alternativa.
 
 ### Co zamknout v každém docrootu
 
