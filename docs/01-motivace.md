@@ -85,23 +85,46 @@ hodně dělníků — dnes stále častěji agentů.
 | build stepu | zdroják je to, co běží; ladí se bez source map |
 | `node_modules` | nulová údržba závislostí, žádný supply chain |
 | klientskému routeru | URL řeší příkaz `history`, stav drží server |
-| šablonám na klientovi | HTML generuje ten, kdo má data |
+| šablonám na klientovi | HTML skládá BFF — mezivrstva, která zná aplikační logiku |
 | ORM | viz následující kapitolu |
 
 ## Bez ORM: co se získá a co to stojí
 
-V tomhle architektonickém stylu jdou data cestou **databáze → HTML**.
-Nikdy se nestanou doménovým objektem. ORM je stroj na to, aby z řádků
-udělal objekty, které se jednou vykreslí a zahodí; v aplikaci, která data
-používá právě jednou a právě k vykreslení, je to režie navíc — hydratace,
-lazy loading s překvapeními, N+1 dotazy a učení se query jazyku místo SQL.
-Ten argument platil před jazykovými modely a platí i po nich.
+V tomhle architektonickém stylu jdou data cestou
+**DB → API → BFF → HTML**:
+
+| vrstva | co dělá |
+|---|---|
+| **DB** | drží data |
+| **API** | zpřístupňuje je — a to je přesně ta role, kterou by jinak hrálo ORM |
+| **BFF** | aplikační logika a skládání HTML |
+| **frontend** | vykresluje a reaguje na události |
+
+Referenčním vzorem je `examples/library`, kde jsou ty vrstvy oddělené
+doopravdy, každá ve své doméně. Zjednodušená integrace, kde BFF sahá na
+data samo a API jako samostatná vrstva chybí, je taky legitimní — u
+převodu staršího monolitu obvykle jiná cesta ani nedává smysl.
+
+Data se na téhle cestě nikdy nestanou doménovým objektem. ORM je stroj na
+to, aby z řádků udělal objekty, které se jednou vykreslí a zahodí;
+v aplikaci, která data používá právě jednou a právě k vykreslení, je to
+režie navíc — hydratace, lazy loading s překvapeními, N+1 dotazy a učení
+se query jazyku místo SQL. Ten argument platil před jazykovými modely a
+platí i po nich.
 
 Nevýhody té volby jsou ale reálné a je lepší je znát předem.
 
-**Evoluci schématu framework neřeší.** ORM s sebou obvykle nese nástroj na
-migrace databáze; tady žádný není. Je to skutečná mezera, ne vyřešený
-problém — postup na to potřebuje každý projekt sám.
+**Evoluci schématu framework neřeší.** ORM s sebou obvykle nese nástroj
+na migrace databáze; tady žádný není. Za tu ztrátu ale platí málokdo tolik,
+kolik to na první pohled vypadá: u větších projektů byla automatická
+evoluce spíš teorie než praxe. Netriviální změna — rozdělení sloupce,
+přepočet historických dat, změna významu příznaku — se stejně dopisovala
+ručně a nástroj u ní posloužil nanejvýš jako evidence, co už proběhlo.
+
+V době agentického kódování se navíc posouvá i ta zbývající část: migrační
+skript umí napsat agent z popisu změny a ze schématu, které má před sebou.
+Co zůstává na lidech, je **spustit ho bezpečně** — zálohou, zkouškou na
+kopii a s plánem, jak se vrátit zpátky. To za vás nevyřeší ORM ani agent.
 
 **Bezpečnost nedrží vrstva, ale autor.** ORM parametrizuje dotazy, ať píše
 kdokoli. Generovaný a ručně psaný kód je bezpečný jen tak, jak pozorný je
@@ -111,18 +134,17 @@ cesty**: `in_int()` je kratší než sáhnout do `$_REQUEST` a přetypovat,
 `htmlspecialchars()` se třemi argumenty. Podrobně v
 [09 — Bezpečnost](09-bezpecnost.md).
 
-**Ochrana proti chybě v zápisu chybí taky.** Zapomenuté `WHERE` odchytí
-ORM, tady ho neodchytí nic. Proto ORM dál dává smysl tam, kde se pracuje
-s penězi a přesnými transakcemi.
+**ORM tím nekončí a končit nemá.** Zapomenuté `WHERE` odchytí ORM, tady
+ho neodchytí nic. Identity map, unit of work a transakční hranice jsou
+mechanismy, které ORM řeší dobře a tenhle styl vůbec — a u složitých
+operací nad více tabulkami, u přesných transakcí a všude, kde se pracuje
+s penězi, si své místo drží dál. Tahle kapitola není argument proti ORM,
+je to popis toho, kdy se nevyplatí.
 
-**Identity map, unit of work a transakční hranice** jsou věci, které ORM
-řeší dobře a tenhle styl vůbec. V doménově složitých, zápisově náročných
-systémech je to důvod ORM použít. V aplikaci typu „formulář, seznam,
-detail" — což je ve většině firemních systémů většina agend — se ty
-mechanismy nikdy neuplatní.
-
-Rozhodovací pravidlo je jednoduché: **kolik agend v systému sahá na jednu
-tabulku?** Když většina, ORM platíte a nevyužijete.
+Protože v aplikaci typu „formulář, seznam, detail" se ty mechanismy
+neuplatní nikdy. Rozhodovací pravidlo je jednoduché: **kolik agend
+v systému sahá na jednu tabulku?** Když většina, ORM platíte a
+nevyužijete — a ničemu nebrání použít ho jen tam, kde se opravdu hodí.
 
 ## Co framework záměrně neřeší
 
@@ -148,8 +170,12 @@ jedním „to se přece hodí", a pak už se to nevrátí.
 dalšího `fw.js` nepotřebuje — žádný build step, žádný balíčkovač, žádnou
 knihovnu třetí strany.
 
-**Volitelná je jedna: nchan.** Jenom kvůli pushi. Bez něj funguje všechno
-ostatní, jen se průběh dlouhé operace doručí streamem, nebo vůbec.
+**Volitelná je jedna: nchan.** Kvůli asynchronnímu doručování obecně —
+tedy všude, kde server potřebuje promluvit dřív, než se ho někdo zeptá.
+Průběh dlouhé operace je jen ten nejviditelnější případ; stejně tak z něj
+žijí živé monitoringy, hlášení o události, kterou spustil někdo jiný, nebo
+data, která se mění sama od sebe. Bez nchanu funguje všechno ostatní, jen
+se tyhle věci doručí streamem, nebo vůbec.
 
 Co do knihovny **nepatří a patřit nebude**:
 

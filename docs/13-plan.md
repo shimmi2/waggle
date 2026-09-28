@@ -1,8 +1,5 @@
 # 13 — Co je v plánu
 
-**Tahle kapitola je plán, ne stav.** Nic z ní není v repozitáři, dokud to
-tam není — ať se podle toho nikdo nezařizuje dřív.
-
 ## Framework zůstane jednoduchý
 
 To je podmínka, ne ambice. Knihovna jsou tři soubory a nic z toho, co
@@ -11,8 +8,10 @@ následuje, se do nich nedostane. Hranice z
 (HTML, CSS, JavaScript), volitelná jedna (nchan).
 
 Co se rozroste, jsou **příklady**. Z `examples/library` se postupně stane
-větší systém — ne proto, aby ho někdo nasadil celý, ale aby si z něj šlo
-brát po částech.
+větší systém — ne proto, aby ho někdo **musel** nasadit celý, ale aby si
+z něj šlo brát po částech. Na nic z toho není projekt vázaný: co si
+nevezmete, to tam prostě nebude, a cokoli jiného vám tam agent zasadí
+podle vašeho zadání.
 
 ## Komponenty, ne framework
 
@@ -28,8 +27,9 @@ mapy, vezme si mapy a nic dalšího mu do projektu nepřijde.
 Rozšiřují se i šablony pro rozjezd, ve dvou variantách podle toho, jak je
 projekt postavený:
 
-* **Dvouvrstvý model** (typicky portál): frontend a BFF, které sahá rovnou
-  na data. Přibalí se kompletní backend.
+* **Dvouvrstvý model**, kam obvykle dospěje převod dvacet let starého
+  monolitu: frontend a BFF, které sahá rovnou na data. Samostatná datová
+  vrstva by u něj byla práce navíc bez užitku.
 * **Třívrstvý model**, který je v [12 — Nový projekt](12-novy-projekt.md)
   popsaný jako výchozí: frontend, BFF a pod ním čisté datové API, sdílené
   i s jinými klienty — mobilními aplikacemi a podobně.
@@ -37,8 +37,10 @@ projekt postavený:
 ## Integrace s AI
 
 Největší kus plánované práce. Vychází ze zkušeností autora z nasazení u
-velkého telekomunikačního operátora, kde se ukázalo, že užitečný agent
-nepotřebuje přístup k modelu, ale **přístup k datům a k obrazovce**.
+velkého telekomunikačního operátora. Model je pochopitelně to první, bez
+čeho se agent nehne — ale sám o sobě z něj užitečného pomocníka neudělá.
+Rozdíl mezi hračkou a nástrojem dělá **přístup k datům a k obrazovce**:
+k tomu, co firma opravdu ví, a k možnosti výsledek rovnou ukázat.
 
 ### MCP server nad API
 

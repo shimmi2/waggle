@@ -6,7 +6,9 @@ přidat featuru bez přepisování toho, co už běží.
 ## 1. Server rozhoduje, klient vykonává
 
 Klient nemá stav aplikace, nemá router a neví, co která funkce znamená.
-Umí jediné: vzít dávku příkazů a aplikovat ji. Veškerá logika je v PHP.
+Umí jediné: vzít dávku příkazů a aplikovat ji. Veškerá logika zůstává na
+serveru — ve vašem oblíbeném jazyce. Příklady v tomhle repozitáři jsou
+v PHP, protokol na ničem takovém nestojí.
 
 ## 2. Cíl je vždy selektor
 
@@ -81,7 +83,7 @@ holé HTML i AdminLTE beze změny jediného řádku.
 
 Totéž platí o technologiích. Tvrdá závislost je **jedna** — HTML, CSS
 a JavaScript v prohlížeči. Volitelná je **jedna** — nchan, a jen kvůli
-pushi. AdminLTE je příklad, PHP je referenční implementace serveru,
+asynchronnímu doručování. AdminLTE je příklad, PHP je referenční implementace serveru,
 naše projekty do repozitáře nepatří vůbec. Příklady a nástroje si smí
 dovolit cokoli, protože je nikdo nemusí použít; knihovna ne.
 Rozvedeno v [01 — Motivace](01-motivace.md).
