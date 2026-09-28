@@ -5,7 +5,7 @@
 > safe and simple apps. Apps where data flows in parallel, asynchronous
 > motion, like bees in a waggle dance.
 
-Vydání **1.6.1**, protokol **v1**.
+Vydání **1.6.2**, protokol **v1**.
 
 ## Proč vznikl
 
@@ -113,7 +113,7 @@ oprávněních první vrstvy a o kódu. Platí pro něj tohle:
     4. **Oprávnění k endpointu:**
        `if (!acl_check($user, 'delete_users')) throw_http_error(403, 'Nemáte oprávnění');`
     5. **Vlastní práce.** Přečte data, udělá, co má. V třívrstvém modelu
-       volá backendové API, které má vlastní kontrolu oprávnění.
+       volá datové API, které má vlastní kontrolu oprávnění.
        Ve dvouvrstvém vám stačí SQL, Redis, InfluxDB a další místa, kde
        data leží. Na vznosné ideály máte agenty, ne ORM.
 
@@ -135,7 +135,7 @@ oprávněních první vrstvy a o kódu. Platí pro něj tohle:
   }
   ```
 
-* Kde backendové API vrací datový JSON, tam backend for frontend vrací
+* Kde datové API vrací datový JSON, tam BFF vrací
   **sadu příkazů Waggle**.
 * Sada příkazů je jedna nebo víc instrukcí typu „do hlavního okna dej
   podokna `goods_filter` a `goods_results`". Vyvolá ji třeba kliknutí
@@ -153,8 +153,8 @@ něco brát, koukni, do které patří — ušetří to spoustu zbytečných ot�
 | vrstva | co to je | jak často se bere |
 |---|---|---|
 | **knihovna** | `io.inc`, `fw.inc`, `fw.js` | **průběžně**, skriptem `tools/fwdeploy.sh` |
-| **kostra** | `examples/library/*` nebo `examples/api/{index.php,config.inc,inc/*}` | **jednou** při zrodu projektu, pak se rozchází |
-| **dema** | `examples/api/pages/*`, `examples/app/*`, `examples/app-adminlte/*` | **nikdy** — jen se čtou |
+| **kostra** | `examples/library/*` nebo `examples/bff/{index.php,config.inc,inc/*}` | **jednou** při zrodu projektu, pak se rozchází |
+| **dema** | `examples/bff/pages/*`, `examples/app/*`, `examples/app-adminlte/*` | **nikdy** — jen se čtou |
 
 **Knihovna jsou tři soubory.** V reálném projektu je to zlomek celku:
 `fw.inc` (protokol) 10 kB, `io.inc` (hygiena vstupu a výstupu) 7 kB,
@@ -163,10 +163,10 @@ každá změna patří do nové verze Waggle.
 
 `fw.inc` si `io.inc` načítá sám a musí ležet **vedle** něj; rozváží je
 `fwdeploy.sh` společně. Vrstva, která o protokolu vědět nemá — typicky
-backendové API tříúrovňové aplikace — si načte jen `io.inc`. Nikdy obojí
+datové API tříúrovňové aplikace — si načte jen `io.inc`. Nikdy obojí
 v jednom procesu: sdílejí jména a PHP spadne na dvojí deklaraci.
 
-**Kostra se rozchází schválně.** Dispatcher demo API má 8 kB, oba
+**Kostra se rozchází schválně.** Dispatcher demo BFF má 8 kB, oba
 odvozené převedením portálu, zkušebního projektu, kolem 6 kB.
 
 **Dema jsou referenční text, `library` je startovací balík.**
@@ -180,11 +180,11 @@ fw.js       knihovna, klient
 fw.inc      knihovna, server — protokol Waggle (referenční implementace v PHP)
 io.inc      knihovna, server — hygiena vstupu a výstupu, o protokolu neví
 examples/
-  api/            demo API — jeden dispatcher, dvě sady fragmentů
+  bff/            demo BFF — jeden dispatcher, dvě sady fragmentů
   app/            demo BEZ AdminLTE — holé HTML a vlastní CSS
   app-adminlte/   demo S AdminLTE 4 — týž kód, jiný markup
-  library/        KNIHOVNA: frontend + BFF + backend API, MySQL, instalák
-docs/       dokumentace, 13 kapitol
+  library/        KNIHOVNA: frontend + BFF + datové API, MySQL, instalák
+docs/       dokumentace, 14 kapitol
 doc/        generátor prohlížitelné dokumentace
 tools/      rozvoz knihovny do projektů + odesílač do prohlížeče
 .claude/    skilly pro práci s Waggle
@@ -202,7 +202,7 @@ něco nového.
 ```html
 <div id="left_menu"></div><div id="top_frame"></div><div id="main"></div>
 <script src="../fw.js"></script>
-<script>Fw.init({ api: '../api/' });</script>
+<script>Fw.init({ bff: '../bff/' });</script>
 ```
 
 ```php
@@ -223,16 +223,16 @@ Odkaz, který to zavolá bez reloadu stránky:
 <a href="#?function=index&id=42" data-fw>Detail</a>
 ```
 
-## Dva příklady, jedno API
+## Dva příklady, jedno BFF
 
 `examples/app/` a `examples/app-adminlte/` jsou tatáž aplikace. Jedna na
-holém HTML, druhá na AdminLTE 4. Jedou přes **jedno** `examples/api/` a
+holém HTML, druhá na AdminLTE 4. Jedou přes **jedno** `examples/bff/` a
 liší se **výhradně markupem fragmentů** — endpointy, session ani protokol se neliší ani o řádek.
 
 Skin posílá aplikace v každém požadavku:
 
 ```js
-Fw.init({ api: '../api/', params: { skin: 'lte' } });
+Fw.init({ bff: '../bff/', params: { skin: 'lte' } });
 ```
 
 ```php
@@ -255,12 +255,13 @@ se z `docs/*.md` příkazem `php doc/build.php`.
 
 | | |
 |---|---|
+| [00 — Slovníček](docs/00-slovnicek.md) | **frontend, BFF, datové API** — jedno jméno pro jednu věc |
 | [01 — Motivace a cíle](docs/01-motivace.md) | proč vznikl, čemu se vyhýbá, vztah k ORM a generovanému kódu |
 | [02 — Principy](docs/02-principy.md) | dvanáct pravidel, na kterých celý návrh stojí |
 | [03 — Protokol](docs/03-protokol.md) | obálka, transporty, úplná reference příkazů |
 | [04 — Klient](docs/04-klient.md) | `fw.js` — API, události, transporty, hooky |
 | [05 — Server](docs/05-server.md) | `fw.inc` — vstupy, fronta odpovědí, chyby, stream, push |
-| [06 — Aplikace](docs/06-aplikace.md) | struktura demo API, **šablona endpointu**, skiny |
+| [06 — Aplikace](docs/06-aplikace.md) | struktura demo BFF, **šablona endpointu**, skiny |
 | [07 — Integrace](docs/07-integrace.md) | AdminLTE a obecný postup pro jakoukoli šablonu |
 | [08 — Migrace](docs/08-migrace.md) | kuchařka pro převod starého projektu |
 | [09 — Bezpečnost](docs/09-bezpecnost.md) | vstupy, escapování, cesty, tokeny, oprávnění |
@@ -293,7 +294,7 @@ každého projektu vidět, na jaké verzi frameworku běží.
 ```bash
 ./tools/fwdeploy.sh --check            # co kde běží
 ./tools/fwdeploy.sh <cesta>...         # rozvoz z tohohle stromu
-./tools/fwdeploy.sh --from v1.6.1 …    # rozvoz z vydání na GitHubu
+./tools/fwdeploy.sh --from v1.6.2 …    # rozvoz z vydání na GitHubu
 ```
 
 Bez `--from` se bere tenhle strom, takže to jede i bez sítě. S `--from`

@@ -1,6 +1,6 @@
 # Knihovna — startovací balík Waggle
 
-Celá aplikace ve třech vrstvách: frontend, BFF a backendové API. Půjčovna
+Celá aplikace ve třech vrstvách: frontend, BFF a datové API. Půjčovna
 knih, protože na ní je vidět všechno, co firemní aplikace potřebuje —
 katalog s filtrem, výpůjčky se stavy, statistika, uživatelé a oprávnění.
 
@@ -35,7 +35,7 @@ Nahraj adresář na hosting, otevři `install.php` v prohlížeči, vyplň pří
 k databázi. Zprovozní to, co jsi nahrál: vytvoří schéma, naplní data,
 napíše tři konfigurace, zkontroluje se a **smaže se**.
 
-Všechny tři vrstvy zůstanou pod jednou doménou, takže backendové API je
+Všechny tři vrstvy zůstanou pod jednou doménou, takže datové API je
 dosažitelné z internetu. Instalace o tom ví a nese o tom červený odznak
 (`UNSAFE_DEMO`). Pro vyzkoušení dobré, pro provoz ne.
 
@@ -96,7 +96,7 @@ bff/          řízení aplikace, mluví Waggle
   index.php     jeden switch, jedna obrazovka na case
   pages/        fragmenty HTML (13)
   inc/          api_client.inc, session_cache.inc, ui.inc
-api/          backendové API, jediná vrstva u databáze
+api/          datové API, jediná vrstva u databáze
   index.php     dispatcher
   inc/io.inc    KNIHOVNA — táž hygiena vstupů, BEZ protokolu
   inc/          boot, session, throttle + api_books/rentals/users
@@ -120,7 +120,7 @@ sahalo na databázi, nedá se mezi ně dát jiné oprávnění a celé dělení 
 ozdobu.
 
 **Backendové API nenačítá `fw.inc`.** Waggle je protokol mezi BFF a
-prohlížečem; backend o něm vědět nemá, jinak by se nedal přepsat do
+prohlížečem; datové API o něm vědět nemá, jinak by se nedalo přepsat do
 Pythonu, aniž by se s ním tahal i ten protokol. Bere si z knihovny jediný
 soubor, `io.inc` — hygienu vstupů, kterou potřebuje stejně jako kdokoli
 jiný. Obojí v jednom procesu být nesmí: sdílejí jména.
@@ -143,7 +143,7 @@ mrtvým sezením znamená, že člověk vyplní celou knihu a přijde o ni až p
 ukládání.
 
 **Kreslení není autorizace.** BFF se podle `may()` rozhoduje, co *nakreslit*.
-O tom, co se *smí*, rozhoduje `acl_require()` na backendu — a rozhodne to i
+O tom, co se *smí*, rozhoduje `acl_require()` v datovém API — a rozhodne to i
 pro klienta, který BFF nikdy neviděl.
 
 **Chyby jdou přes HTTP status.** 400 vyplnění, 401 sezení, 403 oprávnění,

@@ -50,7 +50,7 @@ Oprávnění jsou **řádky v číselníku** `acls` a v `users.us_acl` seznam
 oddělený čárkami. Primitivní schválně. Nové právo = jeden `INSERT` do
 číselníku a jeho jméno v kódu.
 
-## Krok 4 — endpoint na backendu
+## Krok 4 — endpoint v datovém API
 
 Jedna funkce `ep_<co>()` na endpoint, jeden soubor `api_<modul>.inc` na
 modul, jeden řádek do switche v `api/index.php`. A **vždycky tohle pořadí**:
@@ -78,7 +78,7 @@ mnoho pokusů. Žádné `{"ok":false}` s dvěstěkou.
 
 ## Krok 5 — obrazovka v BFF
 
-Totéž pořadí, jen tenčí — skutečná práva hlídá backend, tady se rozhoduje o
+Totéž pořadí, jen tenčí — skutečná práva hlídá datové API, tady se rozhoduje o
 tom, **co se nakreslí**.
 
 ```php
@@ -110,7 +110,7 @@ se **předvyplňují z požadavku**, jinak tabulka filtruje a rozbalovátko tvrd
 Tohle je recept, který stačí přepsat jmény. Vzor v kódu: `ep_book_save()`,
 `bff/pages/book_form.inc`, casy `book_form` a `do_book_save`.
 
-**Na backendu**
+**V datovém API**
 
 1. `$op = in_str('op', 16)` a v kroku 2 ověřit, že si záměr neodporuje s daty:
    `op` mimo `insert|update` → 400, `update` bez id → 400, `insert` **s** id → 400.

@@ -6,7 +6,7 @@ Dva soubory. Neřeší databázi, šablony ani autentizaci — to je věc projek
 z požadavku, escapování do HTML, kódování JSON. `fw.inc` je Waggle a
 `io.inc` si načítá sám, takže musí ležet vedle něj.
 
-To rozdělení není úklid. Tříúrovňová aplikace má backendové API, které
+To rozdělení není úklid. Tříúrovňová aplikace má datové API, které
 protokol mezi BFF a prohlížečem načítat nemá — ale tutéž hygienu vstupů
 potřebuje úplně stejně. Dřív si ji každá vrstva psala znovu a dvě kopie
 téhož se dřív nebo později rozejdou. Vstupy jsou to poslední, co se smí
@@ -29,7 +29,7 @@ require __DIR__ . '/../fw.inc';    // io.inc si natáhne sám
 fw_boot();
 ```
 
-Vrstva bez protokolu — backendové API, cronjob, cokoli, co jen potřebuje
+Vrstva bez protokolu — datové API, cronjob, cokoli, co jen potřebuje
 bezpečně přečíst vstup — si načte jen `io.inc` a `fw_boot()` nevolá:
 
 ```php
@@ -61,7 +61,7 @@ nad hodnotou, kterou už držíš — dnes jediné `is_word()`. Na tom rozdílu 
 dá naletět: `is_word('op')` vypadá jako getter a přitom jen potvrdí, že
 slovo „op" je slovo.
 
-Stejná jména používá i backendové API v `examples/library`, které `fw.inc`
+Stejná jména používá i datové API v `examples/library`, které `fw.inc`
 schválně nenačítá — aby se ta sada učila jednou. Pozor ale, že jsou to pak
 **dvě definice týchž jmen**: v jednom procesu smí být jen jedna, jinak PHP
 spadne na dvojí deklaraci. Hlídá to `fwdeploy.sh`, viz

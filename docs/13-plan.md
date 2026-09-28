@@ -92,6 +92,6 @@ ho vyklikal sám. Komentář agenta jde vedle toho, ne místo toho.
 
 * Protokol zůstává `v1`. Nic z výše uvedeného si nevyžádá nový příkaz;
   agent posílá tytéž příkazy jako server.
-* Oprávnění zůstávají na backendu. Agent je klient jako každý jiný.
+* Oprávnění zůstávají v datovém API. Agent je klient jako každý jiný.
 * Knihovna zůstává oddělitelná. Kdo nechce nic z téhle kapitoly, nedostane
   z ní do projektu ani řádek.

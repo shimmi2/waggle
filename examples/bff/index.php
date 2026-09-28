@@ -1,6 +1,6 @@
 <?php
 /* =====================================================================
- *  api/index.php — demo API
+ *  bff/index.php — demo BFF
  *
  *  Jeden dispatcher, dvě sady fragmentů:
  *      pages/plain/   pro ../app            (holé HTML)

@@ -13,7 +13,7 @@ který se překresluje, dostane `id` a vyprázdní se.
 <div id="top_frame"></div>
 <div id="main"></div>
 <script src="fw.js"></script>
-<script>Fw.init({ api: '/api/' });</script>
+<script>Fw.init({ bff: '/bff/' });</script>
 ```
 
 ## Krok 2 — API jako obálka kolem starých souborů

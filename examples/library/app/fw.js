@@ -20,11 +20,11 @@
 
 var RE_WORD  = /^[A-Za-z0-9_-]+$/;
 var FW_V     = 1;          // verze protokolu na drátě
-var RELEASE  = '1.6.1';    // vydání knihovny, mění se nezávisle na protokolu
+var RELEASE  = '1.6.2';    // vydání knihovny, mění se nezávisle na protokolu
 
 var Fw = {
     release: RELEASE,
-    cfg:     { api: '../api/', debug: true, channel: null, params: null },
+    cfg:     { bff: '../bff/', debug: true, channel: null, params: null },
     session: null,        // token; server ho mění příkazem {"op":"session"}
     serial:  null,        // trvalá identifikace instalace v prohlížeči
     ops:     {},          // registr operací
@@ -428,7 +428,7 @@ Fw.send = function (fn, params, opts) {
     var ctx = { origin: 'response', seq: ++Fw._seq, fn: fn,
                 params: Fw.fromFormData(body), history: opts.history !== false };
     Fw.debug('-> ' + fn, ctx.params);
-    return fetch(Fw.cfg.api, { method: 'POST', body: body, headers: Fw.headers(),
+    return fetch(Fw.cfg.bff, { method: 'POST', body: body, headers: Fw.headers(),
                                credentials: 'same-origin' })
         .then(function (res) {
             var ct = res.headers.get('content-type') || '';
@@ -674,6 +674,13 @@ Fw.fromFormData = function (fd) {
 
 Fw.init = function (cfg) {
     for (var k in cfg) Fw.cfg[k] = cfg[k];
+
+    /* Do 1.6.1 se adresa BFF předávala jako cfg.api. Bylo to matoucí:
+       v tříúrovňové aplikaci je api datová vrstva, kterou prohlížeč
+       nikdy nevolá. Starý klíč se bere dál, aby se nemusely přepisovat
+       existující frontendy; v novém kódu piš bff. */
+    if (cfg && cfg.api && !cfg.bff) Fw.cfg.bff = cfg.api;
+
     Fw.serial = Fw.getSerial();
 
     /* Chybový rám nesmí po startu viset prázdný. */

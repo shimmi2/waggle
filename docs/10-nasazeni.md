@@ -8,7 +8,7 @@ push navíc `EventSource`, synchronizace mezi okny `BroadcastChannel`.
 
 ## Rozdělení app / api
 
-Aplikace zná jedinou adresu: `Fw.init({api: '…'})`. Nic víc. Proto může
+Aplikace zná jedinou adresu: `Fw.init({bff: '…'})`. Nic víc. Proto může
 `/app` a `/api` ležet kdekoli, i na jiných hostech.
 
 Při rozdělení na hosty je potřeba CORS — `fw_boot()` odbaví preflight

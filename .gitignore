@@ -1,7 +1,7 @@
 # Běhový stav dem — obsahuje živé tokeny přihlášených, do gitu nepatří.
 # Cesta je ukotvená ke korenu repozitáře, takže se musí přepsat, kdykoli se
 # demo přestěhuje.
-examples/api/data/*.json
+examples/bff/data/*.json
 
 # Nastavení KONKRÉTNÍ instalace příkladu — hesla k databázi v čitelné
 # podobě. Do gitu patří jen config.example.*, ze kterých je instalák dělá.

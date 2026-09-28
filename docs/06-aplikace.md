@@ -3,7 +3,7 @@
 ## Struktura
 
 ```
-examples/api/
+examples/bff/
   config.inc        VŠECHNO nastavení na jednom místě, načítá se první
   index.php         dispatcher
   inc/
@@ -56,7 +56,7 @@ Přepínání skinů si přidá ten, kdo ho opravdu potřebuje.
 Aplikace posílá skin v každém požadavku:
 
 ```js
-Fw.init({ api: '../api/', params: { skin: 'lte' } });
+Fw.init({ bff: '../bff/', params: { skin: 'lte' } });
 ```
 
 ```php

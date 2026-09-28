@@ -9,4 +9,4 @@ Fw.register('sync_note', function (c, ctx) {
                   ? 'změna přišla z jiného okna' : 'měníte v tomhle okně';
 });
 
-Fw.init({ api: '../api/', debug: true, params: { skin: 'plain' } });
+Fw.init({ bff: '../bff/', debug: true, params: { skin: 'plain' } });
