@@ -11,9 +11,10 @@ $root = dirname(__DIR__);
 $files = glob("$root/docs/*.md");
 sort($files);
 
-function esc_h(string $s): string {
-    return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-}
+/* Escapuje se z knihovny, ať je v repozitáři jediná implementace.
+   Generátor jinak s Waggle nic společného nemá — io.inc je právě ta
+   část, která o protokolu neví. */
+require_once dirname(__DIR__) . '/io.inc';
 
 /* inline: `kód`, **tučně**, *kurzíva*, [text](odkaz) */
 function inline(string $t): string {
@@ -21,13 +22,13 @@ function inline(string $t): string {
        htmlspecialchars() nad jedním bajtem vícebajtového znaku ho
        s ENT_SUBSTITUTE nahradí za U+FFFD a rozsype diakritiku. */
     $out = ''; $plain = ''; $i = 0; $n = strlen($t);
-    $flush = function () use (&$out, &$plain) { $out .= esc_h($plain); $plain = ''; };
+    $flush = function () use (&$out, &$plain) { $out .= esc($plain); $plain = ''; };
     while ($i < $n) {
         if ($t[$i] === '`') {                          // kód má přednost
             $e = strpos($t, '`', $i + 1);
             if ($e !== false) {
                 $flush();
-                $out .= '<code>' . esc_h(substr($t, $i + 1, $e - $i - 1)) . '</code>';
+                $out .= '<code>' . esc(substr($t, $i + 1, $e - $i - 1)) . '</code>';
                 $i = $e + 1; continue;
             }
         }
@@ -57,7 +58,7 @@ function inline(string $t): string {
                     /* odkaz na jinou kapitolu -> kotva na téže stránce */
                     if (preg_match('/^(\d\d)-[a-z-]+\.md$/', $href, $m)) $href = '#k' . $m[1];
                     $flush();
-                    $out .= '<a href="' . esc_h($href) . '">' . inline($label) . '</a>';
+                    $out .= '<a href="' . esc($href) . '">' . inline($label) . '</a>';
                     $i = $p + 1; continue;
                 }
             }
@@ -86,7 +87,7 @@ function render_md(string $md, string $anchor): string {
             $i++; $buf = [];
             while ($i < $n && substr($lines[$i], 0, 3) !== '```') $buf[] = $lines[$i++];
             $i++;
-            $out .= '<pre><code>' . esc_h(implode("\n", $buf)) . "</code></pre>\n";
+            $out .= '<pre><code>' . esc(implode("\n", $buf)) . "</code></pre>\n";
             continue;
         }
         if (preg_match('/^(#{1,4})\s+(.*)$/', $l, $m)) {
@@ -155,7 +156,7 @@ foreach ($files as $f) {
     preg_match('/^#\s+(.*)$/m', $md, $t);
     $title = trim(preg_replace('/^\d+\s*—\s*/u', '', $t[1] ?? $base));
     $nav  .= '    <li><a href="#k' . $m[1] . '"><span class="n">' . $m[1] . '</span> '
-           . esc_h($title) . "</a></li>\n";
+           . esc($title) . "</a></li>\n";
     $body .= '<section id="k' . $m[1] . "\">\n" . render_md($md, 'k' . $m[1]) . "</section>\n";
 }
 

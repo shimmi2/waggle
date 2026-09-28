@@ -31,7 +31,17 @@ const CFG_API   = KROK_DIR . '/api/config.inc';
 const CFG_BFF   = KROK_DIR . '/bff/config.inc';
 const CFG_APP   = KROK_DIR . '/app/config.js';
 
-function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+/* Escapování z knihovny. Instalák měl vlastní, pojmenované jedním
+   písmenem, a nemělo ENT_SUBSTITUTE — bez něj vrací htmlspecialchars()
+   pro neplatné UTF-8 PRÁZDNÝ řetězec. Kdo by měl ve jménu databáze nebo
+   v hesle špatný bajt, přišel by o celé políčko a nedozvěděl se proč.
+
+   post() naopak zůstává vlastní, a schválně: čte JEN z $_POST, kdežto
+   in_str() bere i z GET. Do instaláku se píše heslo k databázi a to
+   nesmí projít URL, kde by skončilo v access logu i v historii
+   prohlížeče. */
+require __DIR__ . '/api/inc/io.inc';
+
 function post(string $k, int $max = 512): string {
     $v = $_POST[$k] ?? ''; if (!is_string($v)) return '';
     return str_replace("\0", '', substr($v, 0, $max));
@@ -252,7 +262,7 @@ code{background:#eef1f3;padding:.1em .35em;border-radius:3px}
 
 <?php elseif ($hotovo): ?>
   <div class="box good"><b>Hotovo.</b> Aplikace je na
-     <a href="app/">app/</a>. Přihlaš se jako <code><?= h($admin) ?></code>.<br>
+     <a href="app/">app/</a>. Přihlaš se jako <code><?= esc($admin) ?></code>.<br>
      <small>Ukázková data: <?= (int)($souhrn['operaci'] ?? 0) ?> operací,
      <?= (int)($souhrn['otevrenych'] ?? 0) ?> otevřených výpůjček
      (<?= (int)($souhrn['po_terminu'] ?? 0) ?> po termínu),
@@ -268,8 +278,8 @@ code{background:#eef1f3;padding:.1em .35em;border-radius:3px}
   <?php if (!$api_dosazitelne): ?>
     <div class="box bad">
       <b>BFF se nedovolá na backendové API — aplikace takhle nepojede.</b><br>
-      Zkusil jsem <code><?= h("$base/api/?fn=ping") ?></code> a nedostal odpověď
-      <?= $chyba_curl !== '' ? '(<code>' . h($chyba_curl) . '</code>)' : '' ?>.
+      Zkusil jsem <code><?= esc("$base/api/?fn=ping") ?></code> a nedostal odpověď
+      <?= $chyba_curl !== '' ? '(<code>' . esc($chyba_curl) . '</code>)' : '' ?>.
       <br><br>
       <b>Nejčastější příčina:</b> webserver obsluhuje jeden požadavek po druhém.
       Vývojový server <code>php -S</code> to dělá — a protože tu všechny tři
@@ -287,7 +297,7 @@ code{background:#eef1f3;padding:.1em .35em;border-radius:3px}
   <?php if ($vystaveno): ?>
     <div class="box bad"><b>Tohle je vidět z internetu:</b>
       <ul><?php foreach ($vystaveno as [$rel, $co]): ?>
-        <li><code><?= h($rel) ?></code> — <?= h($co) ?> (vrátilo <b>200</b>)</li>
+        <li><code><?= esc($rel) ?></code> — <?= esc($co) ?> (vrátilo <b>200</b>)</li>
       <?php endforeach; ?></ul>
       Zakaž to na webserveru — direktivy jsou v kapitole 09 dokumentace
       frameworku, pro Apache i nginx. Zvlášť ta konfigurace s heslem.
@@ -314,13 +324,13 @@ code{background:#eef1f3;padding:.1em .35em;border-radius:3px}
 
   <h2>Prostředí</h2>
   <table><?php foreach ($kontroly as [$co, $ok, $pozn]): ?>
-    <tr><td class="<?= $ok ? 'ok' : 'no' ?>"><?= h($co) ?></td><td><small><?= h($pozn) ?></small></td></tr>
+    <tr><td class="<?= $ok ? 'ok' : 'no' ?>"><?= esc($co) ?></td><td><small><?= esc($pozn) ?></small></td></tr>
   <?php endforeach; ?></table>
 
   <?php if (!$povinne_ok): ?>
     <div class="box bad">Něco povinného chybí — doplň to a obnov stránku.</div>
   <?php else: ?>
-    <?php if ($chyba !== null): ?><div class="box bad"><b>Nepovedlo se:</b> <?= h($chyba) ?></div><?php endif; ?>
+    <?php if ($chyba !== null): ?><div class="box bad"><b>Nepovedlo se:</b> <?= esc($chyba) ?></div><?php endif; ?>
     <form method="post">
       <h2>Databáze</h2>
       <p><small>Tyhle údaje potřebují právo zakládat databázi a tabulky.
