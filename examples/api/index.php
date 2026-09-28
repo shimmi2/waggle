@@ -25,12 +25,12 @@ require __DIR__ . '/inc/auth.inc';
 require __DIR__ . '/inc/stream.inc';
 fw_boot();
 
-$skin     = req('skin', 8) === 'lte' ? 'lte' : 'plain';
+$skin     = in_str('skin', 8) === 'lte' ? 'lte' : 'plain';
 $PAGES    = __DIR__ . '/pages/' . $skin;
 
-$function = req('function', 64);
-$session  = req_header('X-App-Session');
-$serial   = req_header('X-App-Serial');
+$function = in_str('function', 64);
+$session  = in_header('X-App-Session');
+$serial   = in_header('X-App-Serial');
 $user     = session_user($session);
 
 /* Kompletní obrazovka pro daný stav přihlášení. */
@@ -87,8 +87,8 @@ default:
 
 /* ------------------------------------------------------------------ */
 case 'do_login':
-    $login = req('user', 64);
-    $pass  = req('password', 256);
+    $login = in_str('user', 64);
+    $pass  = in_str('password', 256);
     if ($login === '' || $pass === '') throw_http_error(400, 'Vyplňte jméno i heslo');
 
     $u = check_password($login, $pass);
@@ -129,9 +129,9 @@ case 'busy':
 
 /* ------------------------------------------------------------------ */
 case 'save_form_test':
-    $nazev = req('nazev', 128);
-    $pocet = req_int('pocet');
-    $pozn  = req('poznamka', 1024);
+    $nazev = in_str('nazev', 128);
+    $pocet = in_int('pocet');
+    $pozn  = in_str('poznamka', 1024);
 
     if ($nazev === '')                  throw_http_error(400, 'Název je povinný');
     if ($pocet < 1 || $pocet > 99)      throw_http_error(400, 'Počet musí být 1 až 99');

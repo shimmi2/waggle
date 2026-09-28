@@ -99,7 +99,7 @@ předat člověku i modelu se stejným výsledkem.
 1. **Bezpečnost z konstrukce.** ORM parametrizuje dotazy, ať píše kdokoli.
    Generovaný kód je bezpečný jen tak, jak pozorný je ten, kdo ho čte.
    Odpověď frameworku: bezpečná cesta musí být zároveň ta nejpohodlnější —
-   `req_int()` je kratší než `$_REQUEST[...]`, `is_word()` je kratší než
+   `in_int()` je kratší než `$_REQUEST[...]`, `is_word()` je kratší než
    ruční kontrola cesty. Viz [09 — Bezpečnost](09-bezpecnost.md).
 
 2. **Evoluce schématu.** Migrace databáze ORM řeší a tenhle framework ne.

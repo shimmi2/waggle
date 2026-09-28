@@ -61,7 +61,7 @@ Nikdy nepošle „překresli menu" a pak zjistí, že uživatel nemá oprávněn
 
 ## 10. Framework garantuje hygienu, ne bezpečnost
 
-`req()` zaručí skalární string omezené délky bez NUL. Nic víc.
+`in_str()` zaručí skalární string omezené délky bez NUL. Nic víc.
 Escapování je vlastnost **cíle**, ne hodnoty — patří do místa použití.
 Viz [09 — Bezpečnost](09-bezpecnost.md).
 

@@ -37,7 +37,7 @@ záblesk působí pomaleji než ticho.
 ## Po rozvozu knihovny vrací celé API 500
 
 ```
-PHP Fatal error: Cannot redeclare function req_rows()
+PHP Fatal error: Cannot redeclare function in_rows()
 (previously declared in lib/fw.inc) in lib/inc/app.inc on line 85
 ```
 
@@ -45,8 +45,14 @@ Nová verze knihovny přinesla funkci, kterou si projekt už dávno napsal
 sám. PHP na dvojí deklaraci spadne fatální chybou ještě před prvním
 řádkem endpointu, takže **nevrací 500 jedna stránka, ale všechno**.
 
-Stalo se to při vydání 1.2.2, kde do `fw.inc` přibyla `req_rows()` —
-obě odvozené aplikace ji přitom měly ve svém `app.inc`.
+Stalo se to při vydání 1.2.2, kde do `fw.inc` přibyla `req_rows()`
+(dnes `in_rows()`) — obě odvozené aplikace ji přitom měly ve svém
+`app.inc`.
+
+Od 1.5.0 hledá `fwdeploy.sh` kolizi jen v adresáři, kam `fw.inc`
+patří. Tříúrovňová aplikace má knihovnu v `bff/` a vlastní vstupní
+vrstvu v `api/`; jsou to dva procesy, které se v jednom include grafu
+nikdy nesejdou, takže stejná jména tam kolize nejsou.
 
 **Oprava:** smazat projektovou kopii, knihovna tu funkci má taky.
 Nikdy ne obráceně a nikdy ne přes `function_exists()` — to by znamenalo,
@@ -124,7 +130,7 @@ bez varování. Subscriber endpoint musí mít TLS.
 ## `?x[]=1` shodí endpoint
 
 Na PHP 8 hodí `addslashes()` i většina string funkcí na poli `TypeError`,
-tedy HTTP 500. Je to DoS na jeden parametr. `req()` vrací pro pole
+tedy HTTP 500. Je to DoS na jeden parametr. `in_str()` vrací pro pole
 prázdný string.
 
 ## Prázdný chybový rám po startu

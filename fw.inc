@@ -18,7 +18,7 @@
 /* FW_RELEASE je vydání knihovny, FW_V je verze protokolu na drátě.
    Mění se nezávisle: protokol zůstává 1, dokud se nezmění formát dávky.
    Bez tohohle čísla se u běžícího projektu nedalo zjistit, co v něm je. */
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.4.0');
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.5.0');
 defined('FW_V')          || define('FW_V', 1);
 defined('FW_MAXLEN')     || define('FW_MAXLEN', 65536);   // strop délky jednoho pole
 defined('FW_DEBUG')      || define('FW_DEBUG', false);    // true = chyby prozradí cesty
@@ -33,7 +33,7 @@ $FW_DONE    = false;   // pojistka proti dvojímu doběhnutí
  *  VSTUP — jediné tři garance. Nic víc, nic míň.
  * ------------------------------------------------------------------- */
 
-function req(string $name, int $max = 4096): string {
+function in_str(string $name, int $max = 4096): string {
     $v = $_REQUEST[$name] ?? '';
     if (!is_string($v))              return '';   // ?x[]=1 nesmí shodit endpoint
     if (isset($v[$max]))             $v = substr($v, 0, $max);
@@ -41,8 +41,8 @@ function req(string $name, int $max = 4096): string {
     return $v;
 }
 
-function req_int(string $name): int     { return intval(req($name, 32));   }
-function req_float(string $name): float { return floatval(req($name, 64)); }
+function in_int(string $name): int     { return intval(in_str($name, 32));   }
+function in_float(string $name): float { return floatval(in_str($name, 64)); }
 
 /* "slovo" — bezpečné pro názvy funkcí a části cest. Čistý strspn, 41 ns. */
 function is_word(string $s): bool {
@@ -63,7 +63,7 @@ function is_word(string $s): bool {
    Klíče řádků i sloupců zůstávají tak, jak přišly, a jsou to vstup
    od klienta jako každý jiný: do SQL ani do HTML nepatří bez ošetření.
    Framework je nepřepisuje, protože jen volající ví, co znamenají. */
-function req_rows(string $name, int $maxRows = 500, int $maxLen = 4096): array {
+function in_rows(string $name, int $maxRows = 500, int $maxLen = 4096): array {
     $v = $_REQUEST[$name] ?? null;
     if (!is_array($v)) return [];
     $out = [];
@@ -83,13 +83,32 @@ function req_rows(string $name, int $maxRows = 500, int $maxLen = 4096): array {
     return $out;
 }
 
-function req_header(string $name, int $max = 1024): string {
+function in_header(string $name, int $max = 1024): string {
     $v = $_SERVER['HTTP_' . strtr(strtoupper($name), '-', '_')] ?? '';
     if (!is_string($v))              return '';
     if (isset($v[$max]))             $v = substr($v, 0, $max);
     if (strpos($v, "\0") !== false)  $v = str_replace("\0", '', $v);
     return $v;
 }
+
+/* ---------------------------------------------------------------------
+ *  Původní jména z vydání 1.4.0 a starších. Zůstávají a v protokolu v1
+ *  se neodeberou — visí na nich stovky volání v existujících projektech
+ *  a přejmenovat je hromadně v živém kódu je riziko bez užitku.
+ *
+ *  V novém kódu piš in_*. Jsou to jména čteček, takže se poznají od
+ *  is_word(), které nic nečte — je to predikát nad řetězcem, který už
+ *  držíš. Na tom rozdílu se dá naletět: is_word('op') vypadá jako
+ *  getter a přitom jen odpoví, že slovo „op" je slovo. Proto se
+ *  predikát nejmenuje in_word().
+ * ------------------------------------------------------------------- */
+function req(string $name, int $max = 4096): string { return in_str($name, $max); }
+function req_int(string $name): int                 { return in_int($name); }
+function req_float(string $name): float             { return in_float($name); }
+function req_rows(string $name, int $maxRows = 500, int $maxLen = 4096): array {
+    return in_rows($name, $maxRows, $maxLen);
+}
+function req_header(string $name, int $max = 1024): string { return in_header($name, $max); }
 
 /* ---------------------------------------------------------------------
  *  VÝSTUP
@@ -118,7 +137,7 @@ function fw_start_output(): void {
 
 /* CORS — aby /api mohlo v produkci žít na jiném hostu než /app. */
 function fw_cors(): void {
-    $o = req_header('Origin');
+    $o = in_header('Origin');
     if ($o === '') return;
     header('Access-Control-Allow-Origin: ' . $o);
     header('Access-Control-Allow-Credentials: true');

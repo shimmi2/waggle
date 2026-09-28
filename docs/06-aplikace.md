@@ -60,7 +60,7 @@ Fw.init({ api: '../api/', params: { skin: 'lte' } });
 ```
 
 ```php
-$skin  = req('skin', 8) === 'lte' ? 'lte' : 'plain';
+$skin  = in_str('skin', 8) === 'lte' ? 'lte' : 'plain';
 $PAGES = __DIR__ . '/pages/' . $skin;
 ```
 
@@ -82,8 +82,8 @@ a právě to je důvod, proč tu žádná vrstva navíc není.
 ```php
 case 'save_form_test':
     /* 1. vstupy — vždy jako první, nikdy nesahat na $_REQUEST přímo */
-    $nazev = req('nazev', 128);
-    $pocet = req_int('pocet');
+    $nazev = in_str('nazev', 128);
+    $pocet = in_int('pocet');
 
     /* 2. sémantika — levné kontroly, bez lookupů do DB */
     if ($nazev === '')             throw_http_error(400, 'Název je povinný');

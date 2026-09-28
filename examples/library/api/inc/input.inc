@@ -30,7 +30,7 @@ function in_float(string $name): float { return floatval(in_str($name, 64)); }
 /* Je to jedno slovo? Používá se všude, kde hodnota vstupuje do cesty
    k souboru nebo do jména sloupce. Nepustí '/', '.' ani NUL, takže se
    z ní cesta nedá vylomit. */
-function in_word(string $s): bool {
+function is_word(string $s): bool {
     static $OK = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-';
     return $s !== '' && strspn($s, $OK) === strlen($s);
 }

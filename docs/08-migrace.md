@@ -63,8 +63,8 @@ V každém převedeném endpointu nahraď přímé sahání na `$_REQUEST`:
 $id = addslashes($_REQUEST['id'] ?? '');
 
 // je
-$id = req_int('id');            // číslo
-$nazev = req('nazev', 128);     // string
+$id = in_int('id');            // číslo
+$nazev = in_str('nazev', 128);     // string
 ```
 
 Proč ne `addslashes()`: escapuje čtyři znaky pro jeden kontext a používá se,
@@ -78,7 +78,7 @@ Ruční `?session=…` v URL zahoď. Klient posílá `X-App-Session` sám, ke
 každému požadavku včetně fetche fragmentů.
 
 ```php
-$session = req_header('X-App-Session');
+$session = in_header('X-App-Session');
 ```
 
 Server ji mění příkazem:

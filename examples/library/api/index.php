@@ -38,7 +38,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') { http_response_code(204);
 /* Jméno endpointu. is_word() proto, že se z něj skládá jméno funkce —
    bez té kontroly by šlo zavolat cokoli, co je v paměti. */
 $fn = in_str('fn', 64);
-if (!in_word($fn)) api_error(400, 'Neplatné jméno operace');
+if (!is_word($fn)) api_error(400, 'Neplatné jméno operace');
 
 switch ($fn) {
 

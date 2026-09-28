@@ -32,8 +32,8 @@ veřejná bez ohledu na to, odkud ji volá vaše aplikace.
 
 ```php
 case 'save_neco':
-    $nazev = req('nazev', 128);          /* 1. vstupy — nikdy přímo $_REQUEST */
-    $pocet = req_int('pocet');
+    $nazev = in_str('nazev', 128);          /* 1. vstupy — nikdy přímo $_REQUEST */
+    $pocet = in_int('pocet');
     if ($nazev === '') throw_http_error(400, 'Název je povinný');   /* 2. sémantika */
     if ($user === null) throw_http_error(401, 'Nejste přihlášen');  /* 3. session */
     if (!acl_check($user, 'save_form')) throw_http_error(403, '…'); /* 4. oprávnění */
@@ -69,12 +69,12 @@ konkrétního endpointu.
 * do shellu nepatří nic bez `escapeshellarg()`.
 
 Pole z formuláře (`fd[i][sloupec]`, `vyber[]`) skalární gettery nepustí;
-na ně je `req_rows()`. Klíče řádků a sloupců jsou taky vstup od klienta.
+na ně je `in_rows()`. Klíče řádků a sloupců jsou taky vstup od klienta.
 
 ## Co framework garantuje a co ne
 
-Garantuje **jen hygienu vstupu**: `req()` vrátí skalární string omezené
-délky bez NUL, `req_int()` celé číslo, `is_word()` pustí jen
+Garantuje **jen hygienu vstupu**: `in_str()` vrátí skalární string omezené
+délky bez NUL, `in_int()` celé číslo, `is_word()` pustí jen
 `[A-Za-z0-9_-]`. Nic víc.
 
 Neřeší databázi ani escapování pro cílový kontext. Do HTML patří vlastní

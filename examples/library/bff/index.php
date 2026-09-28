@@ -34,7 +34,7 @@ fw_boot();
  *  header() se stejným jménem předchozí hodnotu přepíše, takže stačí
  *  zavolat ji po fw_boot().
  */
-$origin = req_header('Origin');
+$origin = in_header('Origin');
 if ($origin !== '') {
     if ($origin === rtrim(FRONTEND_URL, '/')) {
         header('Access-Control-Allow-Origin: ' . $origin);
@@ -46,8 +46,8 @@ if ($origin !== '') {
     }
 }
 
-$SESSION  = req_header('X-App-Session');
-$function = req('function', 64);
+$SESSION  = in_header('X-App-Session');
+$function = in_str('function', 64);
 if ($function === '') $function = 'index';
 if (!is_word($function)) throw_http_error(400, 'Neplatný název obrazovky');
 
@@ -99,11 +99,11 @@ function prazdna_kniha(): array {
 /* Stav filtru katalogu, jak přišel s požadavkem. Putuje formulářem tam
    a zpět, aby se po uložení překreslil týž seznam. */
 function filtr_katalogu(string $prefix = ''): array {
-    return ['q'         => req($prefix . 'q', 64),
-            'genre'     => req_int($prefix . 'genre'),
-            'available' => req($prefix . 'available', 1),
-            'order'     => req($prefix . 'order', 32),
-            'offset'    => req_int($prefix . 'offset')];
+    return ['q'         => in_str($prefix . 'q', 64),
+            'genre'     => in_int($prefix . 'genre'),
+            'available' => in_str($prefix . 'available', 1),
+            'order'     => in_str($prefix . 'order', 32),
+            'offset'    => in_int($prefix . 'offset')];
 }
 
 /* BĚŽNÁ obrazovka — jen obsah. Tohle je ta, která se používá pořád. */
@@ -120,8 +120,8 @@ case 'index':
     break;
 
 case 'do_login':
-    $login = req('login', 64);
-    $pass  = req('password', 256);
+    $login = in_str('login', 64);
+    $pass  = in_str('password', 256);
     [$code, $data] = api_raw('do_login', ['login' => $login, 'password' => $pass]);
     if ($code !== 200) {
         /* Hláška z backendu se předá tak, jak je — ten ví, jestli je to
@@ -156,16 +156,16 @@ case 'books':
     send_answer(['op' => 'history', 'url' => '#?function=books']);
     /* fallthrough do výsledků */
 case 'books_results':
-    $args = ['q' => req('q', 64), 'genre' => req_int('genre'),
-             'available' => req('available', 1), 'order' => req('order', 32),
-             'limit' => 50, 'offset' => req_int('offset')];
+    $args = ['q' => in_str('q', 64), 'genre' => in_int('genre'),
+             'available' => in_str('available', 1), 'order' => in_str('order', 32),
+             'limit' => 50, 'offset' => in_int('offset')];
     $r = api_call('books_list', $args);
     send_answer(['op' => 'html', 'sel' => '#books_results',
                  'content' => frag('books_results', $r + ['args' => $args])]);
     break;
 
 case 'book_detail':
-    $r = api_call('book_detail', ['bo_id' => req_int('bo_id')]);
+    $r = api_call('book_detail', ['bo_id' => in_int('bo_id')]);
     send_answer(['op' => 'html', 'sel' => 'overlay',
                  'content' => frag('book_detail', $r + ['filtr' => filtr_katalogu()])]);
     break;
@@ -193,7 +193,7 @@ case 'book_detail':
 
 case 'book_form':
     /* 1. vstupy */
-    $id = req_int('bo_id');
+    $id = in_int('bo_id');
 
     /* 2. sémantika — nic k ověřování, id je buď kladné (editace), nebo
        nula (nová kniha), a obojí je platné. */
@@ -237,15 +237,15 @@ case 'do_book_save':
        Hodnoty se z požadavku vytáhnou JEDNOU a používají se pro volání
        i pro případné překreslení formuláře. Dvě čtení stejného pole se
        rozejdou přesně ve chvíli, kdy jedno z nich někdo upraví. */
-    $op = req('op', 16);
-    $b  = ['bo_id'          => req_int('bo_id'),
-           'bo_name'        => req('bo_name', 255),
-           'bo_author'      => req('bo_author', 128),
-           'bo_genre'       => req_int('bo_genre'),
-           'bo_year'        => req_int('bo_year'),
-           'bo_count'       => req_int('bo_count'),
-           'bo_price'       => req_float('bo_price'),
-           'bo_description' => req('bo_description', 4000)];
+    $op = in_str('op', 16);
+    $b  = ['bo_id'          => in_int('bo_id'),
+           'bo_name'        => in_str('bo_name', 255),
+           'bo_author'      => in_str('bo_author', 128),
+           'bo_genre'       => in_int('bo_genre'),
+           'bo_year'        => in_int('bo_year'),
+           'bo_count'       => in_int('bo_count'),
+           'bo_price'       => in_float('bo_price'),
+           'bo_description' => in_str('bo_description', 4000)];
     $filtr = filtr_katalogu('f_');
 
     /* 2. sémantika
@@ -351,16 +351,16 @@ case 'rentals':
     send_answer(['op' => 'history', 'url' => '#?function=rentals']);
     /* fallthrough */
 case 'rentals_results':
-    $args = ['user' => req_int('user'), 'book' => req_int('book'),
-             'open' => req('open', 1), 'overdue' => req('overdue', 1),
-             'limit' => 50, 'offset' => req_int('offset')];
+    $args = ['user' => in_int('user'), 'book' => in_int('book'),
+             'open' => in_str('open', 1), 'overdue' => in_str('overdue', 1),
+             'limit' => 50, 'offset' => in_int('offset')];
     $r = api_call('rentals_list', $args);
     send_answer(['op' => 'html', 'sel' => '#rentals_results',
                  'content' => frag('rentals_results', $r + ['args' => $args])]);
     break;
 
 case 'do_return':
-    api_call('rental_return', ['rental' => req_int('rental')]);
+    api_call('rental_return', ['rental' => in_int('rental')]);
     send_answer(['op' => 'notify', 'kind' => 'success', 'message' => 'Kniha vrácena.']);
     $r = api_call('rentals_list', ['open' => '1', 'limit' => 50]);
     send_answer([['op' => 'html', 'sel' => '#rentals_results',
@@ -389,7 +389,7 @@ case 'statistics':
 
 /* ---- uživatelé -------------------------------------------------- */
 case 'users':
-    $r = api_call('users_list', ['q' => req('q', 64), 'limit' => 200]);
+    $r = api_call('users_list', ['q' => in_str('q', 64), 'limit' => 200]);
     send_answer(jen_main('users', $r));
     send_answer(['op' => 'history', 'url' => '#?function=users']);
     break;

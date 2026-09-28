@@ -115,13 +115,19 @@ V_SRC="$(vydani "$SRC/fw.inc")"
 # předem: vezmou se jména funkcí ze zdrojového fw.inc a hledají se
 # v projektu všude jinde než v souboru, který se přepisuje.
 kolize() {
-    local root="$1" cil="$2" f jmena hit nalez=""
+    local root="$1" cil="$2" f jmena hit nalez="" obor
     [ "${cil##*.}" = "inc" ] || return 0
+    # Hledá se jen v adresáři, kam fw.inc patří, ne v celém projektu.
+    # Tříúrovňová aplikace má fw.inc v bff/ a vlastní vstupní vrstvu
+    # v api/ — jsou to DVA procesy, které se v jednom include grafu
+    # nikdy nesejdou, takže stejná jména tam kolize nejsou. Prohledávat
+    # celý koren by na takovém projektu hlásilo poplach pokaždé.
+    obor="$(dirname "$cil")"
     jmena="$(grep -oE '^function [a-z_]+\(' "$SRC/fw.inc" 2>/dev/null | sed 's/^function //; s/($//')"
     [ -n "$jmena" ] || return 0
     while IFS= read -r f; do
         [ -n "$f" ] || continue
-        hit="$(grep -rlE "^function +$f *\(" "$root" --include='*.inc' --include='*.php' 2>/dev/null \
+        hit="$(grep -rlE "^function +$f *\(" "$obor" --include='*.inc' --include='*.php' 2>/dev/null \
                | grep -v "^$cil$" | head -1)"
         [ -n "$hit" ] && nalez="$nalez\n        $f()  v  ${hit#$root/}"
     done <<< "$jmena"

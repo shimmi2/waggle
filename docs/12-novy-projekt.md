@@ -70,7 +70,7 @@ společné pro celý modul. Proč tak přísně: kroky 1 a 2 jsou levné a bez
 následků, takže je můžou být první; všechno od kroku 5 už něco dělá. Mezi
 tím stojí otázka „kdo se ptá a smí to".
 
-Vstupy **jen** přes `in_str/in_int/in_float/in_word/in_rows` — mají stropy a
+Vstupy **jen** přes `in_str/in_int/in_float/in_rows/in_header` — mají stropy a
 bez stropu je jediný parametr DoS. Chyby **jen** přes `api_error()` s HTTP
 kódem: 400 vyplnění, 401 sezení, 403 oprávnění, 404 neexistuje, 429 příliš
 mnoho pokusů. Žádné `{"ok":false}` s dvěstěkou.
@@ -82,7 +82,7 @@ tom, **co se nakreslí**.
 
 ```php
 case 'neco':
-    $r = api_call('neco_list', ['q' => req('q', 64)]);
+    $r = api_call('neco_list', ['q' => in_str('q', 64)]);
     send_answer(jen_main('neco', $r));
     send_answer(['op' => 'history', 'url' => '#?function=neco']);
     break;
@@ -125,7 +125,7 @@ Tohle je recept, který stačí přepsat jmény. Vzor v kódu: `ep_book_save()`,
 
 ```php
 case 'neco_form':
-    /* 1. vstupy */    $id = req_int('ne_id');
+    /* 1. vstupy */    $id = in_int('ne_id');
     /* 3. sezení */    if (me(true) === null) { … 401 … break; }
     /* 4. oprávnění */ if (!may('manage_neco')) { … 403 … break; }
     /* 5. + 6. */      $b = $id > 0 ? api_call('neco_detail', …)['neco'] : prazdne_neco();

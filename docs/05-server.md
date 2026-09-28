@@ -27,16 +27,32 @@ Framework garantuje **tři věci a nic víc**: skalární string omezené délky
 bez NUL bajtu.
 
 ```php
-$a  = req('nazev', 128);     // string, ořezaný, bez NUL
-$n  = req_int('pocet');      // int — číslo nejde nikam injektovat
-$f  = req_float('cena');
-$s  = req_header('X-App-Session');   // token sezení
-$i  = req_header('X-App-Serial');    // identifikace instalace v prohlížeči
+$a  = in_str('nazev', 128);     // string, ořezaný, bez NUL
+$n  = in_int('pocet');      // int — číslo nejde nikam injektovat
+$f  = in_float('cena');
+$s  = in_header('X-App-Session');   // token sezení
+$i  = in_header('X-App-Serial');    // identifikace instalace v prohlížeči
 
 is_word($function)           // ^[A-Za-z0-9_-]+$ přes strspn (41 ns)
 ```
 
-`req()` vrátí prázdný string, když přijde pole (`?x[]=1`) — bez toho by
+**Úmluva o jménech.** `in_*` **čte** z požadavku — `in_str`, `in_int`,
+`in_float`, `in_rows`, `in_header`. `is_*` **nečte nic**, jen odpovídá ano/ne
+nad hodnotou, kterou už držíš — dnes jediné `is_word()`. Na tom rozdílu se
+dá naletět: `is_word('op')` vypadá jako getter a přitom jen potvrdí, že
+slovo „op" je slovo.
+
+Stejná jména používá i backendové API v `examples/library`, které `fw.inc`
+schválně nenačítá — aby se ta sada učila jednou. Pozor ale, že jsou to pak
+**dvě definice týchž jmen**: v jednom procesu smí být jen jedna, jinak PHP
+spadne na dvojí deklaraci. Hlídá to `fwdeploy.sh`, viz
+[11 — Problémy](11-problemy.md).
+
+Původní `req()`, `req_int()`, `req_float()`, `req_rows()` a `req_header()`
+zůstávají jako aliasy a v protokolu v1 se neodeberou — visí na nich stovky
+volání v existujících projektech. V novém kódu piš `in_*`.
+
+`in_str()` vrátí prázdný string, když přijde pole (`?x[]=1`) — bez toho by
 na PHP 8 spadl jakýkoli endpoint na `TypeError`.
 
 Klient posílá dvě hlavičky a je dobré je nezaměňovat. **`X-App-Session`**
@@ -49,11 +65,11 @@ nedokazuje; jak se z nich dělá důvěra, je v
 [09 — Bezpečnost](09-bezpecnost.md).
 
 Tabulkové formuláře posílají `fd[i][sloupec]`, což skalární getter nepustí.
-Na ně je `req_rows()`, který propustí jen dvojúrovňové pole skalárů
+Na ně je `in_rows()`, který propustí jen dvojúrovňové pole skalárů
 s omezením počtu řádků i délky hodnot:
 
 ```php
-foreach (req_rows('fd', 500) as $i => $row) {
+foreach (in_rows('fd', 500) as $i => $row) {
     $id  = intval($row['id'] ?? 0);
     $txt = db_esc($row['name'] ?? '');
 }
@@ -188,7 +204,8 @@ hodnoty tím, že si je nadefinuje **před** načtením `fw.inc`:
 | | |
 |---|---|
 | `fw_boot()` | inicializace, první řádek endpointu |
-| `req()`, `req_int()`, `req_float()`, `req_rows()`, `req_header()`, `is_word()` | vstupy |
+| `in_str()`, `in_int()`, `in_float()`, `in_rows()`, `in_header()`, `is_word()` | vstupy |
+| `req()`, `req_int()`, `req_float()`, `req_rows()`, `req_header()` | **zastaralé** aliasy z 1.4.0 a starších |
 | `send_answer()`, `flush_answer()`, `finish_answer()` | odpověď |
 | `throw_http_error()` | chyba |
 | `start_direct_answer()`, `finish_direct_answer()` | zachytávání výstupu |

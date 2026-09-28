@@ -8,10 +8,10 @@
          žánr. Bez toho by tabulka byla filtrovaná, ale rozbalovátko by
          tvrdilo „všechny", což je ta nejhorší kombinace: uživatel vidí
          výsledek, kterému neodpovídá ovládání. */
-$f_q     = req('q', 64);
-$f_zanr  = req_int('genre');
-$f_order = req('order', 32);
-$f_avail = req('available', 1) === '1';
+$f_q     = in_str('q', 64);
+$f_zanr  = in_int('genre');
+$f_order = in_str('order', 32);
+$f_avail = in_str('available', 1) === '1';
 ?>
 <div class="card">
   <h2>Katalog</h2>

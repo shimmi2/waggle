@@ -39,7 +39,7 @@ function session_user(string $token): ?array {
 
     $d = json_decode(b64ud($p), true);
     if (!is_array($d) || ($d['exp'] ?? 0) < time())             return null;
-    if (!hash_equals((string)($d['s'] ?? ''), req_header('X-App-Serial'))) return null;
+    if (!hash_equals((string)($d['s'] ?? ''), in_header('X-App-Serial'))) return null;
 
     $u = auth_users()[$d['u']] ?? null;
     if ($u === null) return null;

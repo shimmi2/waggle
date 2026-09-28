@@ -9,7 +9,7 @@ pro SQL, HTML, shell a filesystém se vzájemně vylučuje. Proto:
 
 > Na vstupu **validuj a typuj**. Na výstupu **escapuj podle cíle**.
 
-Kdyby `req()` escapovalo HTML rovnou, uloží se do databáze `O&#039;Brien`,
+Kdyby `in_str()` escapovalo HTML rovnou, uloží se do databáze `O&#039;Brien`,
 porovnání `$u === "O'Brien"` selže, `strlen` vrátí 12 místo 7, a proti
 SQL injection to stejně neudělá nic — `1 OR 1=1` projde beze změny.
 Přesně tohle byly `magic_quotes`, které PHP v 5.4 vyhodilo.
@@ -17,12 +17,12 @@ Přesně tohle byly `magic_quotes`, které PHP v 5.4 vyhodilo.
 ## Vstup: tři garance
 
 ```php
-req($name, $max)   // skalární string, omezená délka, bez NUL
-req_int($name)     // int
-req_float($name)   // float
+in_str($name, $max)   // skalární string, omezená délka, bez NUL
+in_int($name)     // int
+in_float($name)   // float
 ```
 
-`req()` vrátí prázdný string, když místo hodnoty přijde pole. Bez toho by
+`in_str()` vrátí prázdný string, když místo hodnoty přijde pole. Bez toho by
 `?user[]=x` shodil endpoint na PHP 8 fatální chybou — což je DoS na jeden
 parametr.
 
@@ -33,10 +33,10 @@ který by nesl útok.
 
 Tabulkový formulář posílá `fd[i][sloupec]` a checkboxy `vyber[]`.
 Skalární gettery taková pole schválně nepustí, takže je na ně
-`req_rows()` — a platí pro něj **tytéž tři garance**:
+`in_rows()` — a platí pro něj **tytéž tři garance**:
 
 ```php
-foreach (req_rows('fd', 500) as $i => $row) {
+foreach (in_rows('fd', 500) as $i => $row) {
     $id  = intval($row['id'] ?? 0);
     $txt = db_esc($row['name'] ?? '');
 }
@@ -89,7 +89,7 @@ Escapuje čtyři znaky pro jeden kontext. Rozbije se triviálně:
 Traversal se neřeší kontrolou, ale konstrukcí:
 
 ```php
-$function = req('function', 64);
+$function = in_str('function', 64);
 if (!is_word($function)) throw_http_error(400, 'Neplatný název');
 // od téhle chvíle je jisté, že tam není '/', '.' ani NUL
 ```

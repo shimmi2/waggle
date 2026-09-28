@@ -5,7 +5,7 @@
 > safe and simple apps. Apps where data flows in parallel, asynchronous
 > motion, like bees in a waggle dance.
 
-Vydání **1.4.0**, protokol **v1**.
+Vydání **1.5.0**, protokol **v1**.
 
 ## Proč vznikl
 
@@ -103,7 +103,7 @@ oprávněních první vrstvy a o kódu. Platí pro něj tohle:
   a [09 — Bezpečnost](docs/09-bezpecnost.md):
 
     1. **Import vstupů.** První řádky obalí všechno, co přišlo zvenčí:
-       `req()`, `req_int()`, `req_float()`.
+       `in_str()`, `in_int()`, `in_float()`.
     2. **Sémantika.** Levné kontroly bez sahání do databáze:
        `if (!$id) throw_http_error(400, 'Chybí id');`
     3. **Session**, tedy autentizace — pokud ji modul neřeší globálně:
@@ -230,7 +230,7 @@ Fw.init({ api: '../api/', params: { skin: 'lte' } });
 ```
 
 ```php
-$skin  = req('skin', 8) === 'lte' ? 'lte' : 'plain';
+$skin  = in_str('skin', 8) === 'lte' ? 'lte' : 'plain';
 $PAGES = __DIR__ . '/pages/' . $skin;
 ```
 
@@ -286,7 +286,7 @@ každého projektu vidět, na jaké verzi frameworku běží.
 ```bash
 ./tools/fwdeploy.sh --check            # co kde běží
 ./tools/fwdeploy.sh <cesta>...         # rozvoz z tohohle stromu
-./tools/fwdeploy.sh --from v1.4.0 …    # rozvoz z vydání na GitHubu
+./tools/fwdeploy.sh --from v1.5.0 …    # rozvoz z vydání na GitHubu
 ```
 
 Bez `--from` se bere tenhle strom, takže to jede i bez sítě. S `--from`
