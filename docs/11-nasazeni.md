@@ -198,5 +198,5 @@ curl -N -H "Accept: text/event-stream" \
 curl -X POST -d '{"v":1,"cmds":[]}' "http://127.0.0.1:8081/nchan/pub?token=…"
 
 # neveřejné adresáře musí vracet 403
-curl -o /dev/null -w '%{http_code}\n' https://host/framework/api/pages/lte/sync.inc
+curl -o /dev/null -w '%{http_code}\n' https://host/pages/lte/sync.inc
 ```

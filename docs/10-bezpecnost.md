@@ -1,5 +1,48 @@
 # 10 — Bezpečnost
 
+## Nejúčinnější ochrana není v kódu
+
+Než přijde řeč na escapování a přípony souborů: **největší kus
+bezpečnosti se rozhoduje při nasazení, ne v endpointu.** Každá vrstva
+patří na **vlastní site** — vlastní virtual host, vlastní docroot,
+vlastní systémový účet, ideálně vlastní PHP-FPM pool.
+
+| vrstva | kdo na ni smí | co v docrootu je |
+|---|---|---|
+| frontend | kdokoli z internetu | statické soubory; PHP tam nemusí běžet vůbec |
+| BFF | jen prohlížeč | dispatcher, fragmenty, konfigurace BFF |
+| datové API | **jen BFF** | dispatcher, přístup k databázi |
+
+**Datové API nemusí být z internetu dostupné vůbec.** Ať poslouchá na
+localhostu nebo ve vnitřní síti; BFF je na témže stroji nebo za firewallem
+a víc nikdo nepotřebuje. Veřejná adresa se hodí až ve chvíli, kdy API
+používá i něco jiného než váš BFF — nativní aplikace pro iOS a Android,
+integrace partnera, jiný systém. Pak ale platí, že si takový klient řeší
+autentizaci sám a chodí na tytéž endpointy se stejnou kontrolou oprávnění.
+
+Co tím získáte, se v kódu udělat nedá:
+
+* Chyba ve fragmentu nemůže vyservírovat konfiguraci datové vrstvy,
+  protože ta leží v **jiném docrootu**, na který ten webserver nevidí.
+* Kdo se dostane do BFF, nedostane se k databázi přímo. Musí projít
+  endpointy datového API, a ty kontrolují oprávnění nezávisle na tom, co
+  si o nich myslí BFF.
+* Přípona `.inc`, práva souborů a zamčené adresáře jsou pak **druhá**
+  vrstva obrany, ne jediná.
+
+Cena je tři virtual hosty, tři konfigurace a CORS mezi frontendem
+a BFF. U nového projektu je to půlhodina a stojí to za to.
+
+**Dvouvrstvý model tuhle ochranu nemá** — BFF sahá na data přímo, takže
+všechno pod ním visí jen na kázni v kódu. U převodu staršího monolitu to
+je legitimní volba, ale je dobré vědět, co se tím platí.
+
+V `examples/library` je ten rozdíl vidět na dvou instalátorech:
+`install.sh` rozkopíruje kód do tří docrootů a založí databázový účet bez
+DDL, kdežto `install.php` nechá všechno pod jednou doménou — a instalace
+pak nese červený odznak `UNSAFE_DEMO`, protože datové API je z internetu
+dosažitelné.
+
 ## Základní pravidlo
 
 **„Bezpečné" není vlastnost hodnoty, ale dvojice hodnota + cíl.**
@@ -155,7 +198,7 @@ jinak se `.inc` nejdřív chytí jako PHP a direktiva se neuplatní:
 location ~ \.inc$                                   { return 403; }
 
 # fragmenty, workery a běhová data čte jen index.php
-location ~ ^/(api/pages|api/bin|api/data)/          { return 403; }
+location ~ ^/(pages|bin|data)/                      { return 403; }
 
 # zálohy, výpisy a tečkové soubory
 location ~ \.(bak|old|orig|save|swp|sql|dump|log|tar|tgz|zip)$|~$ { return 403; }
@@ -171,14 +214,17 @@ Kde direktivu nasadit nejde (cizí hosting, `AllowOverride None`), je jediná
 funkční náhrada dát souborům příponu `.php` — server je spustí místo
 odeslání — a doplnit jim strážce, který přímé volání odmítne 404.
 
-### Adresáře
+### Co zamknout v každém docrootu
+
+Cesty jsou vztažené k docrootu té které vrstvy — u BFF i u datového API
+platí totéž.
 
 | adresář | ochrana |
 |---|---|
-| `api/*.inc` | `<FilesMatch "\.inc$"> Require all denied` |
-| `api/pages/` | `Require all denied` — čte je jen `index.php` |
-| `api/bin/` | `Require all denied` + kontrola `PHP_SAPI !== 'cli'` |
-| `api/data/` | `Require all denied`, vlastník www-data |
+| `*.inc` | `<FilesMatch "\.inc$"> Require all denied` |
+| `pages/` | `Require all denied` — čte je jen `index.php` |
+| `bin/` | `Require all denied` + kontrola `PHP_SAPI !== 'cli'` |
+| `data/` | `Require all denied`, vlastník www-data |
 
 A žádné `.git` ve webrootu — `/.git/config` je jinak veřejně čitelný.
 
@@ -219,7 +265,7 @@ Při `FW_DEBUG` obsahují cestu a řádek. **Na produkci `FW_DEBUG = false`.**
 
 ## Kontrolní seznam endpointu
 
-1. vstupy přes `req*()`, nikdy přímo `$_REQUEST`
+1. vstupy přes `in_*()`, nikdy přímo `$_REQUEST`
 2. sémantické kontroly → 400
 3. session → 401
 4. oprávnění → 403
