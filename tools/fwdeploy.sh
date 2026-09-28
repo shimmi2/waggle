@@ -133,7 +133,7 @@ patro() {
 # napsal sám. PHP na dvojí deklaraci spadne fatální chybou ještě před
 # prvním řádkem endpointu, takže nevrací 500 jedna stránka, ale všechno.
 #
-# Hledá se v celém patře, ale CIZÍ patra se vynechávají: tříúrovňová
+# Hledá se v celém patře, ale CIZÍ patra se vynechávají: třívrstvá
 # aplikace má vlastní kopii knihovny v bff/ i v api/inc/ a ty dva
 # procesy se v jednom include grafu nikdy nesejdou. Vynechat celý
 # zbytek projektu by naopak minulo kolizi o adresář vedle — a přesně

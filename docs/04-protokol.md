@@ -86,9 +86,14 @@ by uměl číst DOM zpátky. Důvody jsou v [02 — Principy](02-principy.md).
 | `remove` | `sel` | odstraní prvek |
 | `url` | `sel`, `url` | klient stáhne fragment a vloží ho |
 
-`url` má smysl jen pro velký, veřejný, cache-ovatelný fragment servírovaný
-přímo webserverem. Cokoli závislého na session statickým souborem být
-nemůže, takže by se neušetřilo nic a zaplatil by se druhý round-trip.
+Adresa může být cokoli na témže původu — statický soubor i endpoint
+s GET parametry. Hlavičky sezení se k ní posílají (viz výš), takže server
+ví, kdo se ptá, a smí odpovědět podle toho.
+
+Vyplatí se to ale jen u **velkého, veřejného a cache-ovatelného**
+fragmentu, který umí obsloužit rovnou webserver. U obsahu závislého na
+sezení se nic neušetří — statickým souborem být nemůže, takže se jen
+zaplatí druhý round-trip navíc.
 **Výchozí je vždy `html` — obsah jde po drátě v odpovědi.**
 
 ### Vlastnosti prvků

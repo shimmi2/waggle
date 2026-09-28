@@ -6,7 +6,7 @@ Dva soubory. Neřeší databázi, šablony ani autentizaci — to je věc projek
 z požadavku, escapování do HTML, kódování JSON. `fw.inc` je Waggle a
 `io.inc` si načítá sám, takže musí ležet vedle něj.
 
-To rozdělení není úklid. Tříúrovňová aplikace má datové API, které
+To rozdělení není úklid. Třívrstvá aplikace má datové API, které
 protokol mezi BFF a prohlížečem načítat nemá — ale tutéž hygienu vstupů
 potřebuje úplně stejně. Dřív si ji každá vrstva psala znovu a dvě kopie
 téhož se dřív nebo později rozejdou. Vstupy jsou to poslední, co se smí

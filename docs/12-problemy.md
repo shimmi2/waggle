@@ -53,7 +53,7 @@ Od 1.6.0 hledá `fwdeploy.sh` kolizi **po patrech**. Patro je adresář,
 ve kterém běží jeden proces; knihovní soubor ho označuje tím, že v něm
 leží (a když bydlí v `inc/` nebo `lib/`, patří patro o úroveň výš, kde
 je vstupní bod). Hledá se v celém patře, ale cizí patra se vynechávají:
-tříúrovňová aplikace má `io.inc` v `bff/` i v `api/inc/` a ty dva
+třívrstvá aplikace má `io.inc` v `bff/` i v `api/inc/` a ty dva
 procesy se v jednom include grafu nikdy nesejdou.
 
 Zúžení jen na adresář `fw.inc`, jak to dělala 1.5.0, bylo málo —

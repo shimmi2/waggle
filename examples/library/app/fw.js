@@ -676,7 +676,7 @@ Fw.init = function (cfg) {
     for (var k in cfg) Fw.cfg[k] = cfg[k];
 
     /* Do 1.6.1 se adresa BFF předávala jako cfg.api. Bylo to matoucí:
-       v tříúrovňové aplikaci je api datová vrstva, kterou prohlížeč
+       v třívrstvé aplikaci je api datová vrstva, kterou prohlížeč
        nikdy nevolá. Starý klíč se bere dál, aby se nemusely přepisovat
        existující frontendy; v novém kódu piš bff. */
     if (cfg && cfg.api && !cfg.bff) Fw.cfg.bff = cfg.api;

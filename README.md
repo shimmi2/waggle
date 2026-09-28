@@ -163,7 +163,7 @@ každá změna patří do nové verze Waggle.
 
 `fw.inc` si `io.inc` načítá sám a musí ležet **vedle** něj; rozváží je
 `fwdeploy.sh` společně. Vrstva, která o protokolu vědět nemá — typicky
-datové API tříúrovňové aplikace — si načte jen `io.inc`. Nikdy obojí
+datové API třívrstvé aplikace — si načte jen `io.inc`. Nikdy obojí
 v jednom procesu: sdílejí jména a PHP spadne na dvojí deklaraci.
 
 **Kostra se rozchází schválně.** Dispatcher demo BFF má 8 kB, oba
@@ -173,7 +173,7 @@ odvozené převedením portálu, zkušebního projektu, kolem 6 kB.
 `examples/app` a `examples/app-adminlte` jsou tatáž aplikace jednou na
 holém HTML a jednou na AdminLTE — jsou tu, aby bylo vidět, že markup je
 jediné, co se mezi nimi liší. `examples/library` je něco jiného: celá
-tříúrovňová aplikace s instalákem, ze které se **začíná nový projekt**.
+třívrstvá aplikace s instalákem, ze které se **začíná nový projekt**.
 
 ```
 fw.js       knihovna, klient

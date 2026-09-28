@@ -6,7 +6,7 @@
  *  escapuje se do HTML, kóduje se JSON — věci, které potřebuje každá
  *  PHP vrstva, která mluví přes HTTP, ať protokol nahoře vypadá jakkoli.
  *
- *  Proto je oddělený od fw.inc: tříúrovňová aplikace má backendové API,
+ *  Proto je oddělený od fw.inc: třívrstvá aplikace má backendové API,
  *  které protokol mezi BFF a prohlížečem načítat nemá, ale tutéž hygienu
  *  vstupů potřebuje úplně stejně. Dvě kopie téhož by se dřív nebo
  *  později rozešly — a vstupy jsou to poslední, co se smí rozejít.
