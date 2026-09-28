@@ -27,7 +27,7 @@
  *  a nikdo už nikdy nezjistí, jak se ten člověk jmenuje.
  * ------------------------------------------------------------------- */
 
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.6.0');
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.6.1');
 
 /* Vstupy se berou z GET i POST. Vědomé ustoupení kvůli kompatibilitě se
    staršími projekty, kde část endpointů vede na odkaz. Na bezpečnost to

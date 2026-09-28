@@ -5,7 +5,7 @@
 > safe and simple apps. Apps where data flows in parallel, asynchronous
 > motion, like bees in a waggle dance.
 
-Vydání **1.6.0**, protokol **v1**.
+Vydání **1.6.1**, protokol **v1**.
 
 ## Proč vznikl
 
@@ -184,7 +184,7 @@ examples/
   app/            demo BEZ AdminLTE — holé HTML a vlastní CSS
   app-adminlte/   demo S AdminLTE 4 — týž kód, jiný markup
   library/        KNIHOVNA: frontend + BFF + backend API, MySQL, instalák
-docs/       dokumentace, 12 kapitol
+docs/       dokumentace, 13 kapitol
 doc/        generátor prohlížitelné dokumentace
 tools/      rozvoz knihovny do projektů + odesílač do prohlížeče
 .claude/    skilly pro práci s Waggle
@@ -267,6 +267,7 @@ se z `docs/*.md` příkazem `php doc/build.php`.
 | [10 — Nasazení](docs/10-nasazeni.md) | Apache, nginx, nchan, produkční checklist |
 | [11 — Problémy](docs/11-problemy.md) | pasti, na které jsme narazili, a jak je poznat |
 | [12 — Nový projekt](docs/12-novy-projekt.md) | jak začít z `examples/library` — **kuchařka i pro model** |
+| [13 — Co je v plánu](docs/13-plan.md) | komponenty, MCP server, agentický pomocník v aplikaci |
 
 ## Skilly
 
@@ -292,7 +293,7 @@ každého projektu vidět, na jaké verzi frameworku běží.
 ```bash
 ./tools/fwdeploy.sh --check            # co kde běží
 ./tools/fwdeploy.sh <cesta>...         # rozvoz z tohohle stromu
-./tools/fwdeploy.sh --from v1.6.0 …    # rozvoz z vydání na GitHubu
+./tools/fwdeploy.sh --from v1.6.1 …    # rozvoz z vydání na GitHubu
 ```
 
 Bez `--from` se bere tenhle strom, takže to jede i bez sítě. S `--from`

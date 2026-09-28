@@ -2,174 +2,167 @@
 
 > Let's say adieu to the overlayered, fat and slow balls of dirt called high-level frameworks — and open a new era: agentic coding, top speed, safe and simple apps.
 
-## Proč Waggle
+Waggle vznikl ze **dvou potřeb, které se sešly ve stejnou chvíli**. Každá
+z nich by sama o sobě vedla k jinému nástroji; dohromady vedly k tomuhle.
+
+## Cíl 1 — odpovědět na vibecoding
+
+Kód dnes ve velkém píší jazykové modely. Tím se obrací ekonomika, na které
+stály vysoké frameworky: historické ospravedlnění abstraktních vrstev
+znělo *ručně psaný boilerplate je drahý, tak ho schováme.* Když je
+generování boilerplatu levné a přečtení výsledku rychlé, obchod se obrací
+— explicitní, dohledatelný, grepovatelný kód vyhrává nad chytrou
+abstrakcí.
+
+Zásluhu na tom ale nemá samotný model. Model generuje **věrohodný** kód,
+ne nutně **konzistentní**. Čtyřicet endpointů napsaných bez specifikace je
+čtyřicet mírně odlišných endpointů, a to je horší než vrstva, protože
+nekonzistenci nikdo nevynucuje.
+
+Použitelnou strategií dělá generování až **napsaná, úzká a vynucená
+konvence**: pevný protokol, pevná kostra endpointu, pevná sada vstupních
+funkcí, pevná sada příkazů. Pak je generování rychlé vyplňování známé
+šablony a výsledek se dá zkontrolovat pohledem.
+
+Proto je tahle dokumentace zároveň **zadáním pro generátor**.
+[06 — Aplikace](06-aplikace.md) obsahuje šablonu endpointu, kterou lze
+předat člověku i modelu se stejným výsledkem. Skilly v `.claude/skills/`
+jsou z téhož důvodu součástí repozitáře, ne přílohou.
+
+Druhý důsledek je praktický: na jedné úrovni se pracuje stylem **jeden
+prompt = jedna nová vlastnost**. Kdo trvá na vrstvách, narazí na limit
+kontextu mnohem dřív, protože jedna změna se dotkne pěti souborů ve čtyřech
+jazycích.
+
+## Cíl 2 — co s dvacet let starými aplikacemi
+
+Druhá potřeba je konkrétní a stará: PHP aplikace, kde každé tlačítko a
+každý odkaz odesílá formulář a vyvolává kompletní reload stránky. Funguje
+to. Ale je to pomalé, bliká to, ztrácí se pozice ve scrollu i rozepsaný
+obsah polí — a s propracovanou šablonou jako AdminLTE se při každém
+kliknutí zbytečně přenáší a znovu inicializuje celý layout.
+
+Obvyklá odpověď zní „přepiš to do Vue". To znamená build step,
+`node_modules`, druhý jazyk, zdvojenou logiku na obou stranách a rewrite
+na rok.
+
+Waggle je jiná odpověď: **nechat serverovou logiku tam, kde je, a vyměnit
+jen způsob doručení.** Existující stránka se převede přidáním atributu, ne
+přepsáním:
+
+```html
+<a href="#?function=detail&id=1">Detail</a>
+<a href="#?function=detail&id=1" data-fw>Detail</a>
+```
+
+Endpointy zůstávají v PHP, generují HTML jako dosud, jen ho posílají jako
+příkaz místo celé stránky. Postup po krocích je v
+[08 — Migrace](08-migrace.md).
+
+Migrace přitom není strop. Streamované odpovědi, push ze serveru,
+synchronizace mezi okny a jemné adresování prvků jsou věci, které většina
+SPA frameworků řeší složitěji a dráž — takže tentýž základ nese i aplikace
+psané od nuly.
+
+## Proč zrovna „Waggle"
 
 Včelí *waggle dance* je jediný způsob, jak si včely předají, kam letět.
-Tanec nese směr, vzdálenost i kvalitu zdroje — a je to **příkaz**, ne
-data k interpretaci. Včela ho nedostane jako JSON, který si musí sama
+Tanec nese směr, vzdálenost i kvalitu zdroje — a je to **příkaz**, ne data
+k interpretaci. Včela ho nedostane jako JSON, který si musí sama
 vyrenderovat.
 
-Stejnou roli hraje protokol Waggle: server pošle hotový příkaz, klient
-ho provede. Žádné schéma, žádná zdvojená logika na obou stranách, žádný
+Stejnou roli hraje protokol Waggle: server pošle hotový příkaz, klient ho
+provede. Žádné schéma, žádná zdvojená logika na obou stranách, žádný
 model, který se musí držet v synchronu.
 
-A je v tom i druhá půlka. Úl nemá architekta ani vysoký framework. Má
-jednoduchá pravidla a hodně dělníků — dnes stále častěji agentů. K tomu
-není potřeba katedrála, ale sada skillů, která drží jednotný přístup.
-Proto jsou v `.claude/skills/` součástí repozitáře, ne přílohou.
+Úl k tomu nemá architekta ani vysoký framework. Má jednoduchá pravidla a
+hodně dělníků — dnes stále častěji agentů.
 
-## Odkud to vzešlo
+## Čemu se framework vyhýbá
 
-Dvacet let staré PHP aplikace, kde každé tlačítko a každý odkaz odesílá
-formulář a vyvolává kompletní reload stránky. Funguje to. Ale je to pomalé,
-bliká to, ztrácí se pozice ve scrollu a rozepsaný obsah polí — a s propracovanou
-šablonou jako AdminLTE se při každém kliknutí zbytečně přenáší a znovu
-inicializuje celý layout.
-
-Obvyklá odpověď je „přepiš to do Vue". To znamená build step, node_modules,
-druhý jazyk, zdvojenou logiku na obou stranách a rewrite, který trvá rok.
-
-Tenhle framework je jiná odpověď: **nechat serverovou logiku tam, kde je,
-a vyměnit jen způsob doručení.**
-
-## Dva cíle, ne jeden
-
-**1. Evoluční migrace.** Existující stránka se převede přidáním atributu, ne
-přepsáním. `<a href="#?function=aaa&id=1">` → `<a href="#?function=aaa&id=1" data-fw>`.
-Endpointy zůstávají v PHP, generují HTML jako dosud, jen ho posílají jako
-příkaz místo celé stránky. Viz [08 — Migrace](08-migrace.md).
-
-**2. Plnohodnotný základ pro nové aplikace.** Tohle není berlička. Streamované
-odpovědi, push ze serveru, synchronizace mezi okny a jemné adresování prvků
-jsou věci, které většina SPA frameworků řeší složitěji a dráž.
-
-## Čemu se vyhýbá a proč
-
-| vyhýbáme se | důvod |
+| vyhýbá se | důvod |
 |---|---|
-| build step | zdroják = to, co běží; debugování bez source map |
-| node_modules | nulová údržba závislostí, žádný supply chain |
-| klientskému routeru | URL řeší `history`, stav drží server |
+| build stepu | zdroják je to, co běží; ladí se bez source map |
+| `node_modules` | nulová údržba závislostí, žádný supply chain |
+| klientskému routeru | URL řeší příkaz `history`, stav drží server |
 | šablonám na klientovi | HTML generuje ten, kdo má data |
-| ORM | viz níže |
+| ORM | viz následující kapitolu |
 
-## O ORM a generovaném kódu
-
-Ptal ses, jestli sdílím názor, že ORM je zbytečnost, protože AI dokáže
-napsat standardizovaný kód pro každou komponentu zvlášť.
-
-**Se závěrem souhlasím, s odůvodněním jen zčásti** — a ten rozdíl je důležitý,
-protože z něj plyne, jak psát tuhle dokumentaci.
-
-### Proč tu ORM nepatří, nezávisle na AI
+## Bez ORM: co se získá a co to stojí
 
 V tomhle architektonickém stylu jdou data cestou **databáze → HTML**.
-Nikdy se nestanou doménovým objektem. ORM je stroj na to, aby z řádků udělal
-objekty, které pak něco vyrenderuje a zahodí. V aplikaci, která ta data
-používá právě jednou a právě k vykreslení, je to čistá režie — hydratace,
+Nikdy se nestanou doménovým objektem. ORM je stroj na to, aby z řádků
+udělal objekty, které se jednou vykreslí a zahodí; v aplikaci, která data
+používá právě jednou a právě k vykreslení, je to režie navíc — hydratace,
 lazy loading s překvapeními, N+1 dotazy a učení se query jazyku místo SQL.
+Ten argument platil před jazykovými modely a platí i po nich.
 
-Tenhle argument platil před AI a bude platit po ní.
+Nevýhody té volby jsou ale reálné a je lepší je znát předem.
 
-### Kde AI opravdu mění rovnici
+**Evoluci schématu framework neřeší.** ORM s sebou obvykle nese nástroj na
+migrace databáze; tady žádný není. Je to skutečná mezera, ne vyřešený
+problém — postup na to potřebuje každý projekt sám.
 
-Historické ospravedlnění abstraktních vrstev znělo: *ručně psaný boilerplate
-je drahý, tak ho schováme.* Když je generování boilerplatu levné a
-přečtení výsledku rychlé, obchod se obrací — explicitní, dohledatelný,
-grepovatelný kód vyhrává nad chytrou abstrakcí. V tom máš pravdu.
+**Bezpečnost nedrží vrstva, ale autor.** ORM parametrizuje dotazy, ať píše
+kdokoli. Generovaný a ručně psaný kód je bezpečný jen tak, jak pozorný je
+ten, kdo ho čte. Odpověď frameworku není vrstva, ale **zkrácení bezpečné
+cesty**: `in_int()` je kratší než sáhnout do `$_REQUEST` a přetypovat,
+`is_word()` je kratší než ruční kontrola cesty, `esc()` je kratší než
+`htmlspecialchars()` se třemi argumenty. Podrobně v
+[09 — Bezpečnost](09-bezpecnost.md).
 
-### Ale zásluhu nemá AI, má ji úzká konvence
+**Ochrana proti chybě v zápisu chybí taky.** Zapomenuté `WHERE` odchytí
+ORM, tady ho neodchytí nic. Proto ORM dál dává smysl tam, kde se pracuje
+s penězi a přesnými transakcemi.
 
-Tohle je ten rozdíl. AI generuje **věrohodný** kód, ne nutně **konzistentní**.
-Když necháš čtyřicet endpointů napsat bez specifikace, dostaneš čtyřicet
-mírně odlišných endpointů — a to je horší než ORM, protože nekonzistenci
-nikdo nevynucuje.
+**Identity map, unit of work a transakční hranice** jsou věci, které ORM
+řeší dobře a tenhle styl vůbec. V doménově složitých, zápisově náročných
+systémech je to důvod ORM použít. V aplikaci typu „formulář, seznam,
+detail" — což je ve většině firemních systémů většina agend — se ty
+mechanismy nikdy neuplatní.
 
-Co z generování dělá použitelnou strategii, je existence **napsané, úzké,
-vynucené konvence**: pevný protokol, pevná kostra endpointu, pevná sada
-vstupních funkcí, pevná sada příkazů. Pak je generování jen rychlé
-vyplňování známé šablony a výsledek se dá zkontrolovat pohledem.
-
-**Proto je tahle dokumentace zároveň zadáním pro generátor.**
-[06 — Aplikace](06-aplikace.md) obsahuje šablonu endpointu, která se dá
-předat člověku i modelu se stejným výsledkem.
-
-### Dvě věci, které generování nenahradí
-
-1. **Bezpečnost z konstrukce.** ORM parametrizuje dotazy, ať píše kdokoli.
-   Generovaný kód je bezpečný jen tak, jak pozorný je ten, kdo ho čte.
-   Odpověď frameworku: bezpečná cesta musí být zároveň ta nejpohodlnější —
-   `in_int()` je kratší než `$_REQUEST[...]`, `is_word()` je kratší než
-   ruční kontrola cesty. Viz [09 — Bezpečnost](09-bezpecnost.md).
-
-2. **Evoluce schématu.** Migrace databáze ORM řeší a tenhle framework ne.
-   Je to skutečná mezera, ne vyřešený problém — potřebuješ na to vlastní
-   postup, ať už ORM máš, nebo nemáš.
-
-A pro úplnost: identity map, unit of work a transakční hranice jsou věci,
-kde ORM pořád dává smysl — v doménově složitých, zápisově náročných
-systémech. V aplikaci typu „formulář, seznam, detail" prakticky nikdy.
+Rozhodovací pravidlo je jednoduché: **kolik agend v systému sahá na jednu
+tabulku?** Když většina, ORM platíte a nevyužijete.
 
 ## Co framework záměrně neřeší
 
 Databázi, šablonovací jazyk, autentizaci, routing na serveru, validaci,
-lokalizaci. To všechno je věc projektu. Framework dělá jedno:
-**doručí příkaz ze serveru do DOMu, čtyřmi transporty a jedním formátem.**
+lokalizaci. To všechno je věc projektu. Framework dělá jedno: **doručí
+příkaz ze serveru do DOMu, čtyřmi transporty a jedním formátem.**
 
-Zní to jako díra. Není — je to **dělba práce**. Co dřív držela vrstva
-technologie, drží teď konvence a skilly. Konvence se dá přečíst za deset
-minut, nedrží se v paměti procesu, nepřidává round-trip a nezastará
-s příští major verzí. A hlavně: dá se předat agentovi stejně dobře jako
-člověku, což se o vrstvě říct nedá. O tom je celé
-[**jeden prompt = jedna nová vlastnost**](../README.md).
+Není to díra, je to **dělba práce**. Co dřív držela vrstva technologie,
+drží teď konvence a skilly. Konvenci lze přečíst za deset minut, nedrží se
+v paměti procesu, nepřidává round-trip a nezastará s příští major verzí —
+a dá se předat agentovi stejně dobře jako člověku, což se o vrstvě říct
+nedá.
 
-## Co k tomu teprve přibude
-
-Tohle je **plán, ne stav** — ať se podle toho nikdo nezařizuje dřív, než
-to bude v repozitáři.
-
-Framework dnes řeší doručení příkazu a hygienu vstupu. Ostatní vrstvy
-aplikace si musí každý napsat sám, byť podle konvence. Chystá se k němu
-proto sada **skillů, šablon a příkladů pro okamžité nasazení**, aby se
-kompletní aplikace dala vybuildit jedním promptem — i s databází,
-správou session a oprávněními.
-
-Ve dvou variantách, podle toho, jak je projekt postavený:
-
-* **Dvouvrstvý model** (typicky portál): frontend a BFF, který sahá
-  rovnou na data. Přibalí se kompletní backend.
-* **Třívrstvý model**, o kterém mluvím jako o ideálu: frontend, BFF
-  a pod ním čisté datové API, sdílené i s jinými klienty — mobilními
-  aplikacemi a podobně. Přibalí se BFF i backend.
-
-Hranice knihovny se tím **nemění**. Skilly, šablony a příklady jsou
-příklady a nástroje, ne závislosti — viz níž.
+Hotové stavební díly nad rámec knihovny se chystají odděleně, jako
+příklady a komponenty. Viz [13 — Co je v plánu](13-plan.md).
 
 ## Na čem stojí a na čem nesmí stát
 
 Tohle je hranice knihovny a drží se **tvrdě**. Je snadné ji rozmělnit
 jedním „to se přece hodí", a pak už se to nevrátí.
 
-**Tvrdá závislost je jediná: HTML, CSS a JavaScript v prohlížeči.**
-Nic dalšího `fw.js` nepotřebuje — žádný build step, žádný balíčkovač,
-žádnou knihovnu třetí strany.
+**Tvrdá závislost je jediná: HTML, CSS a JavaScript v prohlížeči.** Nic
+dalšího `fw.js` nepotřebuje — žádný build step, žádný balíčkovač, žádnou
+knihovnu třetí strany.
 
-**Volitelná je jedna: nchan.** Jenom kvůli pushi. Bez něj funguje
-všechno ostatní, jen se průběh dlouhé operace doručí streamem, nebo
-vůbec.
+**Volitelná je jedna: nchan.** Jenom kvůli pushi. Bez něj funguje všechno
+ostatní, jen se průběh dlouhé operace doručí streamem, nebo vůbec.
 
 Co do knihovny **nepatří a patřit nebude**:
 
 | | proč to není závislost |
 |---|---|
 | AdminLTE, Bootstrap, jakákoli šablona | `examples/app-adminlte/` je **příklad**, ne součást. `examples/app/` dokazuje, že to jde i bez nich. |
-| PHP | `fw.inc` je **referenční implementace** serverové strany, ne její definice. Definicí je [03 — Protokol](03-protokol.md). Přepsat ji do Pythonu nebo Go je práce na den. |
-| naše konkrétní projekty | Jejich knihovny zůstávají u nich. Do repozitáře se nikdy nedostane nic, co ví, jak vypadá naše databáze. |
+| PHP | `fw.inc` a `io.inc` jsou **referenční implementace** serverové strany, ne její definice. Definicí je [03 — Protokol](03-protokol.md). Přepsat je do Pythonu nebo Go je práce na den. |
+| konkrétní projekty autora | Jejich knihovny zůstávají u nich. Do repozitáře se nikdy nedostane nic, co ví, jak vypadá cizí databáze. |
 
 Zbytek obsahu repozitáře jsou **příklady a nástroje**, ne knihovna:
-`examples/*`, `tools/fwdeploy.sh`, `tools/async_sender.php`.
-Nástroj smí být v PHP, smí předpokládat nchan, smí si dělat, co chce —
-protože ho nikdo nemusí použít. Knihovna ne.
+`examples/*`, `tools/fwdeploy.sh`, `tools/async_sender.php`. Nástroj smí
+být v PHP, smí předpokládat nchan, smí si dělat, co chce — protože ho
+nikdo nemusí použít. Knihovna ne.
 
 Zkouška, která to rozsoudí: **co přestane fungovat, když ta věc zítra
 zmizí?**
@@ -180,8 +173,8 @@ zmizí?**
 
 Když je odpověď „framework", je to závislost a nepatří tam.
 
-**Jedno místo tuhle čistotu dnes porušuje**, ať se na to nepřijde jako
-na překvapení: výchozí překryv operace `busy` má `z-index: 1050`, což je
-bootstrapí číslo pro pozadí modálu. Funguje to i jinde, ale je to
-hodnota vycucaná z cizí knihovny. Správně by to měla být proměnná
-s touhle výchozí hodnotou.
+**Jedno místo tuhle čistotu dnes porušuje**, ať se na to nepřijde jako na
+překvapení: výchozí překryv operace `busy` má `z-index: 1050`, což je
+bootstrapí číslo pro pozadí modálu. Funguje to i jinde, ale je to hodnota
+převzatá z cizí knihovny. Správně by to měla být proměnná s touhle výchozí
+hodnotou.

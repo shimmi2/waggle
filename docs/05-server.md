@@ -16,12 +16,10 @@ rozejít.
 k tomu `io.inc` ještě jednou znamená dvojí deklaraci a fatální chybu
 před prvním řádkem endpointu. Hlídá to `tools/fwdeploy.sh`.
 
-Chystá se k němu sada **skillů, šablon a příkladů pro okamžité
-nasazení**, aby se kompletní aplikace i s databází, session a
-oprávněními dala vybuildit jedním promptem, ve dvouvrstvé i třívrstvé
-podobě. Je to **plán, ne stav**; podrobněji v
-[01 — Motivace](01-motivace.md). Na hranici knihovny to nic nemění —
-budou to příklady a nástroje, ne závislosti.
+Hotové stavební díly nad rámec knihovny — šablony pro rozjezd,
+komponenty, MCP server nad API — se chystají odděleně. Je to **plán, ne
+stav**; podrobně v [13 — Co je v plánu](13-plan.md). Na hranici knihovny
+to nic nemění: budou to příklady a nástroje, ne závislosti.
 
 ## Start
 
