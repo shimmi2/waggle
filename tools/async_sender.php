@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 /* async_sender.php — pošle dávku příkazů do prohlížeče mimo HTTP odpověď.
  *
@@ -17,6 +16,10 @@
  *      otevřené stránky správce („zálohuji, 40 %")
  *    - práce, která má pokračovat potom, co odpověď skončila
  *    - jazyk, který není PHP (pošle JSON na stdin a je hotovo)
+ *
+ *  BEZ SHEBANGU schválně. PHP ho odstraňuje jen v CLI; pod webserverem
+ *  ho pošle jako text, tedy bajt před hlavičkami. Ochranou je kontrola
+ *  PHP_SAPI níž, ne shebang. Volej s interpretem.
  *
  *  Použití:
  *

@@ -162,19 +162,19 @@ Co do knihovny **nepatří a patřit nebude**:
 
 | | proč to není závislost |
 |---|---|
-| AdminLTE, Bootstrap, jakákoli šablona | `app2/` je **příklad**, ne součást. `app/` dokazuje, že to jde i bez nich. |
+| AdminLTE, Bootstrap, jakákoli šablona | `examples/app-adminlte/` je **příklad**, ne součást. `examples/app/` dokazuje, že to jde i bez nich. |
 | PHP | `fw.inc` je **referenční implementace** serverové strany, ne její definice. Definicí je [03 — Protokol](03-protokol.md). Přepsat ji do Pythonu nebo Go je práce na den. |
 | naše konkrétní projekty | Jejich knihovny zůstávají u nich. Do repozitáře se nikdy nedostane nic, co ví, jak vypadá naše databáze. |
 
 Zbytek obsahu repozitáře jsou **příklady a nástroje**, ne knihovna:
-`app/`, `app2/`, `api/`, `tools/fwdeploy.sh`, `tools/async_sender.php`.
+`examples/*`, `tools/fwdeploy.sh`, `tools/async_sender.php`.
 Nástroj smí být v PHP, smí předpokládat nchan, smí si dělat, co chce —
 protože ho nikdo nemusí použít. Knihovna ne.
 
 Zkouška, která to rozsoudí: **co přestane fungovat, když ta věc zítra
 zmizí?**
 
-* zmizí AdminLTE → jen `app2/`
+* zmizí AdminLTE → jen `examples/app-adminlte/`
 * zmizí PHP → serverová strana se přepíše, protokol platí dál
 * zmizí nchan → jen push; fetch i stream jedou
 

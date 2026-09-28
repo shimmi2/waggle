@@ -5,7 +5,7 @@
 > safe and simple apps. Apps where data flows in parallel, asynchronous
 > motion, like bees in a waggle dance.
 
-Vydání **1.3.1**, protokol **v1**.
+Vydání **1.4.0**, protokol **v1**.
 
 ## Proč vznikl
 
@@ -153,8 +153,8 @@ něco brát, koukni, do které patří — ušetří to spoustu zbytečných ot�
 | vrstva | co to je | jak často se bere |
 |---|---|---|
 | **knihovna** | `fw.inc`, `fw.js` | **průběžně**, skriptem `tools/fwdeploy.sh` |
-| **kostra** | `api/index.php`, `api/config.inc`, `api/inc/*` | **jednou** při zrodu projektu, pak se rozchází |
-| **dema** | `api/pages/*`, `app/*`, `app2/*` | **nikdy** — jen se čtou |
+| **kostra** | `examples/library/*` nebo `examples/api/{index.php,config.inc,inc/*}` | **jednou** při zrodu projektu, pak se rozchází |
+| **dema** | `examples/api/pages/*`, `examples/app/*`, `examples/app-adminlte/*` | **nikdy** — jen se čtou |
 
 **Knihovna jsou dva soubory.** V reálném projektu je to zlomek celku:
 `fw.inc` má 10 kB proti stovkám kB stránek, `fw.js` 20 kB proti
@@ -164,17 +164,21 @@ do nové verze Waggle.
 **Kostra se rozchází schválně.** Dispatcher demo API má 8 kB, oba
 odvozené převedením portálu, zkušebního projektu, kolem 6 kB.
 
-**Dema jsou referenční text, ne startovací balík.** `app/` a `app2/` jsou
-tatáž aplikace jednou na holém HTML a jednou na AdminLTE — jsou tu, aby
-bylo vidět, že markup je jediné, co se mezi nimi liší.
+**Dema jsou referenční text, `library` je startovací balík.**
+`examples/app` a `examples/app-adminlte` jsou tatáž aplikace jednou na
+holém HTML a jednou na AdminLTE — jsou tu, aby bylo vidět, že markup je
+jediné, co se mezi nimi liší. `examples/library` je něco jiného: celá
+tříúrovňová aplikace s instalákem, ze které se **začíná nový projekt**.
 
 ```
 fw.js       knihovna, klient
 fw.inc      knihovna, server (referenční implementace v PHP)
-api/        kostra + dema, jedno API pro oba příklady
-app/        příklad BEZ AdminLTE — holé HTML a vlastní CSS
-app2/       příklad S AdminLTE 4
-docs/       dokumentace, 11 kapitol
+examples/
+  api/            demo API — jeden dispatcher, dvě sady fragmentů
+  app/            demo BEZ AdminLTE — holé HTML a vlastní CSS
+  app-adminlte/   demo S AdminLTE 4 — týž kód, jiný markup
+  library/        KNIHOVNA: frontend + BFF + backend API, MySQL, instalák
+docs/       dokumentace, 12 kapitol
 doc/        generátor prohlížitelné dokumentace
 tools/      rozvoz knihovny do projektů + odesílač do prohlížeče
 .claude/    skilly pro práci s Waggle
@@ -182,6 +186,10 @@ LICENSE     Apache License 2.0, plné znění
 NOTICE      copyright a licence přibaleného cizího kódu
 nginx-nchan.conf.example
 ```
+
+Dema si vystačí se samotným PHP. `examples/library` potřebuje MySQL a má
+vlastní [README](examples/library/README.md) — začni tam, pokud stavíš
+něco nového.
 
 ## Rychlý start
 
@@ -211,9 +219,9 @@ Odkaz, který to zavolá bez reloadu stránky:
 
 ## Dva příklady, jedno API
 
-`app/` a `app2/` jsou tatáž aplikace. Jedna na holém HTML, druhá na
-AdminLTE 4. Jedou přes **jedno** `api/` a liší se **výhradně markupem
-fragmentů** — endpointy, session ani protokol se neliší ani o řádek.
+`examples/app/` a `examples/app-adminlte/` jsou tatáž aplikace. Jedna na
+holém HTML, druhá na AdminLTE 4. Jedou přes **jedno** `examples/api/` a
+liší se **výhradně markupem fragmentů** — endpointy, session ani protokol se neliší ani o řádek.
 
 Skin posílá aplikace v každém požadavku:
 
@@ -252,6 +260,7 @@ se z `docs/*.md` příkazem `php doc/build.php`.
 | [09 — Bezpečnost](docs/09-bezpecnost.md) | vstupy, escapování, cesty, tokeny, oprávnění |
 | [10 — Nasazení](docs/10-nasazeni.md) | Apache, nginx, nchan, produkční checklist |
 | [11 — Problémy](docs/11-problemy.md) | pasti, na které jsme narazili, a jak je poznat |
+| [12 — Nový projekt](docs/12-novy-projekt.md) | jak začít z `examples/library` — **kuchařka i pro model** |
 
 ## Skilly
 
@@ -277,7 +286,7 @@ každého projektu vidět, na jaké verzi frameworku běží.
 ```bash
 ./tools/fwdeploy.sh --check            # co kde běží
 ./tools/fwdeploy.sh <cesta>...         # rozvoz z tohohle stromu
-./tools/fwdeploy.sh --from v1.3.1 …    # rozvoz z vydání na GitHubu
+./tools/fwdeploy.sh --from v1.4.0 …    # rozvoz z vydání na GitHubu
 ```
 
 Bez `--from` se bere tenhle strom, takže to jede i bez sítě. S `--from`
@@ -311,5 +320,5 @@ proto je tu Apache a ne MIT.
 
 Knihovnou jsou **`fw.inc` a `fw.js`**; oba nesou licenční hlavičku,
 protože se kopírují do cizích projektů a musí být poznat, odkud jsou.
-Příklad `app2/` přibaluje AdminLTE, Bootstrap a Bootstrap Icons — všechno
+Příklad `examples/app-adminlte/` přibaluje AdminLTE, Bootstrap a Bootstrap Icons — všechno
 MIT, každý se svou licencí ve svém adresáři. Součástí Waggle nejsou.

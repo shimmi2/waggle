@@ -3,8 +3,8 @@
  *  api/index.php — demo API
  *
  *  Jeden dispatcher, dvě sady fragmentů:
- *      pages/plain/   pro /app   (holé HTML)
- *      pages/lte/     pro /app2  (AdminLTE)
+ *      pages/plain/   pro ../app            (holé HTML)
+ *      pages/lte/     pro ../app-adminlte   (AdminLTE 4)
  *
  *  Skin posílá aplikace v každém požadavku přes Fw.init({params:{skin:…}}).
  *  Endpointy, session i protokol jsou pro obě naprosto totožné — liší se
@@ -19,7 +19,7 @@
  * ===================================================================== */
 
 require __DIR__ . '/config.inc';       // musí být první
-require __DIR__ . '/../fw.inc';
+require __DIR__ . '/../../fw.inc';
 require __DIR__ . '/inc/app.inc';
 require __DIR__ . '/inc/auth.inc';
 require __DIR__ . '/inc/stream.inc';

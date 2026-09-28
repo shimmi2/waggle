@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knihovna</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<!--
+  Skořápka je STATICKÁ a nikdy se nepřekresluje. Po drátě jdou jen
+  vnitřky pojmenovaných prvků.
+
+  Schválně bez AdminLTE a bez Bootstrapu. Není to proto, že by to
+  nešlo — examples/demo ukazuje obojí nad jedním API. Je to proto, že
+  tenhle kickstart má jít rozbalit na jakémkoli hostingu a vážit
+  desítky kilobajtů, ne deset megabajtů. Výměna šablony je změna
+  fragmentů, ne aplikace.
+-->
+<body>
+
+<div class="app">
+  <aside id="left_menu"></aside>
+  <div class="content">
+    <header id="top_frame"></header>
+    <main id="main"></main>
+  </div>
+</div>
+
+<!-- Okno pro komponenty v překryvu. Zavírá se na klientovi. -->
+<div id="overlay"></div>
+
+<!-- Sem píše Fw.notify. Nesmí po startu zůstat viset prázdné. -->
+<div id="fw_error" style="display:none"></div>
+
+<script src="config.js"></script>
+<script src="fw.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

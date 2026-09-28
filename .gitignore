@@ -1,5 +1,13 @@
 # Běhový stav dem — obsahuje živé tokeny přihlášených, do gitu nepatří.
-api/data/*.json
+# Cesta je ukotvená ke korenu repozitáře, takže se musí přepsat, kdykoli se
+# demo přestěhuje.
+examples/api/data/*.json
+
+# Nastavení KONKRÉTNÍ instalace příkladu — hesla k databázi v čitelné
+# podobě. Do gitu patří jen config.example.*, ze kterých je instalák dělá.
+examples/library/api/config.inc
+examples/library/bff/config.inc
+examples/library/app/config.js
 
 # Prohlížitelná dokumentace se generuje: php doc/build.php
 doc/index.html

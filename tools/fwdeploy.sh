@@ -134,7 +134,7 @@ kolize() {
 
 najdi() {    # najdi $1=kořen projektu, $2=jméno souboru -> vypiš existující cíl
     local root="$1" f="$2" k
-    for k in "lib/$f" "api/$f" "$f" "app/$f" "public/$f"; do
+    for k in "lib/$f" "api/$f" "bff/$f" "$f" "app/$f" "public/$f"; do
         [ -f "$root/$k" ] && { echo "$root/$k"; return 0; }
     done
     return 1

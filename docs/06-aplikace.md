@@ -3,7 +3,7 @@
 ## Struktura
 
 ```
-api/
+examples/api/
   config.inc        VŠECHNO nastavení na jednom místě, načítá se první
   index.php         dispatcher
   inc/
@@ -12,8 +12,8 @@ api/
     stream.inc      push kanály a tokeny
   bin/              workery na pozadí (.htaccess: Require all denied)
   data/             zápisy za běhu    (.htaccess: Require all denied)
-  pages/plain/      fragmenty pro /app
-  pages/lte/        fragmenty pro /app2
+  pages/plain/      fragmenty pro examples/app
+  pages/lte/        fragmenty pro examples/app-adminlte
 ```
 
 `pages/` je pro HTTP celý zavřený. Fragmenty čte `index.php` z filesystému,
