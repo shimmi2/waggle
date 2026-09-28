@@ -1,66 +1,28 @@
 # 10 — Bezpečnost
 
-## Nejúčinnější ochrana není v kódu
+Nejúčinnější ochrana je synergie opatření při psaní kódu i při nasazení.
+Celková bezpečnost systému se vždycky dělá **kombinací opatření** — těch
+při psaní, ať už lidském nebo vibecodingem, i těch spojených s deploymentem.
 
-Než přijde řeč na escapování a přípony souborů: **největší kus
-bezpečnosti se rozhoduje při nasazení, ne v endpointu.** Každá vrstva
-patří na **vlastní site** — vlastní virtual host, vlastní docroot,
-vlastní systémový účet, ideálně vlastní PHP-FPM pool.
+## Zásadní a nekompromisní pravidla pro psaní endpointu — ať jsi člověk, nebo agent
 
-| vrstva | kdo na ni smí | co v docrootu je |
-|---|---|---|
-| frontend | kdokoli z internetu | statické soubory; PHP tam nemusí běžet vůbec |
-| BFF | jen prohlížeč | dispatcher, fragmenty, konfigurace BFF |
-| datové API | **jen BFF** | dispatcher, přístup k databázi |
+Tato pravidla platí shodně na úrovni BFF i datového API. Celá bezpečnost
+stojí na dodržení tohoto postupu. Nemáme kromě rozdělení na vrstvy nic
+dalšího, co by při chybě požadavek zamítlo nebo alespoň havarovalo.
 
-**Datové API nemusí být z internetu dostupné vůbec.** Ať poslouchá na
-localhostu nebo ve vnitřní síti; BFF je na témže stroji nebo za firewallem
-a víc nikdo nepotřebuje. Veřejná adresa se hodí až ve chvíli, kdy API
-používá i něco jiného než váš BFF — nativní aplikace pro iOS a Android,
-integrace partnera, jiný systém. Pak ale platí, že si takový klient řeší
-autentizaci sám a chodí na tytéž endpointy se stejnou kontrolou oprávnění.
+Všechny endpointy skutečně **musí začínat takto**, jinak hrozí zásadní
+kompromitace celého systému. Žádná výjimka (kromě globální kontroly
+session) není rozumná, i kdyby stokrát zpřehlednila kód. Opakuji:
+**runtime bezpečnost nemá žádné jiné záchytné prvky.**
 
-Co tím získáte, se v kódu udělat nedá:
+1. **veškeré** vstupy přes `in_*()`, nikdy přímo `$_REQUEST`, vždy první řádky endpointu
+2. s pečlivostí **unit testů** sémantické kontroly pro všechny myslitelné kombinace vstupů → 400, následující řádky endpointu
+3. session → 401, až poté kontrola session (pokud není v modulu prováděna globálně, před vstupem do kódu endpointu). Je to dražší operace než prosté PHP, proto stojí až za kontrolou sémantiky. Má to i částečný přínos při DDoS: nesmyslné požadavky nevedou na amplifikační útok proti Redisu, databázi a podobným věcem v pozadí systému.
+4. oprávnění → 403, nejdřív musí být žadatel autentizován, proto až nyní může být autorizován.
+5. teprve pak práce
+6. výstup přes `esc()`
 
-* Kdo se dostane do BFF, nedostane se k databázi přímo. Musí projít
-  endpointy datového API, a ty kontrolují oprávnění nezávisle na tom, co
-  si o nich myslí BFF.
-* Chyba ve fragmentu nedosáhne na konfiguraci **sousední** vrstvy,
-  protože ta leží v jiném docrootu, na který ten webserver nevidí.
-
-Cena je tři virtual hosty, tři konfigurace a CORS mezi frontendem
-a BFF. U nového projektu je to půlhodina a stojí to za to.
-
-### Čím to ale není
-
-Oddělení vrstev **nenahrazuje** nic z toho, co následuje. Ohraničuje
-škodu, nezabraňuje jí. Když se konfigurace servíruje jako text, útočník
-si přečte přístupy k databázi té vrstvy, na kterou dosáhl — a že jsou
-sites tři, mu v tom nezabrání.
-
-Síla je v **součinu opatření**, ne v jednom z nich:
-
-| opatření | co samo o sobě řeší |
-|---|---|
-| zákaz `.inc` na webserveru | **naprostá nutnost.** Bez něj je konfigurace veřejně čitelná. |
-| oddělené vrstvy | ohraničí škodu na jednu vrstvu a odřízne přímou cestu k datům |
-| konfigurace mimo docroot | vyřadí celou třídu chyb — není co špatně naservírovat |
-| vlastní účet a pool na vrstvu | zabrání tomu, aby jedna vrstva četla soubory druhé |
-
-Žádné z nich nestačí samo. Pořadí, ve kterém se vyplatí je zavádět, je
-odshora dolů.
-
-**Dvouvrstvý model tuhle ochranu nemá** — BFF sahá na data přímo, takže
-všechno pod ním visí jen na kázni v kódu. U převodu staršího monolitu to
-je legitimní volba, ale je dobré vědět, co se tím platí.
-
-V `examples/library` je ten rozdíl vidět na dvou instalátorech:
-`install.sh` rozkopíruje kód do tří docrootů a založí databázový účet bez
-DDL, kdežto `install.php` nechá všechno pod jednou doménou — a instalace
-pak nese červený odznak `UNSAFE_DEMO`, protože datové API je z internetu
-dosažitelné.
-
-## Základní pravidlo
+### Základní pravidlo
 
 **„Bezpečné" není vlastnost hodnoty, ale dvojice hodnota + cíl.**
 
@@ -74,7 +36,7 @@ porovnání `$u === "O'Brien"` selže, `strlen` vrátí 12 místo 7, a proti
 SQL injection to stejně neudělá nic — `1 OR 1=1` projde beze změny.
 Přesně tohle byly `magic_quotes`, které PHP v 5.4 vyhodilo.
 
-## Vstup: tři garance
+### Vstup: tři garance
 
 ```php
 in_str($name, $max)   // skalární string, omezená délka, bez NUL
@@ -116,7 +78,7 @@ Dvě věci, na kterých se tu chybuje:
 * **Chybějící klíč není prázdná hodnota.** Řádek nemusí obsahovat
   všechny sloupce, takže `?? ''` tam patří vždycky.
 
-## Výstup: escapuj u cíle
+### Výstup: escapuj u cíle
 
 | cíl | čím |
 |---|---|
@@ -144,7 +106,7 @@ Escapuje čtyři znaky pro jeden kontext. Rozbije se triviálně:
 * **jiné domény** — pro HTML, shell, cesty ani hlavičky nedělá nic
 * **PHP 8** — na poli hodí `TypeError`, tedy fatální chybu
 
-## Cesty
+### Cesty
 
 Traversal se neřeší kontrolou, ale konstrukcí:
 
@@ -153,6 +115,72 @@ $function = in_str('function', 64);
 if (!is_word($function)) throw_http_error(400, 'Neplatný název');
 // od téhle chvíle je jisté, že tam není '/', '.' ani NUL
 ```
+
+## Nezabezpečený deployment může jakékoli opatření v kódu vynulovat
+
+Proč by se útočník namáhal s kódem, když si může rovnou stáhnout konfiguraci i s hesly? Tahle třída přehmatů je pořád nejčastější.
+
+**Každá vrstva** patří na **vlastní site** — vlastní virtual host, vlastní docroot,
+vlastní systémový účet, ideálně vlastní kontejner nebo virtuál.
+
+| vrstva | kdo na ni smí | co v docrootu je |
+|---|---|---|
+| frontend | kdokoli z internetu | statické soubory; PHP ani dynamické stránky tam nemusí běžet vůbec. Může být bez úprav na jakémkoli cloudu, s přidanou ochranou proti DDoS. |
+| BFF | jen prohlížeč | dispatcher, fragmenty, konfigurace BFF. Může na cloud, pokud se vyřeší sdílená cache sezení. Dalšími opatřeními se dá provázat s ochranou frontendu proti DDoS. |
+| datové API | **jen BFF** | dispatcher, přístup k databázi; může být schované v DMZ |
+
+**Datové API nemusí být z internetu dostupné vůbec.** Ať poslouchá na
+localhostu nebo ve vnitřní síti či DMZ; BFF — ať už je na témže stroji,
+nebo za firewallem — víc nepotřebuje.
+Veřejná adresa se hodí až ve chvíli, kdy API
+používá i něco jiného než váš BFF — nativní aplikace pro iOS a Android,
+integrace partnera, jiný systém. Pak ale platí, že si takový klient řeší
+autentizaci sám a chodí na tytéž endpointy se stejnou kontrolou oprávnění.
+
+Co tím získáte, se kódem zařídit nedá:
+
+* Kdo prolomí frontend nebo BFF, stejně se k datům nedostane přímo. Musí
+  projít endpointy datového API, a ty kontrolují oprávnění nezávisle na
+  tom, co si o nich myslí BFF. Kompromitace BFF samozřejmě otevírá cestu
+  k útokům typu man in the middle a podobně — proto mluvíme o synergii.
+* Chyba ve fragmentu nedosáhne na konfiguraci **sousední** vrstvy,
+  protože ta leží v jiném docrootu, na který ten webserver nevidí.
+
+Cena je tři virtual hosty, tři konfigurace a CORS mezi frontendem
+a BFF. U nového projektu je to půlhodina a stojí to za to.
+
+### Čím to ale není
+
+Oddělení vrstev **nenahrazuje** nic z toho, co následuje. Ohraničuje
+škodu, nezabraňuje jí. Když se konfigurace servíruje jako text, útočník
+si přečte přístupy k databázi té vrstvy, na kterou dosáhl — a že jsou
+sites tři, mu v tom nezabrání.
+
+| opatření | co samo o sobě řeší |
+|---|---|
+| zákaz `.inc` na webserveru | **naprostá nutnost.** Bez něj je konfigurace veřejně čitelná. |
+| oddělené vrstvy | ohraničí škodu na jednu vrstvu a odřízne přímou cestu k datům |
+| konfigurace mimo docroot | vyřadí celou třídu chyb — není co špatně naservírovat |
+| vlastní účet a pool na vrstvu | zabrání tomu, aby jedna vrstva četla soubory druhé |
+
+Žádné z nich nestačí samo. Pořadí, ve kterém se vyplatí je zavádět, je
+odshora dolů.
+
+**Dvouvrstvý model tuhle vrstvu navíc nemá** — BFF sahá na data přímo,
+stejně jako by to dělalo datové API, takže všechno pod ním visí jen na té
+kázni při psaní kódu popsané výš. (Pokud si nepřibere ORM nebo podobnou
+technologii, což jde proti naší filosofii.)
+
+U převodu staršího monolitu je dvouvrstvý model legitimní volba, ale je
+dobré vědět, co se za něj platí: kromě snížené bezpečnosti i nemožnost
+postavit nad API další věci — MCP server pro AI, úplně jinou aplikaci a
+tak dál. **Pro nové projekty proto důrazně doporučuji model třívrstvý.**
+
+V `examples/library` je rozdíl vidět na dvou instalátorech:
+`install.sh` rozkopíruje kód do tří docrootů a založí databázový účet bez
+DDL, kdežto `install.php` nechá všechno pod jednou doménou — a instalace
+pak nese červený odznak `UNSAFE_DEMO`, protože datové API je z internetu
+dosažitelné.
 
 ## Adresáře
 
@@ -242,10 +270,6 @@ s přístupy k databázi nemusí v docrootu ležet vůbec.
 require '/etc/waggle/mujprojekt/bff.inc';   // PHP ano, webserver nikdy
 ```
 
-Na hostingu, kde do `/etc` nesmíte, poslouží úroveň nad docrootem —
-docroot je `/home/ucet/www/`, konfigurace `/home/ucet/config/bff.inc`.
-Webserver tam nedosáhne, PHP ano.
-
 Kdo nechce sahat na kostru, může nechat soubor na místě a udělat z něj
 **zavaděč**:
 
@@ -329,12 +353,3 @@ Argumenty se předávají dočasným souborem s právy 0600, ne přes `argv` —
 ## Chybové hlášky
 
 Při `FW_DEBUG` obsahují cestu a řádek. **Na produkci `FW_DEBUG = false`.**
-
-## Kontrolní seznam endpointu
-
-1. vstupy přes `in_*()`, nikdy přímo `$_REQUEST`
-2. sémantické kontroly → 400
-3. session → 401
-4. oprávnění → 403
-5. teprve pak práce
-6. výstup přes `esc()`
