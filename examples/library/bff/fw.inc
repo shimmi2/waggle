@@ -23,7 +23,7 @@
    ležet VEDLE tohohle; rozváží ho tools/fwdeploy.sh spolu s ním. */
 require_once __DIR__ . '/io.inc';
 
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.6.3');
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.6.4');
 defined('FW_V')          || define('FW_V', 1);
 defined('FW_MAXLEN')     || define('FW_MAXLEN', 65536);   // strop délky jednoho pole
 defined('FW_DEBUG')      || define('FW_DEBUG', false);    // true = chyby prozradí cesty

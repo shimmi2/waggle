@@ -81,7 +81,7 @@ postavené přesně pro tenhle typ částečných překreslení (cílí na Turbo
 `teardown()` odstřelí listenery přes `AbortController`, takže je volání
 idempotentní a nic se nezdvojí.
 
-Celá integrace je `examples/app-adminlte/app2.js` — zhruba čtyřicet řádků:
+Celá integrace je `examples/basic_demo/app-adminlte/app2.js` — zhruba čtyřicet řádků:
 
 ```js
 function reinit() { /* debounce */ adminlte.initialize(); /* + tooltipy */ }

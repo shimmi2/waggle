@@ -19,7 +19,7 @@
  * ===================================================================== */
 
 require __DIR__ . '/config.inc';       // musí být první
-require __DIR__ . '/../../fw.inc';
+require __DIR__ . '/../../../fw.inc';
 require __DIR__ . '/inc/app.inc';
 require __DIR__ . '/inc/auth.inc';
 require __DIR__ . '/inc/stream.inc';

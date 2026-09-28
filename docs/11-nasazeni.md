@@ -156,12 +156,12 @@ $data = dlouhy_dotaz();          // prohlížeč už kolečko točí
 
 Žádný stream, žádný worker, žádná změna konfigurace Apache.
 
-Pro to, co PHP request udělat neumí, je `tools/async_sender.php`:
+Pro to, co PHP request udělat neumí, je `examples/async_sender/async_sender.php`:
 
 ```bash
-php tools/async_sender.php --token=TOKEN --busy='Zálohuji…' --pct=40
+php examples/async_sender/async_sender.php --token=TOKEN --busy='Zálohuji…' --pct=40
 echo '{"op":"notify","kind":"success","message":"Hotovo"}' \
-  | php tools/async_sender.php --token=TOKEN
+  | php examples/async_sender/async_sender.php --token=TOKEN
 ```
 
 Hodí se pro démona, cron nebo shellový skript, který chce něco napsat
@@ -170,6 +170,18 @@ a pro jazyk, který není PHP — ten pošle JSON na stdin a je hotovo.
 Token je klíč kanálu z příkazu `subscribe`, ne přihlašovací údaj.
 Návratový kód: 0 odesláno, 1 chyba vstupu, 2 broker neodpověděl.
 **Kontroluj ho** — tichý neúspěch je horší než hlasitý.
+
+**Není to knihovna a nepatří do docrootu.** Je to příklad nástroje;
+zkopíruj si ho někam, kam webserver nevidí — `/usr/local/bin`, adresář
+démona, cokoli mimo web. V `examples/basic_demo/bff/bin/` leží kopie jen
+proto, aby demo šlo vyzkoušet celé; ten adresář je zamčený direktivou
+`Require all denied`.
+
+A pozor na `--token=` v příkazové řádce: **argumenty procesu vidí v `ps`
+každý uživatel stroje.** Je to tentýž důvod, kvůli kterému workery
+dostávají parametry dočasným souborem s právy `0600`. U cronu na vlastním
+stroji to obvykle nevadí; na sdíleném ano, a tam token předej na stdin
+nebo konfiguračním souborem.
 
 ## Výkon
 

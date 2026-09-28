@@ -11,7 +11,7 @@ které platí ve dvouvrstvé i třívrstvé aplikaci — a dá se ověřit grepe
 | pojem | co dělá | čím mluví | v příkladech |
 |---|---|---|---|
 | **frontend** | strana prohlížeče, psaná v JavaScriptu: vykresluje a reaguje na události. Nemá stav aplikace ani router. | Waggle, klientská strana | `examples/library/app/` |
-| **BFF** | *Backend For Frontend*. Aplikační logika a skládání HTML; **jediná serverová vrstva, která mluví Waggle**. | Waggle | `examples/library/bff/`, `examples/bff/` |
+| **BFF** | *Backend For Frontend*. Aplikační logika a skládání HTML; **jediná serverová vrstva, která mluví Waggle**. | Waggle | `examples/library/bff/`, `examples/basic_demo/bff/` |
 | **datové API** | vlastní data, vynucuje oprávnění; o protokolu neví | JSON přes HTTP | `examples/library/api/` |
 
 **BFF** je *Backend For Frontend*: vrstva, jejíž tvar určují potřeby

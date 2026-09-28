@@ -4,7 +4,7 @@ Celá aplikace ve třech vrstvách: frontend, BFF a datové API. Půjčovna
 knih, protože na ní je vidět všechno, co firemní aplikace potřebuje —
 katalog s filtrem, výpůjčky se stavy, statistika, uživatelé a oprávnění.
 
-**Nečti to jako demo.** `examples/app` a `examples/app-adminlte` jsou dema,
+**Nečti to jako demo.** `examples/basic_demo/app` a `examples/basic_demo/app-adminlte` jsou dema,
 ta ukazují protokol. Tady se **začíná nový projekt**: vezmeš to, přejmenuješ
 domény a knihy vyměníš za to, co doopravdy potřebuješ. Jak na to krok za
 krokem je v [13 — Nový projekt z příkladu](../../docs/13-novy-projekt.md).

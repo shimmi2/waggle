@@ -5,7 +5,7 @@
 > safe and simple apps. Apps where data flows in parallel, asynchronous
 > motion, like bees in a waggle dance.
 
-Vydání **1.6.3**, protokol **v1**.
+Vydání **1.6.4**, protokol **v1**.
 
 ## Proč vznikl
 
@@ -153,8 +153,8 @@ něco brát, koukni, do které patří — ušetří to spoustu zbytečných ot�
 | vrstva | co to je | jak často se bere |
 |---|---|---|
 | **knihovna** | `io.inc`, `fw.inc`, `fw.js` | **průběžně**, skriptem `tools/fwdeploy.sh` |
-| **kostra** | `examples/library/*` nebo `examples/bff/{index.php,config.inc,inc/*}` | **jednou** při zrodu projektu, pak se rozchází |
-| **dema** | `examples/bff/pages/*`, `examples/app/*`, `examples/app-adminlte/*` | **nikdy** — jen se čtou |
+| **kostra** | `examples/library/*` nebo `examples/basic_demo/bff/{index.php,config.inc,inc/*}` | **jednou** při zrodu projektu, pak se rozchází |
+| **dema** | `examples/basic_demo/bff/pages/*`, `examples/basic_demo/app/*`, `examples/basic_demo/app-adminlte/*` | **nikdy** — jen se čtou |
 
 **Knihovna jsou tři soubory.** V reálném projektu je to zlomek celku:
 `fw.inc` (protokol) 10 kB, `io.inc` (hygiena vstupu a výstupu) 7 kB,
@@ -170,7 +170,7 @@ v jednom procesu: sdílejí jména a PHP spadne na dvojí deklaraci.
 odvozené převedením portálu, zkušebního projektu, kolem 6 kB.
 
 **Dema jsou referenční text, `library` je startovací balík.**
-`examples/app` a `examples/app-adminlte` jsou tatáž aplikace jednou na
+`examples/basic_demo/app` a `examples/basic_demo/app-adminlte` jsou tatáž aplikace jednou na
 holém HTML a jednou na AdminLTE — jsou tu, aby bylo vidět, že markup je
 jediné, co se mezi nimi liší. `examples/library` je něco jiného: celá
 třívrstvá aplikace s instalákem, ze které se **začíná nový projekt**.
@@ -225,8 +225,8 @@ Odkaz, který to zavolá bez reloadu stránky:
 
 ## Dva příklady, jedno BFF
 
-`examples/app/` a `examples/app-adminlte/` jsou tatáž aplikace. Jedna na
-holém HTML, druhá na AdminLTE 4. Jedou přes **jedno** `examples/bff/` a
+`examples/basic_demo/app/` a `examples/basic_demo/app-adminlte/` jsou tatáž aplikace. Jedna na
+holém HTML, druhá na AdminLTE 4. Jedou přes **jedno** `examples/basic_demo/bff/` a
 liší se **výhradně markupem fragmentů** — endpointy, session ani protokol se neliší ani o řádek.
 
 Skin posílá aplikace v každém požadavku:
@@ -294,7 +294,7 @@ každého projektu vidět, na jaké verzi frameworku běží.
 ```bash
 ./tools/fwdeploy.sh --check            # co kde běží
 ./tools/fwdeploy.sh <cesta>...         # rozvoz z tohohle stromu
-./tools/fwdeploy.sh --from v1.6.3 …    # rozvoz z vydání na GitHubu
+./tools/fwdeploy.sh --from v1.6.4 …    # rozvoz z vydání na GitHubu
 ```
 
 Bez `--from` se bere tenhle strom, takže to jede i bez sítě. S `--from`
@@ -328,5 +328,5 @@ proto je tu Apache a ne MIT.
 
 Knihovnou jsou **`io.inc`, `fw.inc` a `fw.js`**; oba nesou licenční hlavičku,
 protože se kopírují do cizích projektů a musí být poznat, odkud jsou.
-Příklad `examples/app-adminlte/` přibaluje AdminLTE, Bootstrap a Bootstrap Icons — všechno
+Příklad `examples/basic_demo/app-adminlte/` přibaluje AdminLTE, Bootstrap a Bootstrap Icons — všechno
 MIT, každý se svou licencí ve svém adresáři. Součástí Waggle nejsou.

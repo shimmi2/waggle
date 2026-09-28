@@ -20,7 +20,7 @@
 
 var RE_WORD  = /^[A-Za-z0-9_-]+$/;
 var FW_V     = 1;          // verze protokolu na drátě
-var RELEASE  = '1.6.3';    // vydání knihovny, mění se nezávisle na protokolu
+var RELEASE  = '1.6.4';    // vydání knihovny, mění se nezávisle na protokolu
 
 var Fw = {
     release: RELEASE,
@@ -100,11 +100,24 @@ Fw.register('class', function (c) {
     });
 });
 
+/* Klíč pro uložení sezení. Jmenuje se podle ADRESY BFF, ne podle cesty
+   aplikace: dvě aplikace nad týmž BFF mají sdílet přihlášení (to je
+   žádoucí), dvě aplikace nad různými BFF ne — jinak token jedné odejde
+   do API druhé. Adresa se resolvuje na absolutní, aby '../bff/' ze dvou
+   různých cest dalo stejný klíč jen tehdy, když opravdu míří na totéž. */
+Fw.storeKey = function () {
+    var u;
+    try { u = new URL(Fw.cfg.bff, location.href).href; }
+    catch (e) { u = String(Fw.cfg.bff || ''); }
+    return 'fw_session:' + u.replace(/[?#].*$/, '');
+};
+
 Fw.register('session', function (c) {
     Fw.session = c.value || null;
     try {
-        if (Fw.session) localStorage.setItem('fw_session', Fw.session);
-        else            localStorage.removeItem('fw_session');
+        var k = Fw.storeKey();
+        if (Fw.session) localStorage.setItem(k, Fw.session);
+        else            localStorage.removeItem(k);
     } catch (e) {}
     Fw.debug('session ' + (Fw.session ? 'nastavena' : 'zrušena'));
 });
@@ -691,7 +704,18 @@ Fw.init = function (cfg) {
        aplikace na stejném hostu nepřepisují stav. cfg.channel=false vypne. */
     if (Fw.cfg.channel !== false)
         Fw.openChannel(Fw.cfg.channel || ('fw:' + location.pathname));
-    try { Fw.session = localStorage.getItem('fw_session') || null; } catch (e) {}
+    try {
+        var k = Fw.storeKey();
+        Fw.session = localStorage.getItem(k) || null;
+        /* Přechod z vydání do 1.6.3, kde byl klíč globální. Jednorázově se
+           převezme a starý se zahodí, ať se kvůli přejmenování neodhlásí
+           všichni uživatelé. Až to doslouží, celý blok pryč. */
+        if (!Fw.session) {
+            var stary = localStorage.getItem('fw_session');
+            if (stary) { Fw.session = stary; localStorage.setItem(k, stary); }
+        }
+        localStorage.removeItem('fw_session');
+    } catch (e) {}
     Fw.busyStyle();
     Fw.bind();
     Fw.debug('init, serial=' + Fw.serial + ', session=' + (Fw.session ? 'ano' : 'ne'));
