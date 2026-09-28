@@ -43,7 +43,7 @@
 if (PHP_SAPI !== 'cli') { http_response_code(403); exit('cli only'); }
 
 $o = getopt('', ['token:', 'pub:', 'config:', 'sel:', 'busy:', 'pct:',
-                 'busy-done:', 'busy-off', 'notify:', 'kind:', 'help']);
+                 'busy-done:', 'busy-off', 'notify:', 'kind:', 'help', 'fw:']);
 
 if (isset($o['help']) || !isset($o['token'])) {
     fwrite(STDERR, preg_replace('/^.*?\/\* |\*\/.*$/s', '', file_get_contents(__FILE__)) . "\n");
@@ -53,7 +53,18 @@ $token = (string)$o['token'];
 $sel   = (string)($o['sel'] ?? 'main');
 
 if (isset($o['config']) && is_file($o['config'])) require $o['config'];
-require __DIR__ . '/../fw.inc';
+/* fw.inc se HLEDÁ, ne napevno: tenhle soubor se má zkopírovat mimo
+   docroot, takže relativní cesta by po přesunu přestala platit. Pořadí:
+   --fw, proměnná prostředí, pak pár pater nahoru. */
+$fw = (string)($o['fw'] ?? getenv('FW_INC') ?: '');
+if ($fw === '') {
+    for ($d = __DIR__, $i = 0; $i < 6; $i++, $d = dirname($d))
+        if (is_file("$d/fw.inc")) { $fw = "$d/fw.inc"; break; }
+}
+if ($fw === '' || !is_file($fw)) {
+    fwrite(STDERR, "nenašel jsem fw.inc — zadej --fw=/cesta/fw.inc nebo FW_INC\n"); exit(1);
+}
+require $fw;
 
 $pub = (string)($o['pub'] ?? getenv('FW_STREAM_PUB_URL')
       ?: (defined('STREAM_PUB_URL') ? STREAM_PUB_URL : ''));

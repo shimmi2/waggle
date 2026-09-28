@@ -49,6 +49,7 @@ function screen(string $PAGES, ?array $user, string $serial, string $body, array
 function busy_kanal(?array $user, string $session): string {
     if ($user === null) throw_http_error(401, 'Nejste přihlášen');
     $tok = stream_token($session, 'main');
+    $sig = stream_key($session, 'main');
     if ($tok === '') throw_http_error(500, 'Nepodařilo se vydat token kanálu');
     if (!fw_publish(STREAM_PUB_URL, $tok, [['op' => 'debug', 'message' => 'busy: kanál živý']]))
         throw_http_error(503, 'nchan neběží na ' . STREAM_PUB_URL
@@ -154,7 +155,7 @@ case 'save_form_test':
 
 case 'busy_quick':                       // doběhne dřív, než se cokoli nakreslí
     $tok = busy_kanal($user, $session);
-    fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', 'Tohle nikdo neuvidí…')]);
+    fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', 'Tohle nikdo neuvidí…')], 2.0, $sig);
     usleep(150000);                      // 150 ms < prodleva 300 ms
     send_answer(['op' => 'html', 'sel' => '#busy_out',
                  'content' => 'Hotovo za 150 ms — překryv se ani nenakreslil.']);
@@ -163,10 +164,10 @@ case 'busy_quick':                       // doběhne dřív, než se cokoli nakr
 case 'busy_phases':                      // tři obyčejná volání za sebou
     $tok = busy_kanal($user, $session);
     foreach (['Připravuji…', 'Počítám…', 'Dokončuji…'] as $faze) {
-        fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', $faze)]);
+        fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', $faze)], 2.0, $sig);
         usleep(900000);
     }
-    fw_publish(STREAM_PUB_URL, $tok, [fw_busy_done('#busy_zone', 'Hotovo')]);
+    fw_publish(STREAM_PUB_URL, $tok, [fw_busy_done('#busy_zone', 'Hotovo')], 2.0, $sig);
     send_answer(['op' => 'html', 'sel' => '#busy_out',
                  'content' => 'Tři fáze, jeden překryv, žádný stav na klientovi.']);
     break;
@@ -174,14 +175,14 @@ case 'busy_phases':                      // tři obyčejná volání za sebou
 case 'busy_bar':                         // kolečko, které se promění v pruh
     $tok = busy_kanal($user, $session);
     /* Zatím nevíme, kolik toho bude — tedy bez pct, tedy kolečko. */
-    fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', 'Prohledávám…')]);
+    fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', 'Prohledávám…')], 2.0, $sig);
     usleep(1200000);
     /* Teď to víme. Stačí poslat pct a z kolečka je pruh. */
     for ($i = 0; $i <= 100; $i += 4) {
-        fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', "Zpracovávám 240 položek…", $i)]);
+        fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', "Zpracovávám 240 položek…", $i)], 2.0, $sig);
         usleep(120000);
     }
-    fw_publish(STREAM_PUB_URL, $tok, [fw_busy_done('#busy_zone', 'Zpracováno 240 položek')]);
+    fw_publish(STREAM_PUB_URL, $tok, [fw_busy_done('#busy_zone', 'Zpracováno 240 položek')], 2.0, $sig);
     send_answer(['op' => 'html', 'sel' => '#busy_out',
                  'content' => 'Kolečko se změnilo v pruh ve chvíli, kdy dorazilo první pct.']);
     break;
@@ -196,7 +197,7 @@ case 'busy_slow':                        // nic nepublikuje: překryv řídí kl
 
 case 'busy_clear':                       // překreslení okna překryv sundá
     $tok = busy_kanal($user, $session);
-    fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', 'Tenhle překryv nikdo nevypne…')]);
+    fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', 'Tenhle překryv nikdo nevypne…')], 2.0, $sig);
     usleep(1800000);
     /* Nikdo neposílá busy state=off. Překryv zmizí proto, že do jeho
        okna přišlo html — hlídá to Fw.apply v dispatcheru. */
@@ -234,6 +235,7 @@ case 'progress_push':                    // push: PHP odpoví za ~20 ms
     if ($user === null) throw_http_error(401, 'Nejste přihlášen');
 
     $tok = stream_token($session, 'main');
+    $sig = stream_key($session, 'main');
     if ($tok === '') throw_http_error(500, 'Nepodařilo se vydat token kanálu');
 
     /* Zkušební publikace ověří, že broker běží — dokud neodešel první
@@ -241,11 +243,11 @@ case 'progress_push':                    // push: PHP odpoví za ~20 ms
     $ok = fw_publish(STREAM_PUB_URL, $tok, [
         ['op' => 'class', 'sel' => '#run_push', 'add' => ['disabled']],
         ['op' => 'html',  'sel' => '#pb_note', 'content' => 'běží na pozadí, doručuje se pushem…'],
-    ]);
+    ], 2.0, $sig);
     if (!$ok) throw_http_error(503,
         'nchan neběží na ' . STREAM_PUB_URL . ' — viz nginx-nchan.conf.example');
 
-    stream_spawn(__DIR__ . '/bin/worker_progress.php', ['token' => $tok]);
+    stream_spawn(__DIR__ . '/bin/worker_progress.php', ['token' => $tok, 'key' => $sig]);
     send_answer(['op' => 'debug', 'message' => 'worker spuštěn, procenta dorazí kanálem "main"']);
     break;
 

@@ -20,14 +20,51 @@
 
 var RE_WORD  = /^[A-Za-z0-9_-]+$/;
 var FW_V     = 1;          // verze protokolu na drátě
-var RELEASE  = '1.6.4';    // vydání knihovny, mění se nezávisle na protokolu
+var RELEASE  = '1.7.0';    // vydání knihovny, mění se nezávisle na protokolu
 
 var Fw = {
     release: RELEASE,
-    cfg:     { bff: '../bff/', debug: true, channel: null, params: null },
+    cfg:     { bff: '../bff/', debug: false, channel: null, params: null },
     session: null,        // token; server ho mění příkazem {"op":"session"}
     serial:  null,        // trvalá identifikace instalace v prohlížeči
     ops:     {},          // registr operací
+
+    /* ------------------------------------------------------------------
+     *  KDO SMÍ CO. Dispatcher dostane dávku čtyřmi cestami a každá má
+     *  jinou důvěryhodnost:
+     *
+     *    response  odpověď na náš vlastní požadavek — plná důvěra
+     *    local     naše vlastní volání Fw.broadcast(…, includeSelf)
+     *    push      nchan; publikovat umí každý, kdo zná id kanálu
+     *    broadcast BroadcastChannel; poslat umí KAŽDÁ stránka na originu
+     *
+     *  Dřív se nerozlišovalo a dávka z cizí stránky měla stejnou moc jako
+     *  odpověď serveru. Proto tyhle dvě tabulky.
+     *
+     *  V nepodepsané sadě schválně NENÍ html: innerHTML sice nespustí
+     *  <script>, ale <img src=x onerror=…> ano. html přes push nebo
+     *  broadcast je tedy spuštění kódu, ne kreslení.
+     *
+     *  Rozšířit se dá přes Fw.init({access:…, accessSigned:…}); výchozí
+     *  hodnota je tady proto, aby chybějící konfigurace neotvírala dveře.
+     * ---------------------------------------------------------------- */
+    access: {
+        response:  '*',
+        local:     '*',
+        push:      ['busy', 'notify', 'value', 'text', 'class', 'remove', 'debug', 'error'],
+        broadcast: ['value', 'text', 'class', 'notify']
+    },
+    /* Platný podpis dokazuje, že dávku vyrobil držitel klíče, tedy server.
+       Přesto tu NENÍ '*': push jde přes broker, takže odchycenou dávku lze
+       přehrát znovu. U kreslení je přehrání neškodné, u session by to byla
+       podvržená session — tedy přesně to, co zavíráme u broadcastu.
+       Kdo přehrání vyloučil jinak, rozšíří si to v config.js na '*'. */
+    accessSigned: {
+        push:      ['html', 'append', 'remove', 'attr', 'value', 'text',
+                    'class', 'busy', 'notify', 'debug', 'error'],
+        broadcast: ['html', 'append', 'remove', 'attr', 'value', 'text',
+                    'class', 'busy', 'notify']
+    },
     guards:  [],          // async(cmd, ctx) -> false zruší příkaz (budoucí featura)
     hooks:   { beforeReplace: [], afterReplace: [] },
     _seq:    0
@@ -82,10 +119,31 @@ Fw.register('remove', function (c) {
     Fw.nodes(c.sel).forEach(function (el) { el.parentNode && el.parentNode.removeChild(el); });
 });
 
+/* Atributy, kterými se dá spustit kód. attr je kreslení, ne spouštění —
+   kdo chce spustit funkci, má na to call a její registraci. Platí pro
+   VŠECHNY transporty včetně odpovědi serveru: teprve tím je pravda, co
+   dokumentace tvrdí, totiž že příkaz na vyhodnocení kódu neexistuje. */
+var ATTR_ZAKAZANE = /^on/i;                              // onclick, onerror, …
+var ATTR_URL      = /^(href|src|action|formaction|xlink:href)$/i;
+var URL_ZAKAZANE  = /^[\s\u0000-\u001f]*(javascript|vbscript|data)\s*:/i;
+
 Fw.register('attr', function (c) {
+    var jm = String(c.name || '');
+    if (ATTR_ZAKAZANE.test(jm) || jm.toLowerCase() === 'srcdoc') {
+        Fw.warn('attr: atribut ' + jm + ' je zakázaný'); return;
+    }
+    if (c.value !== null && ATTR_URL.test(jm) && URL_ZAKAZANE.test(String(c.value))) {
+        Fw.warn('attr: nepovolené schéma v ' + jm); return;
+    }
     Fw.nodes(c.sel).forEach(function (el) {
-        if (c.value === null) el.removeAttribute(c.name); else el.setAttribute(c.name, c.value);
+        if (c.value === null) el.removeAttribute(jm); else el.setAttribute(jm, c.value);
     });
+});
+
+/* Text bez HTML. Chyběl, takže kdo chtěl bezpečně vypsat hodnotu, sáhl
+   po html — a tím pustil do stránky značky. */
+Fw.register('text', function (c) {
+    Fw.nodes(c.sel).forEach(function (el) { el.textContent = c.content == null ? '' : String(c.content); });
 });
 
 Fw.register('value', function (c) {
@@ -127,9 +185,14 @@ Fw.register('history', function (c, ctx) {
     history.pushState({ fw: { fn: ctx.fn, params: ctx.params } }, '', c.url || location.href);
 });
 
+/* call volá JEN to, co si aplikace sama zaregistrovala. Dřív se jméno
+   hledalo průchodem přes window, takže {"op":"call","fn":"eval"} spustil
+   cokoli — a přes fn:"Fw.register" šlo přepsat i registr operací. */
+Fw.callable = {};
+
 Fw.register('call', function (c) {
-    var fn = Fw.resolve(c.fn);
-    if (!fn) { Fw.warn('call: neznámá funkce ' + c.fn); return; }
+    var fn = Fw.callable[c.fn];
+    if (typeof fn !== 'function') { Fw.warn('call: nepovolená funkce ' + c.fn); return; }
     return fn.apply(null, c.args || []);
 });
 
@@ -312,17 +375,25 @@ Fw.busyStyle = function () {
     document.head.appendChild(st);
 };
 
-Fw.resolve = function (path) {
-    var p = String(path).split('.'), o = global;
-    for (var i = 0; i < p.length && o; i++) o = o[p[i]];
-    return typeof o === 'function' ? o : null;
-};
 
 /* ----------------------------------------------------------- DISPATCH */
+
+/* Smí tenhle příkaz přijít touhle cestou? */
+Fw.allowed = function (op, ctx) {
+    var t = (ctx && ctx.origin) || 'response';
+    var list = (ctx && ctx.signed && Fw.accessSigned[t] !== undefined)
+             ? Fw.accessSigned[t] : Fw.access[t];
+    if (list === '*') return true;
+    return !!list && list.indexOf(op) >= 0;
+};
 
 Fw.apply = function (cmd, ctx) {
     var fn = Fw.ops[cmd.op];
     if (!fn) { Fw.warn('neznámá operace: ' + cmd.op); return Promise.resolve(); }
+    if (!Fw.allowed(cmd.op, ctx)) {
+        Fw.warn('operace ' + cmd.op + ' není povolena z ' + ((ctx && ctx.origin) || '?'));
+        return Promise.resolve();
+    }
     var chain = Promise.resolve(true);
     Fw.guards.forEach(function (g) {
         chain = chain.then(function (ok) { return ok === false ? false : g(cmd, ctx); });
@@ -341,8 +412,14 @@ Fw.apply = function (cmd, ctx) {
 /* Příkazy se aplikují STRIKTNĚ v pořadí pole — session musí platit
    dřív, než se odpálí fetch fragmentu za ní. */
 Fw.dispatch = function (batch, ctx) {
-    var cmds = (batch && batch.cmds) || [];
-    if (!batch || !batch.cmds) { Fw.warn('dávka bez cmds'); return Promise.resolve(); }
+    if (!batch || !Array.isArray(batch.cmds)) { Fw.warn('dávka bez pole cmds'); return Promise.resolve(); }
+    /* Verze protokolu se čte. Dokud se nečetla, bylo verzování jen na
+       papíře a dávka z budoucí verze by se tiše provedla napůl. */
+    if (batch.v !== undefined && batch.v !== FW_V) {
+        Fw.error('Neznámá verze protokolu: ' + batch.v);
+        return Promise.resolve();
+    }
+    var cmds = batch.cmds;
     return cmds.reduce(function (p, cmd) {
         return p.then(function () { return Fw.apply(cmd, ctx); });
     }, Promise.resolve());
@@ -392,9 +469,14 @@ Fw.broadcast = function (cmds, includeSelf) {
 
 Fw.subs = {};                      // name -> EventSource
 
-Fw.subscribe = function (name, url, token) {
+Fw.subscribe = function (name, url, token, key) {
     if (!name || !url) { Fw.warn('subscribe bez name/url'); return; }
     Fw.unsubscribe(name);
+    /* Klíč je NĚCO JINÉHO než token kanálu. Token je jméno kanálu, zná ho
+       každý, kdo do něj smí publikovat. Klíč jde jen touhle cestou, tedy
+       odpovědí serveru, a kanálem nikdy neprojde — proto jím podepsanou
+       dávku nevyrobí ani ten, kdo id kanálu zná. */
+    Fw.subKeys[name] = key || null;
     if (typeof EventSource === 'undefined') { Fw.warn('EventSource není k dispozici'); return; }
 
     var u = url + (url.indexOf('?') < 0 ? '?' : '&') + 'token=' + encodeURIComponent(token || '');
@@ -403,12 +485,16 @@ Fw.subscribe = function (name, url, token) {
     catch (e) { Fw.warn('subscribe "' + name + '" selhal: ' + e.message); return; }
 
     es.onmessage = function (ev) { Fw.line(ev.data, { origin: 'push', sub: name, seq: ++Fw._seq }); };
+    /* poznámka: ověření podpisu dělá Fw.line, podle ctx.sub */
     es.onopen    = function () { Fw.debug('push "' + name + '" připojen'); };
     es.onerror   = function () { Fw.debug('push "' + name + '" přerušen, EventSource se připojí sám'); };
     Fw.subs[name] = es;
 };
 
+Fw.subKeys = {};        // jméno odběru -> klíč pro ověření podpisu
+
 Fw.unsubscribe = function (name) {
+    delete Fw.subKeys[name];
     var es = Fw.subs[name];
     if (!es) return;
     es.close();
@@ -416,7 +502,7 @@ Fw.unsubscribe = function (name) {
     Fw.debug('push "' + name + '" odpojen');
 };
 
-Fw.register('subscribe', function (c) { Fw.subscribe(c.name, c.url, c.token); });
+Fw.register('subscribe', function (c) { Fw.subscribe(c.name, c.url, c.token, c.key); });
 
 Fw.register('unsubscribe', function (c) {
     if (c.name) { Fw.unsubscribe(c.name); return; }
@@ -483,20 +569,68 @@ Fw.text = function (txt, ctx) {
     }, Promise.resolve());
 };
 
+/* Ověření podpisu dávky. Vrací promise, protože WebCrypto je asynchronní.
+   Bez crypto.subtle (nezabezpečený kontext) se NEOVĚŘUJE a dávka propadne
+   na nepodepsanou sadu — selhat se má zavřeně, ne otevřeně. */
+Fw.verify = function (key, data, sigHex) {
+    var c = (typeof crypto !== 'undefined') && crypto.subtle;
+    if (!key || !sigHex || !c || typeof TextEncoder === 'undefined') return Promise.resolve(false);
+    var enc = new TextEncoder();
+    return c.importKey('raw', enc.encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+        .then(function (k) { return c.sign('HMAC', k, enc.encode(data)); })
+        .then(function (buf) {
+            var hex = Array.prototype.map.call(new Uint8Array(buf), function (b) {
+                return ('0' + b.toString(16)).slice(-2);
+            }).join('');
+            if (hex.length !== sigHex.length) return false;
+            var r = 0;                                   // porovnání bez předčasného konce
+            for (var i = 0; i < hex.length; i++) r |= hex.charCodeAt(i) ^ sigHex.charCodeAt(i);
+            return r === 0;
+        })
+        .catch(function () { return false; });
+};
+
 Fw.line = function (line, ctx) {
     line = line.trim();
     if (!line) return Promise.resolve();
     var batch;
     try { batch = JSON.parse(line); }
     catch (e) { Fw.error('Neplatná odpověď serveru'); Fw.debug('parse fail', line); return Promise.resolve(); }
+
+    /* Podepsaná dávka: cmds přišly jako řetězec v p, podepsaný je právě on. */
+    if (batch && typeof batch.p === 'string') {
+        var klic = (ctx && ctx.sub) ? Fw.subKeys[ctx.sub] : null;
+        return Fw.verify(klic, batch.p, batch.sig).then(function (ok) {
+            if (!ok) { Fw.warn('dávka s neplatným podpisem zahozena'); return; }
+            var cmds;
+            try { cmds = JSON.parse(batch.p); }
+            catch (e) { Fw.error('Neplatná odpověď serveru'); return; }
+            var c2 = {}; for (var k in ctx) c2[k] = ctx[k];
+            c2.signed = true;
+            Fw.debug('<- podepsaná dávka (' + cmds.length + ' příkazů)', cmds);
+            return Fw.dispatch({ v: batch.v, cmds: cmds }, c2);
+        });
+    }
+
     Fw.debug('<- dávka (' + (batch.cmds || []).length + ' příkazů)', batch);
     return Fw.dispatch(batch, ctx);
 };
 
 /* Fragment stažený přímo (op:url). Session posílá klient sám —
    proto na serveru neexistuje žádné append_session. */
+/* Fragment se tahá JEN z vlastního původu. Dřív šly hlavičky X-App-Session
+   a X-App-Serial na jakoukoli adresu, takže stačilo, aby cizí server povolil
+   preflight, a měl token. A odpověď cizího serveru se navíc vkládala
+   innerHTML. Když dám příkaz něco nahrát, tak z vlastního serveru. */
 Fw.fragment = function (url) {
-    return fetch(url, { headers: Fw.headers(), credentials: 'same-origin' })
+    var abs;
+    try { abs = new URL(url, location.href); }
+    catch (e) { Fw.error('url: neplatná adresa'); return Promise.resolve(''); }
+    if (abs.origin !== location.origin) {
+        Fw.error('url: cizí původ odmítnut (' + abs.origin + ')');
+        return Promise.resolve('');
+    }
+    return fetch(abs.href, { headers: Fw.headers(), credentials: 'same-origin' })
         .then(function (r) {
             if (!r.ok) throw new Error('HTTP ' + r.status + ' při načítání ' + url);
             return r.text();
@@ -576,7 +710,7 @@ Fw.bind = function () {
         if (!el.id || !el.matches || !el.matches('[data-fw-sync]')) return;
         Fw.broadcast([
             { op: 'value', sel: '#' + el.id,          value: el.value },
-            { op: 'html',  sel: '#' + el.id + '_out', content: el.value },
+            { op: 'text',  sel: '#' + el.id + '_out', content: el.value },
             { op: 'sync_note' }
         ]);
     });
@@ -693,6 +827,19 @@ Fw.init = function (cfg) {
        nikdy nevolá. Starý klíč se bere dál, aby se nemusely přepisovat
        existující frontendy; v novém kódu piš bff. */
     if (cfg && cfg.api && !cfg.bff) Fw.cfg.bff = cfg.api;
+
+    /* Rozšíření přístupové tabulky. Píše se jako ROZDÍL proti výchozímu,
+       ne jako celý seznam: kdyby instalace vyjmenovala všechny příkazy,
+       příští vydání s novým příkazem by ho měla tiše mimo seznam.
+       Patří do config.js té instalace — utažení je rozhodnutí toho, kdo
+       nasazuje. Výchozí bezpečná hodnota je ve frameworku proto, aby
+       chybějící konfigurace neotvírala dveře. */
+    ['access', 'accessSigned'].forEach(function (jm) {
+        var d = cfg && cfg[jm];
+        if (!d) return;
+        Object.keys(d).forEach(function (t) { Fw[jm][t] = d[t]; });
+        delete Fw.cfg[jm];
+    });
 
     Fw.serial = Fw.getSerial();
 

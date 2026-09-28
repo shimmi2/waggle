@@ -23,7 +23,7 @@
    ležet VEDLE tohohle; rozváží ho tools/fwdeploy.sh spolu s ním. */
 require_once __DIR__ . '/io.inc';
 
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.6.4');
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.7.0');
 defined('FW_V')          || define('FW_V', 1);
 defined('FW_MAXLEN')     || define('FW_MAXLEN', 65536);   // strop délky jednoho pole
 defined('FW_DEBUG')      || define('FW_DEBUG', false);    // true = chyby prozradí cesty
@@ -163,9 +163,29 @@ function fw_busy_off(string $sel): array {
  *  Vrací false, když broker neběží; volající se může rozhodnout.
  * ------------------------------------------------------------------- */
 
-function fw_publish(string $pub_url, string $token, array $cmds, float $timeout = 2.0): bool {
+/* $key podepíše dávku. Token kanálu ho nenahradí: token je zároveň jméno
+   kanálu, takže ho zná každý, kdo do něj smí publikovat — podepsat jím by
+   znamenalo napsat klíč na dveře, které jím zamykáme. Klíč se ke klientovi
+   dostane příkazem subscribe, tedy odpovědí serveru, a kanálem nikdy
+   neprojde.
+   Bez klíče projdou na klientovi jen příkazy z Fw.access.push, tedy
+   kreslení, které neumí spustit kód. S klíčem cokoli — včetně html. */
+function fw_publish(string $pub_url, string $token, array $cmds,
+                    float $timeout = 2.0, string $key = ''): bool {
     if (isset($cmds['op'])) $cmds = [$cmds];
-    $body = json_text(['v' => FW_V, 'cmds' => array_values($cmds)]);
+
+    if ($key !== '') {
+        /* Podepisuje se PŘESNĚ ten text, který se pošle, a pošle se jako
+           řetězec. Kdyby se podepisovalo pole a klient si ho serializoval
+           znovu, rozešly by se implementace json_encode a JSON.stringify
+           a podpis by občas neseděl bez zjevné příčiny. */
+        $vnitrek = json_text(array_values($cmds));
+        $body = json_text(['v'   => FW_V,
+                           'sig' => hash_hmac('sha256', $vnitrek, $key),
+                           'p'   => $vnitrek]);
+    } else {
+        $body = json_text(['v' => FW_V, 'cmds' => array_values($cmds)]);
+    }
 
     $ctx = stream_context_create(['http' => [
         'method'        => 'POST',

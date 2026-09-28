@@ -6,7 +6,7 @@
 if (PHP_SAPI !== 'cli') { http_response_code(403); exit; }
 
 require __DIR__ . '/../config.inc';
-require __DIR__ . '/../../fw.inc';
+require __DIR__ . '/../../../../fw.inc';
 require __DIR__ . '/../inc/app.inc';
 require __DIR__ . '/../inc/stream.inc';
 
@@ -15,10 +15,11 @@ $in    = is_file($file) ? json_decode((string)file_get_contents($file), true) : 
 @unlink($file);
 
 $token = is_array($in) ? (string)($in['token'] ?? '') : '';
+$sig   = is_array($in) ? (string)($in['key']   ?? '') : '';   // klíč pro podpis
 if ($token === '') die('token je null');
 
 for ($i = 0; $i <= 100; $i++) {
-    if (!fw_publish(STREAM_PUB_URL, $token, progress_cmds($i))) die('selhal publish');
+    if (!fw_publish(STREAM_PUB_URL, $token, progress_cmds($i), 2.0, $sig)) die('selhal publish');
     usleep(100000);
 }
-fw_publish(STREAM_PUB_URL, $token, progress_done('#run_push', 'pushem'));
+fw_publish(STREAM_PUB_URL, $token, progress_done('#run_push', 'pushem'), 2.0, $sig);

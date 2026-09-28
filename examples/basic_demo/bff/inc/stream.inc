@@ -22,7 +22,7 @@ function stream_sub_url(): string {
    POZOR, tohle je DEMO úložiště. Dva souběžné požadavky si můžou
    navzájem přepsat soubor, protože tu není zamykání. V produkci sem
    patří Redis nebo databáze, ne JSON na disku. */
-function stream_token(string $session, string $name): string {
+function stream_token(string $session, string $name, string $co = 't'): string {
     if ($session === '' || !is_word($name)) return '';
 
     $all = json_decode((string)@file_get_contents(STREAM_STORE), true);
@@ -32,17 +32,30 @@ function stream_token(string $session, string $name): string {
     foreach ($all as $k => $v) if (($v['exp'] ?? 0) < $now) unset($all[$k]);
 
     $key = $name . '|' . $session;
-    if (!isset($all[$key])) $all[$key] = ['t' => bin2hex(random_bytes(16))];
+    if (!isset($all[$key])) $all[$key] = ['t' => bin2hex(random_bytes(16)),
+                                          'k' => bin2hex(random_bytes(32))];
+    if (!isset($all[$key]['k'])) $all[$key]['k'] = bin2hex(random_bytes(32));
     $all[$key]['exp'] = $now + STREAM_TTL;
 
     file_put_contents(STREAM_STORE, json_encode($all));
-    return $all[$key]['t'];
+    return $all[$key][$co];
+}
+
+/* Klíč pro podpis dávky. JINÁ hodnota než token kanálu, a to schválně:
+   token je zároveň jméno kanálu, takže ho zná každý, kdo do něj smí
+   publikovat. Klíč jde ke klientovi jen příkazem subscribe, tedy
+   odpovědí serveru, a kanálem nikdy neprojde. Bez něj propustí klient
+   z pushe jen kreslení, které neumí spustit kód — html mezi ně nepatří. */
+function stream_key(string $session, string $name = 'main'): string {
+    return stream_token($session, $name, 'k');
 }
 
 /* Příkaz, kterým server řekne klientovi, kde má poslouchat. */
 function stream_subscribe_cmd(string $session, string $name = 'main'): array {
     return ['op' => 'subscribe', 'name' => $name,
-            'url' => stream_sub_url(), 'token' => stream_token($session, $name)];
+            'url'   => stream_sub_url(),
+            'token' => stream_token($session, $name),
+            'key'   => stream_key($session, $name)];
 }
 
 /* Spustí workera na pozadí. Token jde dočasným souborem, NE přes argv —

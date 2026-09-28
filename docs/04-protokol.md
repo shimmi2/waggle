@@ -51,12 +51,13 @@ shody; když selektor nenajde nic, je to varování v konzoli, ne chyba.
 
 ## Reference příkazů
 
-Celá sada je **šestnáct příkazů** a vejde se na jednu obrazovku. Tohle
+Celá sada je **sedmnáct příkazů** a vejde se na jednu obrazovku. Tohle
 je ta tabulka, kterou si stačí vytisknout; podrobnosti jsou pod ní.
 
 | op | pole | co dělá |
 |---|---|---|
 | `html` | `sel`, `content` | nahradí obsah prvku |
+| `text` | `sel`, `content` | nahradí obsah **jako text**, značky se nevykreslí |
 | `append` | `sel`, `content` | přidá na konec |
 | `remove` | `sel` | odstraní prvek |
 | `url` | `sel`, `url` | klient stáhne fragment a vloží ho |
@@ -69,8 +70,8 @@ je ta tabulka, kterou si stačí vytisknout; podrobnosti jsou pod ní.
 | `debug` | `message`, `data` | do konzole, jen když `cfg.debug` |
 | `session` | `value` | nastaví token; `null` = odhlášení |
 | `history` | `url` | `pushState` |
-| `call` | `fn`, `args[]` | zavolá globální funkci |
-| `subscribe` | `name`, `url`, `token` | otevře push kanál |
+| `call` | `fn`, `args[]` | zavolá funkci z `Fw.callable` |
+| `subscribe` | `name`, `url`, `token`, `key` | otevře push kanál; `key` ověřuje podpis |
 | `unsubscribe` | `name` | zavře kanál; bez `name` všechny |
 
 Co v tabulce **není a nikdy nebude**: příkaz, který se odkazuje na
@@ -82,6 +83,7 @@ by uměl číst DOM zpátky. Důvody jsou v [02 — Principy](02-principy.md).
 | op | pole | co dělá |
 |---|---|---|
 | `html` | `sel`, `content` | nahradí obsah prvku |
+| `text` | `sel`, `content` | nahradí obsah **jako text**, značky se nevykreslí |
 | `append` | `sel`, `content` | přidá na konec |
 | `remove` | `sel` | odstraní prvek |
 | `url` | `sel`, `url` | klient stáhne fragment a vloží ho |
@@ -95,6 +97,64 @@ fragmentu, který umí obsloužit rovnou webserver. U obsahu závislého na
 sezení se nic neušetří — statickým souborem být nemůže, takže se jen
 zaplatí druhý round-trip navíc.
 **Výchozí je vždy `html` — obsah jde po drátě v odpovědi.**
+
+## Kdo smí co: příkazy podle transportu
+
+Dávka dorazí čtyřmi cestami a každá je jinak důvěryhodná:
+
+| transport | odkud | kdo do ní umí poslat |
+|---|---|---|
+| `response` | odpověď na náš požadavek | jen náš server |
+| `local` | vlastní `Fw.broadcast(…, includeSelf)` | jen naše stránka |
+| `push` | nchan | každý, kdo zná id kanálu |
+| `broadcast` | `BroadcastChannel` | **každá stránka na témže originu** |
+
+Klient proto nepustí z každé cesty všechno. Výchozí sada je v `Fw.access`,
+rozšíření patří do `config.js` té instalace a píše se jako **rozdíl**, ne
+jako celý seznam — jinak by příští vydání s novým příkazem zůstalo mimo.
+
+```js
+Fw.init({ bff: '…', access: { broadcast: ['value', 'text', 'class', 'notify', 'html'] } });
+```
+
+V nepodepsané sadě schválně **není `html`**: `innerHTML` sice nespustí
+`<script>`, ale `<img src=x onerror=…>` ano. `html` přes push nebo
+broadcast je tedy spuštění kódu, ne kreslení. Ze stejného důvodu tam není
+`attr` (umí `onclick`) ani `url`, `call`, `session` a `subscribe`.
+
+### Podepsaná dávka
+
+Kdo potřebuje pushem posílat i `html`, dávku podepíše:
+
+```php
+fw_publish(STREAM_PUB_URL, $token, $cmds, 2.0, $klic);
+```
+
+Na drátě pak místo `cmds` přijde podepsaný řetězec:
+
+```json
+{"v":1,"sig":"<hmac-sha256 hex>","p":"[{\"op\":\"html\",…}]"}
+```
+
+Podepisuje se **přesně ten text, který se pošle**, a posílá se jako
+řetězec. Kdyby se podepisovalo pole a klient si ho serializoval znovu,
+rozešly by se `json_encode` a `JSON.stringify` a podpis by občas neseděl
+bez zjevné příčiny.
+
+**Klíč musí být něco jiného než token kanálu.** Token je zároveň jméno
+kanálu, takže ho zná každý, kdo do něj smí publikovat — podepsat jím by
+znamenalo napsat klíč na dveře, které jím zamykáme. Klíč jde ke klientovi
+jedině příkazem `subscribe`, tedy odpovědí serveru, a kanálem nikdy
+neprojde.
+
+Ověřuje se HMAC-SHA256 přes WebCrypto. Bez `crypto.subtle` (tedy mimo
+zabezpečený kontext) se neověřuje a dávka propadne na nepodepsanou sadu —
+selhat se má zavřeně.
+
+I podepsaná sada je **užší než `response`**: nejsou v ní `session`,
+`call`, `url` ani `subscribe`. Push jde přes broker, takže odchycenou
+dávku lze přehrát znovu; u kreslení je to neškodné, u `session` by to byla
+podvržená session.
 
 ### Vlastnosti prvků
 
@@ -179,8 +239,8 @@ na kterou stejně nikdo nechce klikat:
 |---|---|---|
 | `session` | `value` | nastaví token; `null` = odhlášení |
 | `history` | `url` | `pushState`; po submitu formuláře se ignoruje |
-| `call` | `fn`, `args[]` | zavolá globální funkci |
-| `subscribe` | `name`, `url`, `token` | otevře push kanál |
+| `call` | `fn`, `args[]` | zavolá funkci z `Fw.callable` |
+| `subscribe` | `name`, `url`, `token`, `key` | otevře push kanál; `key` ověřuje podpis |
 | `unsubscribe` | `name` | zavře kanál; bez `name` všechny |
 
 ### Vlastní operace
