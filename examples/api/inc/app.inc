@@ -3,9 +3,8 @@
    Framework záměrně neřeší šablony ani escapování do cílového kontextu. */
 
 /* Escapování do HTML. Jediné správné místo je až tady, na výstupu. */
-function esc(?string $s): string {
-    return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-}
+/* esc() bydlí v io.inc — escapuje se v obou vrstvách stejně a dvě
+   kopie téhož by se dřív nebo později rozešly. */
 
 /* Vyrenderuje .inc soubor do řetězce. Proměnné dostane jako lokální. */
 function render(string $file, array $vars = []): string {

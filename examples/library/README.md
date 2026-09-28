@@ -91,12 +91,15 @@ v téhle aplikaci udělané.
 app/          frontend — index.html, app.js, app.css, fw.js
               Nesahá na databázi ani na API. Zná jedinou adresu: BFF.
 bff/          řízení aplikace, mluví Waggle
+  fw.inc        KNIHOVNA — protokol; io.inc si načítá sám
+  io.inc        KNIHOVNA — hygiena vstupu a výstupu
   index.php     jeden switch, jedna obrazovka na case
   pages/        fragmenty HTML (13)
   inc/          api_client.inc, session_cache.inc, ui.inc
 api/          backendové API, jediná vrstva u databáze
   index.php     dispatcher
-  inc/          boot, input, session, throttle + api_books/rentals/users
+  inc/io.inc    KNIHOVNA — táž hygiena vstupů, BEZ protokolu
+  inc/          boot, session, throttle + api_books/rentals/users
 sql/          schéma, číselníky, 60 knih, 14 uživatelů, generátor historie
 cronjobs/      cleaner.php — úklid prošlých sezení a záznamů o pokusech
 install.php    instalace z webu (maže se po sobě)
@@ -115,6 +118,12 @@ Tohle nejsou náhody a při úpravách to nechtěj „zjednodušit".
 **Tři vrstvy jdou vždy po HTTP.** I když běží na jednom stroji. Kdyby BFF
 sahalo na databázi, nedá se mezi ně dát jiné oprávnění a celé dělení je na
 ozdobu.
+
+**Backendové API nenačítá `fw.inc`.** Waggle je protokol mezi BFF a
+prohlížečem; backend o něm vědět nemá, jinak by se nedal přepsat do
+Pythonu, aniž by se s ním tahal i ten protokol. Bere si z knihovny jediný
+soubor, `io.inc` — hygienu vstupů, kterou potřebuje stejně jako kdokoli
+jiný. Obojí v jednom procesu být nesmí: sdílejí jména.
 
 **Backend ověřuje sezení vždy, interně, u každého volání** kromě přihlášení.
 Nevěří BFF, že už to udělalo. Ověřuje to `session_require()` a je to krok 3

@@ -7,9 +7,8 @@
  *  cíle. Do HTML nejde nic bez esc().
  * ===================================================================== */
 
-function esc(?string $s): string {
-    return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-}
+/* esc() bydlí v io.inc — escapuje se v obou vrstvách stejně a dvě
+   kopie téhož by se dřív nebo později rozešly. */
 
 /* Fragment ze souboru. Stejná myšlenka jako render() ve frameworku:
    proměnné se předají polem, ne globálkami, aby bylo v šabloně vidět,

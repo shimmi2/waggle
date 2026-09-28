@@ -18,7 +18,12 @@
 /* FW_RELEASE je vydání knihovny, FW_V je verze protokolu na drátě.
    Mění se nezávisle: protokol zůstává 1, dokud se nezmění formát dávky.
    Bez tohohle čísla se u běžícího projektu nedalo zjistit, co v něm je. */
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.5.0');
+/* Hygiena vstupu a výstupu bydlí vedle, v io.inc — potřebuje ji i vrstva,
+   která o Waggle nemá vědět, a dvě kopie téhož by se rozešly. Soubor musí
+   ležet VEDLE tohohle; rozváží ho tools/fwdeploy.sh spolu s ním. */
+require_once __DIR__ . '/io.inc';
+
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.6.0');
 defined('FW_V')          || define('FW_V', 1);
 defined('FW_MAXLEN')     || define('FW_MAXLEN', 65536);   // strop délky jednoho pole
 defined('FW_DEBUG')      || define('FW_DEBUG', false);    // true = chyby prozradí cesty
@@ -28,87 +33,6 @@ $FW_QUEUE   = [];      // fronta příkazů čekajících na odeslání
 $FW_STARTED = false;   // odešly už hlavičky? (rozhoduje o způsobu hlášení chyby)
 $FW_DIRECT  = null;    // rozpracovaný start_direct_answer()
 $FW_DONE    = false;   // pojistka proti dvojímu doběhnutí
-
-/* ---------------------------------------------------------------------
- *  VSTUP — jediné tři garance. Nic víc, nic míň.
- * ------------------------------------------------------------------- */
-
-function in_str(string $name, int $max = 4096): string {
-    $v = $_REQUEST[$name] ?? '';
-    if (!is_string($v))              return '';   // ?x[]=1 nesmí shodit endpoint
-    if (isset($v[$max]))             $v = substr($v, 0, $max);
-    if (strpos($v, "\0") !== false)  $v = str_replace("\0", '', $v);
-    return $v;
-}
-
-function in_int(string $name): int     { return intval(in_str($name, 32));   }
-function in_float(string $name): float { return floatval(in_str($name, 64)); }
-
-/* "slovo" — bezpečné pro názvy funkcí a části cest. Čistý strspn, 41 ns. */
-function is_word(string $s): bool {
-    static $OK = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-';
-    return $s !== '' && strspn($s, $OK) === strlen($s);
-}
-
-/* Hlavička požadavku se stejnou hygienou jako $_REQUEST. */
-/* Tabulkový formulář posílá fd[i][sloupec]. Skalární getter takové pole
-   schválně nepustí, takže je na ně tenhle — a platí pro něj TYTÉŽ tři
-   garance: string omezené délky bez NUL, nic víc.
-
-   Propustí jen dvojúrovňové pole skalárů. Hlubší zanoření, objekty ani
-   skaláry na první úrovni neprojdou; nepadá se na nich, jen se
-   přeskočí. Stropy jsou dva, na počet řádků i na délku hodnoty —
-   bez nich by jediný požadavek mohl vyrobit statisíce prvků.
-
-   Klíče řádků i sloupců zůstávají tak, jak přišly, a jsou to vstup
-   od klienta jako každý jiný: do SQL ani do HTML nepatří bez ošetření.
-   Framework je nepřepisuje, protože jen volající ví, co znamenají. */
-function in_rows(string $name, int $maxRows = 500, int $maxLen = 4096): array {
-    $v = $_REQUEST[$name] ?? null;
-    if (!is_array($v)) return [];
-    $out = [];
-    foreach ($v as $i => $row) {
-        if (count($out) >= $maxRows) break;
-        if (!is_array($row)) continue;
-        $r = [];
-        foreach ($row as $k => $cv) {
-            if (!is_scalar($cv)) continue;
-            $cv = (string)$cv;
-            if (isset($cv[$maxLen]))        $cv = substr($cv, 0, $maxLen);
-            if (strpos($cv, "\0") !== false) $cv = str_replace("\0", '', $cv);
-            $r[(string)$k] = $cv;
-        }
-        $out[(string)$i] = $r;
-    }
-    return $out;
-}
-
-function in_header(string $name, int $max = 1024): string {
-    $v = $_SERVER['HTTP_' . strtr(strtoupper($name), '-', '_')] ?? '';
-    if (!is_string($v))              return '';
-    if (isset($v[$max]))             $v = substr($v, 0, $max);
-    if (strpos($v, "\0") !== false)  $v = str_replace("\0", '', $v);
-    return $v;
-}
-
-/* ---------------------------------------------------------------------
- *  Původní jména z vydání 1.4.0 a starších. Zůstávají a v protokolu v1
- *  se neodeberou — visí na nich stovky volání v existujících projektech
- *  a přejmenovat je hromadně v živém kódu je riziko bez užitku.
- *
- *  V novém kódu piš in_*. Jsou to jména čteček, takže se poznají od
- *  is_word(), které nic nečte — je to predikát nad řetězcem, který už
- *  držíš. Na tom rozdílu se dá naletět: is_word('op') vypadá jako
- *  getter a přitom jen odpoví, že slovo „op" je slovo. Proto se
- *  predikát nejmenuje in_word().
- * ------------------------------------------------------------------- */
-function req(string $name, int $max = 4096): string { return in_str($name, $max); }
-function req_int(string $name): int                 { return in_int($name); }
-function req_float(string $name): float             { return in_float($name); }
-function req_rows(string $name, int $maxRows = 500, int $maxLen = 4096): array {
-    return in_rows($name, $maxRows, $maxLen);
-}
-function req_header(string $name, int $max = 1024): string { return in_header($name, $max); }
 
 /* ---------------------------------------------------------------------
  *  VÝSTUP
@@ -156,8 +80,7 @@ function flush_answer(): void {
         $FW_QUEUE[] = ['op' => 'debug', 'message' => 'nezachycený výstup PHP', 'data' => $stray];
     if (!$FW_QUEUE) return;
     fw_start_output();
-    echo json_encode(['v' => FW_V, 'cmds' => array_values($FW_QUEUE)],
-                     JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), "\n";
+    echo json_text(['v' => FW_V, 'cmds' => array_values($FW_QUEUE)]), "\n";
     $FW_QUEUE = [];
     fw_pump();
 }
@@ -242,8 +165,7 @@ function fw_busy_off(string $sel): array {
 
 function fw_publish(string $pub_url, string $token, array $cmds, float $timeout = 2.0): bool {
     if (isset($cmds['op'])) $cmds = [$cmds];
-    $body = json_encode(['v' => FW_V, 'cmds' => array_values($cmds)],
-                        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $body = json_text(['v' => FW_V, 'cmds' => array_values($cmds)]);
 
     $ctx = stream_context_create(['http' => [
         'method'        => 'POST',

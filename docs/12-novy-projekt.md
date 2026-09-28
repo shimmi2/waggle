@@ -32,8 +32,9 @@ to, co nechceš psát znovu.
 
 | | |
 |---|---|
-| `fw.inc`, `fw.js` | **knihovna**. Rozváží `tools/fwdeploy.sh`. Každá úprava patří do nové verze Waggle, ne do projektu. |
-| `api/inc/boot.inc`, `input.inc`, `api_session.inc`, `api_throttle.inc` | kostra. Funguje. Sáhni tam jen s důvodem, který umíš vyslovit. |
+| `io.inc`, `fw.inc`, `fw.js` | **knihovna**. Rozváží `tools/fwdeploy.sh`. Každá úprava patří do nové verze Waggle, ne do projektu. |
+| `api/inc/io.inc` | **knihovna**, stejně jako `fw.inc`. Rozváží ji `fwdeploy.sh`. |
+| `api/inc/boot.inc`, `api_session.inc`, `api_throttle.inc` | kostra. Funguje. Sáhni tam jen s důvodem, který umíš vyslovit. |
 | `bff/inc/api_client.inc`, `session_cache.inc` | totéž. Zejména obsluhu 401 v `api_call()`. |
 
 Tvoje území: `sql/*`, `api/inc/api_<modul>.inc`, `api/index.php` (jen switch),

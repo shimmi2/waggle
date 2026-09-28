@@ -64,7 +64,7 @@ vydani() {   # vytáhne číslo vydání ze souboru, ať je to .inc nebo .js
 stahni() {
     local ref="$1" f dir
     dir="$(mktemp -d)" || return 1
-    for f in fw.inc fw.js; do
+    for f in io.inc fw.inc fw.js; do
         if command -v gh >/dev/null 2>&1 && \
            gh api "repos/$REPO/contents/$f?ref=$ref" \
               -H "Accept: application/vnd.github.raw" > "$dir/$f" 2>/dev/null \
@@ -109,26 +109,55 @@ fi
 V_SRC="$(vydani "$SRC/fw.inc")"
 [ "$V_SRC" != "bez verze" ] || { echo "ve zdroji $SRC/fw.inc není FW_RELEASE" >&2; exit 1; }
 
+# fw.inc vyžaduje io.inc, takže spolu musí i verzovat. Rozejití by
+# znamenalo projekt, kde půlka knihovny je z jiného vydání — a to se
+# pozná až podle chování, ne podle chyby.
+V_IO="$(vydani "$SRC/io.inc")"
+[ "$V_IO" = "$V_SRC" ] || {
+    echo "zdroj se rozešel: fw.inc je $V_SRC, io.inc $V_IO" >&2; exit 1; }
+
 # Nová verze knihovny může přinést funkci, kterou si projekt už dávno
 # napsal sám. PHP na dvojí deklaraci spadne fatální chybou a celé API
 # začne vracet 500 — a pozná se to až po nasazení. Proto se to hlídá
 # předem: vezmou se jména funkcí ze zdrojového fw.inc a hledají se
 # v projektu všude jinde než v souboru, který se přepisuje.
+# Patro = adresář, ve kterém běží JEDEN proces. Knihovní soubor svoje
+# patro označuje tím, že v něm leží; když bydlí v inc/ nebo lib/, patří
+# patro o úroveň výš, protože vstupní bod je tam.
+patro() {
+    local d; d="$(dirname "$1")"
+    case "$(basename "$d")" in inc|lib) dirname "$d" ;; *) echo "$d" ;; esac
+}
+
+# Nová verze knihovny může přinést funkci, kterou si projekt už dávno
+# napsal sám. PHP na dvojí deklaraci spadne fatální chybou ještě před
+# prvním řádkem endpointu, takže nevrací 500 jedna stránka, ale všechno.
+#
+# Hledá se v celém patře, ale CIZÍ patra se vynechávají: tříúrovňová
+# aplikace má vlastní kopii knihovny v bff/ i v api/inc/ a ty dva
+# procesy se v jednom include grafu nikdy nesejdou. Vynechat celý
+# zbytek projektu by naopak minulo kolizi o adresář vedle — a přesně
+# ta shodila vydání 1.2.2.
 kolize() {
-    local root="$1" cil="$2" f jmena hit nalez="" obor
+    local root="$1" cil="$2" f jmena hit nalez="" moje ciziptr cizi=""
     [ "${cil##*.}" = "inc" ] || return 0
-    # Hledá se jen v adresáři, kam fw.inc patří, ne v celém projektu.
-    # Tříúrovňová aplikace má fw.inc v bff/ a vlastní vstupní vrstvu
-    # v api/ — jsou to DVA procesy, které se v jednom include grafu
-    # nikdy nesejdou, takže stejná jména tam kolize nejsou. Prohledávat
-    # celý koren by na takovém projektu hlásilo poplach pokaždé.
-    obor="$(dirname "$cil")"
-    jmena="$(grep -oE '^function [a-z_]+\(' "$SRC/fw.inc" 2>/dev/null | sed 's/^function //; s/($//')"
+    moje="$(patro "$cil")"
+    while IFS= read -r ciziptr; do
+        [ -n "$ciziptr" ] || continue
+        local pt; pt="$(patro "$ciziptr")"
+        [ "$pt" = "$moje" ] || cizi="$cizi $pt"
+    done <<< "$(find "$root" \( -name io.inc -o -name fw.inc \) 2>/dev/null)"
+
+    jmena="$(grep -hoE '^function [a-z_]+\(' "$SRC/fw.inc" "$SRC/io.inc" 2>/dev/null \
+             | sed 's/^function //; s/($//' | sort -u)"
     [ -n "$jmena" ] || return 0
     while IFS= read -r f; do
         [ -n "$f" ] || continue
-        hit="$(grep -rlE "^function +$f *\(" "$obor" --include='*.inc' --include='*.php' 2>/dev/null \
-               | grep -v "^$cil$" | head -1)"
+        hit="$(grep -rlE "^function +$f *\(" "$moje" --include='*.inc' --include='*.php' 2>/dev/null \
+               | grep -vE '/(io|fw)\.inc$' | while IFS= read -r h; do
+                     for c in $cizi; do case "$h" in "$c"/*) continue 2 ;; esac; done
+                     echo "$h"
+                 done | head -1)"
         [ -n "$hit" ] && nalez="$nalez\n        $f()  v  ${hit#$root/}"
     done <<< "$jmena"
     [ -z "$nalez" ] && return 0
@@ -158,8 +187,19 @@ for root in "${CILE[@]}"; do
         echo "  !! $root — adresář neexistuje"; CHYBY=1; continue
     fi
     echo "  $root"
-    for f in fw.inc fw.js; do
-        cil="$(najdi "$root" "$f")" || { echo "      $f — v projektu není, přeskakuji"; continue; }
+    for f in io.inc fw.inc fw.js; do
+        cil="$(najdi "$root" "$f")" || {
+            # io.inc je nový v 1.6.0 a fw.inc ho VYŽADUJE. Kdyby se
+            # rozvezl jen fw.inc, spadne projekt na chybějícím require
+            # hned prvním požadavkem. Proto se zakládá vedle fw.inc.
+            if [ "$f" = "io.inc" ] && cil_fw="$(najdi "$root" fw.inc)"; then
+                cil="$(dirname "$cil_fw")/io.inc"
+                echo "      ${cil#$root/} — chybí, zakládám vedle fw.inc"
+                [ $CHECK -eq 1 ] && continue
+                cp -f "$SRC/io.inc" "$cil" && echo "        založeno na $V_SRC" || CHYBY=1
+                continue
+            fi
+            echo "      $f — v projektu není, přeskakuji"; continue; }
         rel="${cil#$root/}"
         if ! kolize "$root" "$cil"; then CHYBY=1; continue; fi
         if cmp -s "$SRC/$f" "$cil"; then

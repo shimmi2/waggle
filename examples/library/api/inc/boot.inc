@@ -19,7 +19,10 @@ declare(strict_types=1);
 @ini_set('display_errors', '0');
 while (ob_get_level() > 0) @ob_end_clean();
 
-require __DIR__ . '/input.inc';
+/* Hygiena vstupu a výstupu z knihovny Waggle. Načítá se PŘÍMO, ne přes
+   fw.inc — backendové API o protokolu mezi BFF a prohlížečem vědět
+   nemá. Tohle je jediný soubor, který si odsud bere. */
+require __DIR__ . '/io.inc';
 
 $GLOBALS['api_done'] = false;
 
@@ -33,7 +36,7 @@ function api_out(array $data, int $code = 200): void {
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-store');
-    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    echo json_text($data);   // příznaky bydlí v io.inc, jedno místo pro obě vrstvy
     exit;
 }
 

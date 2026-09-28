@@ -1,6 +1,20 @@
-# 05 — Server (`fw.inc`)
+# 05 — Server (`fw.inc` + `io.inc`)
 
-Jeden soubor. Neřeší databázi, šablony ani autentizaci — to je věc projektu.
+Dva soubory. Neřeší databázi, šablony ani autentizaci — to je věc projektu.
+
+`io.inc` je hygiena vstupu a výstupu a **o protokolu neví nic**: čtení
+z požadavku, escapování do HTML, kódování JSON. `fw.inc` je Waggle a
+`io.inc` si načítá sám, takže musí ležet vedle něj.
+
+To rozdělení není úklid. Tříúrovňová aplikace má backendové API, které
+protokol mezi BFF a prohlížečem načítat nemá — ale tutéž hygienu vstupů
+potřebuje úplně stejně. Dřív si ji každá vrstva psala znovu a dvě kopie
+téhož se dřív nebo později rozejdou. Vstupy jsou to poslední, co se smí
+rozejít.
+
+**Nikdy obojí v jednom procesu.** `fw.inc` už `io.inc` obsahuje; načíst
+k tomu `io.inc` ještě jednou znamená dvojí deklaraci a fatální chybu
+před prvním řádkem endpointu. Hlídá to `tools/fwdeploy.sh`.
 
 Chystá se k němu sada **skillů, šablon a příkladů pro okamžité
 nasazení**, aby se kompletní aplikace i s databází, session a
@@ -13,8 +27,15 @@ budou to příklady a nástroje, ne závislosti.
 
 ```php
 require __DIR__ . '/config.inc';   // přebije výchozí hodnoty frameworku
-require __DIR__ . '/../fw.inc';
+require __DIR__ . '/../fw.inc';    // io.inc si natáhne sám
 fw_boot();
+```
+
+Vrstva bez protokolu — backendové API, cronjob, cokoli, co jen potřebuje
+bezpečně přečíst vstup — si načte jen `io.inc` a `fw_boot()` nevolá:
+
+```php
+require __DIR__ . '/io.inc';
 ```
 
 `fw_boot()` vypne `display_errors` (notice uprostřed odpovědi by rozbil
@@ -204,7 +225,8 @@ hodnoty tím, že si je nadefinuje **před** načtením `fw.inc`:
 | | |
 |---|---|
 | `fw_boot()` | inicializace, první řádek endpointu |
-| `in_str()`, `in_int()`, `in_float()`, `in_rows()`, `in_header()`, `is_word()` | vstupy |
+| `in_str()`, `in_int()`, `in_float()`, `in_rows()`, `in_header()`, `is_word()` | vstupy — **`io.inc`** |
+| `esc()`, `json_text()` | výstup — **`io.inc`** |
 | `req()`, `req_int()`, `req_float()`, `req_rows()`, `req_header()` | **zastaralé** aliasy z 1.4.0 a starších |
 | `send_answer()`, `flush_answer()`, `finish_answer()` | odpověď |
 | `throw_http_error()` | chyba |

@@ -5,7 +5,7 @@
 > safe and simple apps. Apps where data flows in parallel, asynchronous
 > motion, like bees in a waggle dance.
 
-Vydání **1.5.0**, protokol **v1**.
+Vydání **1.6.0**, protokol **v1**.
 
 ## Proč vznikl
 
@@ -152,14 +152,19 @@ něco brát, koukni, do které patří — ušetří to spoustu zbytečných ot�
 
 | vrstva | co to je | jak často se bere |
 |---|---|---|
-| **knihovna** | `fw.inc`, `fw.js` | **průběžně**, skriptem `tools/fwdeploy.sh` |
+| **knihovna** | `io.inc`, `fw.inc`, `fw.js` | **průběžně**, skriptem `tools/fwdeploy.sh` |
 | **kostra** | `examples/library/*` nebo `examples/api/{index.php,config.inc,inc/*}` | **jednou** při zrodu projektu, pak se rozchází |
 | **dema** | `examples/api/pages/*`, `examples/app/*`, `examples/app-adminlte/*` | **nikdy** — jen se čtou |
 
-**Knihovna jsou dva soubory.** V reálném projektu je to zlomek celku:
-`fw.inc` má 10 kB proti stovkám kB stránek, `fw.js` 20 kB proti
-megabajtům šablony. Nikdy se needituje v projektu — každá změna patří
-do nové verze Waggle.
+**Knihovna jsou tři soubory.** V reálném projektu je to zlomek celku:
+`fw.inc` (protokol) 10 kB, `io.inc` (hygiena vstupu a výstupu) 7 kB,
+`fw.js` 30 kB proti megabajtům šablony. Nikdy se needitují v projektu —
+každá změna patří do nové verze Waggle.
+
+`fw.inc` si `io.inc` načítá sám a musí ležet **vedle** něj; rozváží je
+`fwdeploy.sh` společně. Vrstva, která o protokolu vědět nemá — typicky
+backendové API tříúrovňové aplikace — si načte jen `io.inc`. Nikdy obojí
+v jednom procesu: sdílejí jména a PHP spadne na dvojí deklaraci.
 
 **Kostra se rozchází schválně.** Dispatcher demo API má 8 kB, oba
 odvozené převedením portálu, zkušebního projektu, kolem 6 kB.
@@ -172,7 +177,8 @@ tříúrovňová aplikace s instalákem, ze které se **začíná nový projekt*
 
 ```
 fw.js       knihovna, klient
-fw.inc      knihovna, server (referenční implementace v PHP)
+fw.inc      knihovna, server — protokol Waggle (referenční implementace v PHP)
+io.inc      knihovna, server — hygiena vstupu a výstupu, o protokolu neví
 examples/
   api/            demo API — jeden dispatcher, dvě sady fragmentů
   app/            demo BEZ AdminLTE — holé HTML a vlastní CSS
@@ -278,7 +284,7 @@ která drží jednotný přístup. Proto jsou tady, ne jako příloha.
 
 ## Rozvoz do projektů
 
-Projekty si nesou **vlastní kopii** `fw.inc` a `fw.js`, ne symlink. Chyba
+Projekty si nesou **vlastní kopii** `io.inc`, `fw.inc` a `fw.js`, ne symlink. Chyba
 v `fw.inc` znamená, že projekt nejede vůbec; se symlinkem by šla do všech
 projektů naráz a nedalo by se nasazovat po jednom. S kopií je v gitu
 každého projektu vidět, na jaké verzi frameworku běží.
@@ -286,7 +292,7 @@ každého projektu vidět, na jaké verzi frameworku běží.
 ```bash
 ./tools/fwdeploy.sh --check            # co kde běží
 ./tools/fwdeploy.sh <cesta>...         # rozvoz z tohohle stromu
-./tools/fwdeploy.sh --from v1.5.0 …    # rozvoz z vydání na GitHubu
+./tools/fwdeploy.sh --from v1.6.0 …    # rozvoz z vydání na GitHubu
 ```
 
 Bez `--from` se bere tenhle strom, takže to jede i bez sítě. S `--from`
@@ -318,7 +324,7 @@ kterou lze předat člověku i modelu se stejným výsledkem. Fork, který
 potichu změní protokol a nechá si jméno, tuhle hodnotu zničí — a přesně
 proto je tu Apache a ne MIT.
 
-Knihovnou jsou **`fw.inc` a `fw.js`**; oba nesou licenční hlavičku,
+Knihovnou jsou **`io.inc`, `fw.inc` a `fw.js`**; oba nesou licenční hlavičku,
 protože se kopírují do cizích projektů a musí být poznat, odkud jsou.
 Příklad `examples/app-adminlte/` přibaluje AdminLTE, Bootstrap a Bootstrap Icons — všechno
 MIT, každý se svou licencí ve svém adresáři. Součástí Waggle nejsou.

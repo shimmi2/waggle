@@ -49,10 +49,16 @@ Stalo se to při vydání 1.2.2, kde do `fw.inc` přibyla `req_rows()`
 (dnes `in_rows()`) — obě odvozené aplikace ji přitom měly ve svém
 `app.inc`.
 
-Od 1.5.0 hledá `fwdeploy.sh` kolizi jen v adresáři, kam `fw.inc`
-patří. Tříúrovňová aplikace má knihovnu v `bff/` a vlastní vstupní
-vrstvu v `api/`; jsou to dva procesy, které se v jednom include grafu
-nikdy nesejdou, takže stejná jména tam kolize nejsou.
+Od 1.6.0 hledá `fwdeploy.sh` kolizi **po patrech**. Patro je adresář,
+ve kterém běží jeden proces; knihovní soubor ho označuje tím, že v něm
+leží (a když bydlí v `inc/` nebo `lib/`, patří patro o úroveň výš, kde
+je vstupní bod). Hledá se v celém patře, ale cizí patra se vynechávají:
+tříúrovňová aplikace má `io.inc` v `bff/` i v `api/inc/` a ty dva
+procesy se v jednom include grafu nikdy nesejdou.
+
+Zúžení jen na adresář `fw.inc`, jak to dělala 1.5.0, bylo málo —
+minulo kolizi o adresář vedle, tedy přesně ten případ, který 1.2.2
+shodil.
 
 **Oprava:** smazat projektovou kopii, knihovna tu funkci má taky.
 Nikdy ne obráceně a nikdy ne přes `function_exists()` — to by znamenalo,
