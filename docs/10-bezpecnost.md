@@ -332,6 +332,73 @@ Trade-off: token v `localStorage` není chráněný proti XSS tak jako
 `HttpOnly` cookie. Protiváhou je důsledné `esc()` na výstupu a možnost
 mít API na jiném hostu bez trápení s `SameSite`.
 
+## Kdo smí poslat který příkaz
+
+Dávka dorazí čtyřmi cestami a každá je jinak důvěryhodná:
+
+| transport | kdo do ní umí poslat |
+|---|---|
+| `response` | jen náš server — odpověď na náš vlastní požadavek |
+| `local` | jen naše stránka |
+| `push` | každý, kdo zná id kanálu |
+| `broadcast` | **každá stránka na témže originu** |
+
+Ten poslední řádek je důvod, proč tahle sekce existuje. `BroadcastChannel`
+je na úrovni originu, takže do něj pošle cokoli jiná aplikace na doméně,
+nahraný HTML soubor nebo XSS kdekoli jinde. Pojmenování kanálu podle cesty
+brání kolizím, ne útočníkovi.
+
+Klient proto nepustí z každé cesty všechno:
+
+```js
+Fw.access = {                     // výchozí, ve frameworku
+    response:  '*',
+    local:     '*',
+    push:      ['busy','notify','value','text','class','remove','debug','error'],
+    broadcast: ['value','text','class','notify']
+};
+```
+
+**V nepodepsané sadě schválně není `html`.** `innerHTML` sice nespustí
+`<script>`, ale `<img src=x onerror=…>` ano — `html` přes push nebo
+broadcast je tedy spuštění kódu, ne kreslení. Ze stejného důvodu tam není
+`attr` (umí `onclick`), `url`, `call`, `session` ani `subscribe`.
+
+### Rozšíření patří do konfigurace instalace
+
+Výchozí hodnota je ve `fw.js` proto, aby chybějící konfigurace neotvírala
+dveře. Utažení nebo povolení je ale rozhodnutí toho, kdo nasazuje — ten ví,
+co na doméně ještě běží. Píše se do `config.js` a **jako rozdíl**, ne jako
+celý seznam; jinak by příští vydání s novým příkazem zůstalo mimo:
+
+```js
+window.LIB_FW_ACCESS = { broadcast: ['value','text','class','notify','html'] };
+```
+
+### Podepsaná dávka
+
+Kdo potřebuje pushem posílat i `html`, dávku podepíše:
+
+```php
+fw_publish(STREAM_PUB_URL, $token, $cmds, 2.0, $klic);
+```
+
+**Klíč musí být něco jiného než token kanálu.** Token je zároveň jméno
+kanálu (`nchan_channel_id $arg_token`), takže ho zná každý, kdo do něj smí
+publikovat — podepsat jím by znamenalo napsat klíč na dveře, které jím
+zamykáme. Klíč jde ke klientovi jedině příkazem `subscribe`, tedy odpovědí
+serveru, a kanálem nikdy neprojde.
+
+Ověřuje se HMAC-SHA256 přes WebCrypto. Bez `crypto.subtle`, tedy mimo
+zabezpečený kontext, se neověřuje a dávka propadne na nepodepsanou sadu —
+selhat se má zavřeně.
+
+I podepsaná sada je užší než `response`: bez `session`, `call`, `url`
+a `subscribe`. Push jde přes broker, takže odchycenou dávku lze přehrát
+znovu. U kreslení je to neškodné, u `session` by to byla podvržená session.
+
+Úplná reference je ve [04 — Protokol](04-protokol.md).
+
 ## Push kanály
 
 Tři věci, každá nutná:
@@ -344,6 +411,17 @@ Tři věci, každá nutná:
    Tohle je nejcitlivější místo celého návrhu.
 3. **Odběratel přes TLS.** Z https stránky prohlížeč spojení na http
    zablokuje jako mixed content.
+
+A dvě direktivy, bez kterých je kanál otevřený DoS:
+
+```nginx
+nchan_subscribe_existing_channels_only on;   # odběrem nejde kanál založit
+limit_conn  nchan_ip 20;                     # EventSource drží spojení
+```
+
+Bez té první si kdokoli vymyslí libovolný token, nchan mu kanál vyrobí
+a drží ho v paměti. Bez té druhé stačí pár set záložek. Obojí je
+v `nginx-nchan.conf.example`.
 
 ## Workery
 

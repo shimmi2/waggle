@@ -11,7 +11,7 @@
 #  hlavičku Accept: text/event-stream. Bez ní vrátí 403, i když je
 #  všechno v pořádku — prohlížeč ji posílá sám, curl ne:
 #      curl -N -H "Accept: text/event-stream" \
-#           "https://www.simek.info:8443/nchan/sub?token=…"
+#           "https://www.priklad.cz:8443/nchan/sub?token=…"
 #
 #  Apache zůstává beze změny. nginx drží jen SSE spojení; PHP do něj
 #  krátkým POSTem publikuje a končí. Žádný trvale běžící PHP proces,
@@ -19,6 +19,9 @@
 # =====================================================================
 
 
+# Zóna pro limit_conn patří do http {} bloku, ne sem:
+#     limit_conn_zone $binary_remote_addr zone=nchan_ip:10m;
+#
 # ---------------------------------------------------------------------
 #  1) ODBĚRATELÉ — veřejně, povinně přes TLS.
 #
@@ -30,10 +33,10 @@ server {
     listen              8443 ssl;
     listen         [::]:8443 ssl;
     http2               on;
-    server_name         www.simek.info simek.info;
+    server_name         www.priklad.cz priklad.cz;
 
-    ssl_certificate     /etc/letsencrypt/live/simek.info-0001/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/simek.info-0001/privkey.pem;
+    ssl_certificate     /etc/letsencrypt/live/priklad.cz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/priklad.cz/privkey.pem;
 
     access_log          /var/log/nginx/fw-nchan.access.log;
 
@@ -42,6 +45,15 @@ server {
         nchan_channel_id                $arg_token;   # prázdný token -> nchan vrátí 403
         nchan_subscriber_first_message  newest;       # při připojení nelít historii
 
+        # Odběrem se NESMÍ dát kanál založit. Bez tohohle si kdokoli
+        # vymyslí libovolný token, nchan mu kanál vyrobí a drží ho
+        # v paměti — je to DoS na paměť za cenu jednoho requestu.
+        nchan_subscribe_existing_channels_only on;
+
+        # A strop na počet spojení z jedné adresy. EventSource drží
+        # spojení otevřené, takže bez limitu stačí pár set záložek.
+        limit_conn  nchan_ip 20;
+
         # CORS řeší nchan sám a odráží Origin požadavku — proto tu
         # NESMÍ být žádné add_header Access-Control-*. Vznikly by dvě
         # hlavičky, prohlížeč je spojí čárkou a spojení zablokuje
@@ -49,7 +61,7 @@ server {
         #
         # Omezit na konkrétní origin jde takto (jen JEDNA hodnota,
         # takže buď s www, nebo bez — proto radši necháváme odraz):
-        #   nchan_access_control_allow_origin "https://simek.info";
+        #   nchan_access_control_allow_origin "https://priklad.cz";
     }
 
     location / { return 404; }

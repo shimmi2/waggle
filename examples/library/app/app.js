@@ -69,7 +69,8 @@ if (!window.LIB_BFF_URL) {
         '<code>config.js</code> s adresou BFF. Zkopíruj ' +
         '<code>config.example.js</code> a doplň ji, nebo pusť instalák.</p></div>';
 } else {
-    Fw.init({ bff: window.LIB_BFF_URL });
+    Fw.init({ bff: window.LIB_BFF_URL,
+              access: window.LIB_FW_ACCESS || undefined });
 }
 
 })();
