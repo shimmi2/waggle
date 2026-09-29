@@ -96,6 +96,24 @@ function prazdna_kniha(): array {
             'bo_year' => 0, 'bo_count' => 1, 'bo_price' => 0.0, 'bo_description' => ''];
 }
 
+/* Stav filtru výpůjček.
+ *
+ *  $vychozi platí JEN při příchodu na obrazovku. Při odeslání formuláře
+ *  znamená chybějící 'open', že si ho člověk odškrtl — a výchozí hodnota
+ *  by mu ho napořád vracela zpátky, takže by šlo odškrtnout jen na jedno
+ *  kliknutí a hned zpět.
+ *
+ *  Čte se to jednou a použije dvakrát: pro dotaz i pro vykreslení filtru.
+ *  Když si každý z nich přečte požadavek sám, jednou se rozejdou a
+ *  uživatel uvidí zaškrtnuté políčko nad nefiltrovanou tabulkou. */
+function filtr_vypujcek(bool $vychozi = false): array {
+    $open = in_str('open', 1);
+    if ($vychozi && !isset($_REQUEST['open'])) $open = '1';
+    return ['user'    => in_int('user'),   'book'    => in_int('book'),
+            'open'    => $open,            'overdue' => in_str('overdue', 1),
+            'limit'   => 50,               'offset'  => in_int('offset')];
+}
+
 /* Stav filtru katalogu, jak přišel s požadavkem. Putuje formulářem tam
    a zpět, aby se po uložení překreslil týž seznam. */
 function filtr_katalogu(string $prefix = ''): array {
@@ -347,13 +365,14 @@ case 'genres':
 
 /* ---- výpůjčky --------------------------------------------------- */
 case 'rentals':
-    send_answer(jen_main('rentals'));
-    send_answer(['op' => 'history', 'url' => '#?function=rentals']);
-    /* fallthrough */
+    /* Výchozí filtr se nastaví tady, při příchodu na obrazovku, a putuje
+       rovnou do fragmentu i do dotazu. */
+    $vf = filtr_vypujcek(true);
+    send_answer(jen_main('rentals', ['args' => $vf]));
+    send_answer(['op' => 'history', 'url' => '#?function=rentals&open=' . rawurlencode($vf['open'])]);
+    /* fallthrough do výsledků, se stejným filtrem */
 case 'rentals_results':
-    $args = ['user' => in_int('user'), 'book' => in_int('book'),
-             'open' => in_str('open', 1), 'overdue' => in_str('overdue', 1),
-             'limit' => 50, 'offset' => in_int('offset')];
+    $args = $vf ?? filtr_vypujcek(false);
     $r = api_call('rentals_list', $args);
     send_answer(['op' => 'html', 'sel' => '#rentals_results',
                  'content' => frag('rentals_results', $r + ['args' => $args])]);

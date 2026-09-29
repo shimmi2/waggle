@@ -27,7 +27,7 @@
  *  a nikdo už nikdy nezjistí, jak se ten člověk jmenuje.
  * ------------------------------------------------------------------- */
 
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.7.2');
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.7.3');
 
 /* Tvrdý strop délky jednoho pole. Volající si smí říct o méně, o víc ne —
    jinak by jedno zapomenuté $max znamenalo, že si někdo pošle megabajty. */

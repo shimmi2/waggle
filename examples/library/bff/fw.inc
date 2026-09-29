@@ -23,7 +23,7 @@
    ležet VEDLE tohohle; rozváží ho tools/fwdeploy.sh spolu s ním. */
 require_once __DIR__ . '/io.inc';
 
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.7.2');
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.7.3');
 defined('FW_V')          || define('FW_V', 1);
 /* '*' = odrazit jakýkoli Origin (jak to bylo vždycky), nebo seznam adres
    oddělený čárkami: 'https://app.priklad.cz,https://admin.priklad.cz'. */
