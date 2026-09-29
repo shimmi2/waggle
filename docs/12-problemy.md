@@ -133,6 +133,21 @@ prohlížeče. Použij příkaz `call` poslaný za příkazem `html`.
 Z https stránky nelze otevřít `EventSource` na http. Prohlížeč to zablokuje
 bez varování. Subscriber endpoint musí mít TLS.
 
+## Kolečko visí po krátké operaci
+
+Překryv byl nad `#busy_zone`, výsledek přišel do `#busy_out` uvnitř něj —
+a auto-úklid ho nepoznal, protože posuzoval zásah jen **dolů**, na sebe
+a potomky. Naplánované kreslení se pak ve 300 ms provedlo do prázdna
+a kolečko zůstalo viset.
+
+Od 1.7.2 se zásah posuzuje oběma směry: překreslení **části** oblasti,
+nad kterou překryv visí, ho taky ukončí. Server totiž běžně překresluje
+jen ten kousek, kde je výsledek.
+
+Blik „hotovo" se přitom nepřerušuje. Je to výslovné „ukaž na chvíli
+výsledek" a odpověď, která přijde hned po něm, ho nemá spolknout — jinak
+by `fw_busy_done()` následované `send_answer()` nebylo nikdy vidět.
+
 ## `?x[]=1` shodí endpoint
 
 Na PHP 8 hodí `addslashes()` i většina string funkcí na poli `TypeError`,

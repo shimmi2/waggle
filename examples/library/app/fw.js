@@ -20,7 +20,7 @@
 
 var RE_WORD  = /^[A-Za-z0-9_-]+$/;
 var FW_V     = 1;          // verze protokolu na drátě
-var RELEASE  = '1.7.1';    // vydání knihovny, mění se nezávisle na protokolu
+var RELEASE  = '1.7.2';    // vydání knihovny, mění se nezávisle na protokolu
 
 var Fw = {
     release: RELEASE,
@@ -248,11 +248,24 @@ function busyDrop(r) {
 /* Sundá překryv nad prvkem i nad čímkoli, co v něm leží. Volá se
    z dispatcheru a z beforeReplace, takže překryv zmizí i tehdy, když
    někdo překreslí celé okno. */
+/* Zruší překryv, kterého se dotklo překreslení uzlu `node`.
+ *
+ *  Zásah se posuzuje OBĚMA směry. Dřív se koukalo jen dolů, na sebe
+ *  a potomky — a to je málo: server běžně překresluje jen ČÁST té
+ *  oblasti, nad kterou překryv visí. V demu tak zůstávalo kolečko viset
+ *  po operaci, která doběhla za 150 ms: překryv byl nad #busy_zone,
+ *  výsledek přišel do #busy_out uvnitř něj, zásah se nepoznal a
+ *  naplánované kreslení se ve 300 ms provedlo do prázdna.
+ *
+ *  Blik „hotovo" se nepřerušuje. Je to výslovné „ukaž na chvíli
+ *  výsledek" a odpověď, která přijde hned po něm, ho nemá spolknout. */
 Fw.busyClear = function (node) {
     for (var i = Fw._busy.length - 1; i >= 0; i--) {
         var r = Fw._busy[i];
         if (!r.host || !document.contains(r.host)) { busyDrop(r); continue; }
-        if (node && (r.host === node || node.contains(r.host))) busyDrop(r);
+        if (!node) continue;
+        var zasah = r.host === node || node.contains(r.host) || r.host.contains(node);
+        if (zasah && !r.doneTimer) busyDrop(r);
     }
 };
 
