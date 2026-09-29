@@ -23,9 +23,11 @@
    ležet VEDLE tohohle; rozváží ho tools/fwdeploy.sh spolu s ním. */
 require_once __DIR__ . '/io.inc';
 
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.7.0');
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.7.1');
 defined('FW_V')          || define('FW_V', 1);
-defined('FW_MAXLEN')     || define('FW_MAXLEN', 65536);   // strop délky jednoho pole
+/* '*' = odrazit jakýkoli Origin (jak to bylo vždycky), nebo seznam adres
+   oddělený čárkami: 'https://app.priklad.cz,https://admin.priklad.cz'. */
+defined('FW_CORS')       || define('FW_CORS', '*');
 defined('FW_DEBUG')      || define('FW_DEBUG', false);    // true = chyby prozradí cesty
 defined('FW_STREAM_PAD') || define('FW_STREAM_PAD', 8192); // viz fw_stream_start()
 
@@ -59,10 +61,35 @@ function fw_start_output(): void {
     fw_cors();
 }
 
-/* CORS — aby /api mohlo v produkci žít na jiném hostu než /app. */
+/* CORS — aby BFF mohlo v produkci žít na jiném hostu než frontend.
+ *
+ *  FW_CORS je buď '*' (odrazí jakýkoli Origin), nebo seznam adres
+ *  oddělený čárkami. Výchozí je '*', protože to tak framework dělal
+ *  odjakživa a zúžení by rozbilo běžící projekty — ale na produkci to
+ *  patří vyplnit. Díra to sama o sobě není: token sezení jde hlavičkou
+ *  a leží v localStorage, takže cizí stránka se k němu nedostane a
+ *  dostane jen přihlašovací obrazovku. U aplikace, která se drží cookie
+ *  (typicky migrovaný monolit), je to ale zásadní rozdíl.
+ *
+ *  Odpovědnost se tím přenáší na toho, kdo nasazuje, a to je správně —
+ *  jen on ví, kolik hostů má a jak se jmenují. */
 function fw_cors(): void {
     $o = in_header('Origin');
     if ($o === '') return;
+
+    if (FW_CORS !== '*') {
+        $ok = false;
+        foreach (explode(',', FW_CORS) as $p)
+            if (rtrim(trim($p), '/') === rtrim($o, '/')) { $ok = true; break; }
+        if (!$ok) {
+            /* Nic neposlat je správná odpověď: prohlížeč spojení zablokuje
+               sám a server nemusí řešit, jestli vrátit 403 nebo mlčet. */
+            header_remove('Access-Control-Allow-Origin');
+            header_remove('Access-Control-Allow-Credentials');
+            header('Vary: Origin');
+            return;
+        }
+    }
     header('Access-Control-Allow-Origin: ' . $o);
     header('Access-Control-Allow-Credentials: true');
     header('Vary: Origin');

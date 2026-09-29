@@ -399,6 +399,26 @@ znovu. U kreslení je to neškodné, u `session` by to byla podvržená session.
 
 Úplná reference je ve [04 — Protokol](04-protokol.md).
 
+## CORS
+
+`fw_cors()` odráží **jakýkoli** Origin, dokud se nenastaví `FW_CORS`:
+
+```php
+define('FW_CORS', 'https://app.priklad.cz,https://admin.priklad.cz');
+```
+
+Výchozí `'*'` je kvůli zpětné kompatibilitě, ne proto, že by byla správná.
+Sama o sobě to díra není: token sezení jde hlavičkou a leží v
+`localStorage`, takže cizí stránka se k němu nedostane a dostane jen
+přihlašovací obrazovku. U aplikace, která se drží cookie — typicky
+migrovaný monolit podle [09 — Migrace](09-migrace.md) — je to ale zásadní
+rozdíl: cizí web pak přečte odpovědi s cookie oběti a `SameSite` to
+v některých prohlížečích ani mezi subdoménami nezastaví.
+
+Origin mimo seznam nedostane **žádnou** hlavičku `Access-Control-Allow-*`.
+Prohlížeč spojení zablokuje sám a server nemusí řešit, jestli vrátit 403
+nebo mlčet.
+
 ## Push kanály
 
 Tři věci, každá nutná:

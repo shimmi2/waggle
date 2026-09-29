@@ -71,6 +71,12 @@ Původní `req()`, `req_int()`, `req_float()`, `req_rows()` a `req_header()`
 zůstávají jako aliasy a v protokolu v1 se neodeberou — visí na nich stovky
 volání v existujících projektech. V novém kódu piš `in_*`.
 
+Ořez je na bajty, ale **nikdy doprostřed znaku**. Prosté `substr()` umí
+strop trefit mezi dva bajty jednoho „ž"; výsledek pak není platné UTF-8,
+`json_encode()` vrátí `false` a klientovi odejde prázdná odpověď s HTTP
+200 — ani chyba, ani data. `FW_MAXLEN` je přitom strop tvrdý: kdo si
+řekne o víc, dostane `FW_MAXLEN`.
+
 `in_str()` vrátí prázdný string, když přijde pole (`?x[]=1`) — bez toho by
 na PHP 8 spadl jakýkoli endpoint na `TypeError`.
 
@@ -214,7 +220,8 @@ hodnoty tím, že si je nadefinuje **před** načtením `fw.inc`:
 | konstanta | výchozí | význam |
 |---|---|---|
 | `FW_V` | `1` | verze protokolu |
-| `FW_MAXLEN` | `65536` | strop délky jednoho pole |
+| `FW_MAXLEN` | `65536` | **tvrdý** strop délky pole; `in_str()` si o víc říct nemůže |
+| `FW_CORS` | `'*'` | `'*'` odrazí jakýkoli Origin, nebo seznam adres oddělený čárkami |
 | `FW_DEBUG` | `false` | chybová hláška prozradí cesty |
 | `FW_STREAM_PAD` | `8192` | výplň pro `fw_stream_start()` |
 

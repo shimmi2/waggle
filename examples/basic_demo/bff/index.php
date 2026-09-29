@@ -46,15 +46,19 @@ function screen(string $PAGES, ?array $user, string $serial, string $body, array
 
 /* Společný začátek: vydat token a ověřit, že broker opravdu běží.
    Dokud neodešel první bajt, můžeme vrátit poctivý HTTP status. */
-function busy_kanal(?array $user, string $session): string {
+function busy_kanal(?array $user, string $session): array {
     if ($user === null) throw_http_error(401, 'Nejste přihlášen');
     $tok = stream_token($session, 'main');
     $sig = stream_key($session, 'main');
     if ($tok === '') throw_http_error(500, 'Nepodařilo se vydat token kanálu');
+    /* Ověřovací publikace nese jen debug, což projde i nepodepsané. */
     if (!fw_publish(STREAM_PUB_URL, $tok, [['op' => 'debug', 'message' => 'busy: kanál živý']]))
         throw_http_error(503, 'nchan neběží na ' . STREAM_PUB_URL
                             . ' — viz nginx-nchan.conf.example');
-    return $tok;
+    /* Vrací se OBOJÍ: token říká kam, klíč čím podepsat. Kdyby se vracel
+       jen token, volající by si klíč musel brát znovu — a zapomenout se
+       na to dá právě ve větvi, kterou nikdo neproklikne. */
+    return [$tok, $sig];
 }
 
 /* ---------------------------------------------------------------------
@@ -154,7 +158,7 @@ case 'save_form_test':
  * ------------------------------------------------------------------ */
 
 case 'busy_quick':                       // doběhne dřív, než se cokoli nakreslí
-    $tok = busy_kanal($user, $session);
+    [$tok, $sig] = busy_kanal($user, $session);
     fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', 'Tohle nikdo neuvidí…')], 2.0, $sig);
     usleep(150000);                      // 150 ms < prodleva 300 ms
     send_answer(['op' => 'html', 'sel' => '#busy_out',
@@ -162,7 +166,7 @@ case 'busy_quick':                       // doběhne dřív, než se cokoli nakr
     break;
 
 case 'busy_phases':                      // tři obyčejná volání za sebou
-    $tok = busy_kanal($user, $session);
+    [$tok, $sig] = busy_kanal($user, $session);
     foreach (['Připravuji…', 'Počítám…', 'Dokončuji…'] as $faze) {
         fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', $faze)], 2.0, $sig);
         usleep(900000);
@@ -173,7 +177,7 @@ case 'busy_phases':                      // tři obyčejná volání za sebou
     break;
 
 case 'busy_bar':                         // kolečko, které se promění v pruh
-    $tok = busy_kanal($user, $session);
+    [$tok, $sig] = busy_kanal($user, $session);
     /* Zatím nevíme, kolik toho bude — tedy bez pct, tedy kolečko. */
     fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', 'Prohledávám…')], 2.0, $sig);
     usleep(1200000);
@@ -196,7 +200,7 @@ case 'busy_slow':                        // nic nepublikuje: překryv řídí kl
     break;
 
 case 'busy_clear':                       // překreslení okna překryv sundá
-    $tok = busy_kanal($user, $session);
+    [$tok, $sig] = busy_kanal($user, $session);
     fw_publish(STREAM_PUB_URL, $tok, [fw_busy('#busy_zone', 'Tenhle překryv nikdo nevypne…')], 2.0, $sig);
     usleep(1800000);
     /* Nikdo neposílá busy state=off. Překryv zmizí proto, že do jeho

@@ -181,12 +181,54 @@ else
     echo "zdroj: $SRC (vydání $V_SRC)"
 fi
 
+# Syntaktická kontrola ZDROJE, jednou pro všechny cíle. Rozvézt rozbitý
+# fw.inc znamená 500 na celém projektu a pozná se to až po nasazení —
+# README dosud tvrdilo, že se kontroluje, a kontrolovalo se jen to, že
+# v souboru někde stojí RELEASE. Ten je na patnáctém řádku ze tří set,
+# takže useknutý soubor tou kontrolou prošel.
+for f in io.inc fw.inc; do
+    if command -v php >/dev/null 2>&1; then
+        php -l "$SRC/$f" >/dev/null 2>&1 || {
+            echo "zdrojový $f neprojde php -l — nerozvážím nic" >&2; exit 1; }
+    fi
+done
+if command -v node >/dev/null 2>&1; then
+    node --check "$SRC/fw.js" >/dev/null 2>&1 || {
+        echo "zdrojový fw.js neprojde node --check — nerozvážím nic" >&2; exit 1; }
+fi
+
+# Atomický zápis: vedle cíle a přejmenovat. cp -f přepisuje na místě,
+# takže běžící požadavek může načíst napůl zapsaný soubor.
+poloz() {
+    local zdroj="$1" cil="$2" tmp
+    tmp="$(dirname "$cil")/.fwdeploy.$$.$(basename "$cil")"
+    cp -f "$zdroj" "$tmp" || { rm -f "$tmp"; return 1; }
+    chmod --reference="$cil" "$tmp" 2>/dev/null || true
+    mv -f "$tmp" "$cil" || { rm -f "$tmp"; return 1; }
+}
+
 CHYBY=0
 for root in "${CILE[@]}"; do
     if [ ! -d "$root" ]; then
         echo "  !! $root — adresář neexistuje"; CHYBY=1; continue
     fi
     echo "  $root"
+
+    # Kolize v jednom souboru zastaví CELÝ projekt. Dřív se přeskočil jen
+    # fw.inc a fw.js se rozvezl — projekt pak měl každou půlku knihovny
+    # z jiné verze, což je horší než nerozvézt nic.
+    PRESKOC=0
+    for f in io.inc fw.inc; do
+        cil="$(najdi "$root" "$f")" || continue
+        # Jména se berou z obou knihovních souborů, takže druhý průchod by
+        # vypsal totéž. Stačí první nález.
+        kolize "$root" "$cil" || { PRESKOC=1; break; }
+    done
+    if [ $PRESKOC -eq 1 ]; then
+        echo "      nerozvážím do tohohle projektu nic, dokud kolize trvá"
+        CHYBY=1; continue
+    fi
+
     for f in io.inc fw.inc fw.js; do
         cil="$(najdi "$root" "$f")" || {
             # io.inc je nový v 1.6.0 a fw.inc ho VYŽADUJE. Kdyby se
@@ -196,12 +238,11 @@ for root in "${CILE[@]}"; do
                 cil="$(dirname "$cil_fw")/io.inc"
                 echo "      ${cil#$root/} — chybí, zakládám vedle fw.inc"
                 [ $CHECK -eq 1 ] && continue
-                cp -f "$SRC/io.inc" "$cil" && echo "        založeno na $V_SRC" || CHYBY=1
+                poloz "$SRC/io.inc" "$cil" && echo "        založeno na $V_SRC" || CHYBY=1
                 continue
             fi
             echo "      $f — v projektu není, přeskakuji"; continue; }
         rel="${cil#$root/}"
-        if ! kolize "$root" "$cil"; then CHYBY=1; continue; fi
         if cmp -s "$SRC/$f" "$cil"; then
             echo "      $rel — shodné ($(vydani "$cil"))"
             continue
@@ -212,7 +253,7 @@ for root in "${CILE[@]}"; do
             read -r -p "        přepsat? [a/N] " o </dev/tty
             case "$o" in a|A|y|Y) ;; *) echo "        ponecháno"; continue ;; esac
         fi
-        cp -f "$SRC/$f" "$cil" || { CHYBY=1; continue; }
+        poloz "$SRC/$f" "$cil" || { CHYBY=1; continue; }
         echo "        rozvezeno na $V_SRC"
     done
 done

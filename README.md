@@ -5,7 +5,7 @@
 > safe and simple apps. Apps where data flows in parallel, asynchronous
 > motion, like bees in a waggle dance.
 
-Vydání **1.7.0**, protokol **v1**.
+Vydání **1.7.1**, protokol **v1**.
 
 ## Proč vznikl
 
@@ -294,7 +294,7 @@ každého projektu vidět, na jaké verzi frameworku běží.
 ```bash
 ./tools/fwdeploy.sh --check            # co kde běží
 ./tools/fwdeploy.sh <cesta>...         # rozvoz z tohohle stromu
-./tools/fwdeploy.sh --from v1.7.0 …    # rozvoz z vydání na GitHubu
+./tools/fwdeploy.sh --from v1.7.1 …    # rozvoz z vydání na GitHubu
 ```
 
 Bez `--from` se bere tenhle strom, takže to jede i bez sítě. S `--from`

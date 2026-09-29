@@ -180,8 +180,14 @@ proto, aby demo šlo vyzkoušet celé; ten adresář je zamčený direktivou
 A pozor na `--token=` v příkazové řádce: **argumenty procesu vidí v `ps`
 každý uživatel stroje.** Je to tentýž důvod, kvůli kterému workery
 dostávají parametry dočasným souborem s právy `0600`. U cronu na vlastním
-stroji to obvykle nevadí; na sdíleném ano, a tam token předej na stdin
-nebo konfiguračním souborem.
+stroji to obvykle nevadí, na sdíleném ano — proto bere token ze tří míst
+v tomhle pořadí:
+
+```bash
+php async_sender.php --token-file=/run/kanal.tok …   # soubor, klidně 0600
+FW_CHANNEL_TOKEN=… php async_sender.php …            # proměnná prostředí
+php async_sender.php --token=TOKEN …                 # vidět v ps
+```
 
 ## Výkon
 

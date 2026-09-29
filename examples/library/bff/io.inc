@@ -27,17 +27,37 @@
  *  a nikdo už nikdy nezjistí, jak se ten člověk jmenuje.
  * ------------------------------------------------------------------- */
 
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.7.0');
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.7.1');
+
+/* Tvrdý strop délky jednoho pole. Volající si smí říct o méně, o víc ne —
+   jinak by jedno zapomenuté $max znamenalo, že si někdo pošle megabajty. */
+defined('FW_MAXLEN')     || define('FW_MAXLEN', 65536);
 
 /* Vstupy se berou z GET i POST. Vědomé ustoupení kvůli kompatibilitě se
    staršími projekty, kde část endpointů vede na odkaz. Na bezpečnost to
    vliv nemá — ošetřuje se to stejně. */
 function in_str(string $name, int $max = 4096): string {
+    if ($max > FW_MAXLEN) $max = FW_MAXLEN;
     $v = $_REQUEST[$name] ?? '';
     if (!is_string($v))              return '';   // ?x[]=1 nesmí shodit endpoint
-    if (isset($v[$max]))             $v = substr($v, 0, $max);
+    if (isset($v[$max]))             $v = utf8_rez($v, $max);
     if (strpos($v, "\0") !== false)  $v = str_replace("\0", '', $v);
     return $v;
+}
+
+/* Ořez na BAJTY, ale nikdy doprostřed znaku.
+ *
+ *  Prosté substr() umí strop trefit mezi dva bajty jednoho „ž" a nechat
+ *  za sebou půlku. Výsledek pak není platné UTF-8, json_encode() vrátí
+ *  false — a protože to nikdo nekontroloval, odešla klientovi prázdná
+ *  odpověď s HTTP 200. Ani chyba, ani data; ladí se to hodinu.
+ *
+ *  Bez mbstring, protože to je volitelné rozšíření: odřízne se nedokončená
+ *  úvodní sekvence na konci. Úvodní bajt sám nikdy platný znak není. */
+function utf8_rez(string $v, int $max): string {
+    $v = substr($v, 0, $max);
+    return (string)preg_replace(
+        '/(?:[\xC0-\xDF]|[\xE0-\xEF][\x80-\xBF]?|[\xF0-\xF7][\x80-\xBF]{0,2})$/', '', $v);
 }
 
 function in_int(string $name): int     { return intval(in_str($name, 32));   }
@@ -75,7 +95,7 @@ function in_rows(string $name, int $maxRows = 500, int $maxLen = 4096): array {
         foreach ($row as $k => $cv) {
             if (!is_scalar($cv)) continue;
             $cv = (string)$cv;
-            if (isset($cv[$maxLen]))         $cv = substr($cv, 0, $maxLen);
+            if (isset($cv[$maxLen]))         $cv = utf8_rez($cv, $maxLen);
             if (strpos($cv, "\0") !== false) $cv = str_replace("\0", '', $cv);
             $r[(string)$k] = $cv;
         }
@@ -130,5 +150,14 @@ function esc(?string $s): string {
    (jinak je odpověď třikrát delší a v logu nečitelná), UNESCAPED_SLASHES
    kvůli URL. */
 function json_text(array $data): string {
-    return (string)json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $t = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($t !== false) return $t;
+    /* Neplatné UTF-8 nemusí přijít jen ze vstupu — umí ho podat i databáze
+       v latin1 nebo cizí API. Prázdná odpověď je ta nejhorší možná reakce,
+       takže se to zkusí znovu s náhradou za U+FFFD. */
+    $t = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+                          | JSON_INVALID_UTF8_SUBSTITUTE);
+    if ($t !== false) { error_log('[fw] json_text: neplatné UTF-8 nahrazeno'); return $t; }
+    error_log('[fw] json_text selhal: ' . json_last_error_msg());
+    return '';
 }

@@ -23,7 +23,9 @@
  *
  *  Použití:
  *
- *    php async_sender.php --token=TOKEN --pub=URL < davka.json
+ *    php async_sender.php --token-file=/run/tok --pub=URL < davka.json
+ *    FW_CHANNEL_TOKEN=… php async_sender.php --pub=URL < davka.json
+ *    php async_sender.php --token=TOKEN --pub=URL < davka.json   (vidět v ps!)
  *    echo '{"op":"notify","kind":"info","message":"Záloha hotova"}' \
  *      | php async_sender.php --token=TOKEN
  *    php async_sender.php --token=TOKEN --busy='Zálohuji…' --pct=40
@@ -43,13 +45,27 @@
 if (PHP_SAPI !== 'cli') { http_response_code(403); exit('cli only'); }
 
 $o = getopt('', ['token:', 'pub:', 'config:', 'sel:', 'busy:', 'pct:',
-                 'busy-done:', 'busy-off', 'notify:', 'kind:', 'help', 'fw:']);
+                 'busy-done:', 'busy-off', 'notify:', 'kind:', 'help', 'fw:',
+                 'token-file:']);
 
-if (isset($o['help']) || !isset($o['token'])) {
+/* Token se bere ze tří míst, v tomhle pořadí. --token je nejpohodlnější
+   a nejhorší: ARGUMENTY PROCESU VIDÍ V `ps` KAŽDÝ UŽIVATEL STROJE. Je to
+   tentýž důvod, kvůli kterému workery dostávají parametry dočasným
+   souborem s právy 0600. Na vlastním stroji to obvykle nevadí, na
+   sdíleném ano — a tam použij --token-file nebo proměnnou prostředí. */
+$token = '';
+if (isset($o['token-file']) && is_file($o['token-file'])) {
+    $token = trim((string)file_get_contents($o['token-file']));
+} elseif (getenv('FW_CHANNEL_TOKEN') !== false) {
+    $token = trim((string)getenv('FW_CHANNEL_TOKEN'));
+} elseif (isset($o['token'])) {
+    $token = (string)$o['token'];
+}
+
+if (isset($o['help']) || $token === '') {
     fwrite(STDERR, preg_replace('/^.*?\/\* |\*\/.*$/s', '', file_get_contents(__FILE__)) . "\n");
     exit(isset($o['help']) ? 0 : 1);
 }
-$token = (string)$o['token'];
 $sel   = (string)($o['sel'] ?? 'main');
 
 if (isset($o['config']) && is_file($o['config'])) require $o['config'];
