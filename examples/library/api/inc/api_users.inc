@@ -100,21 +100,44 @@ function ep_do_logout(): void {
  *  Správa uživatelů — admin
  * ------------------------------------------------------------------- */
 function ep_users_list(): void {
+    /* 1. vstupy */
+    $hledat = in_str('q', 64);
+    $limit  = max(1, min(500, in_int('limit') ?: 50));
+    $offset = max(0, in_int('offset'));
+
+    /* 2. sémantika — prázdné hledání znamená „všichni", to je v pořádku */
+
+    /* 3. sezení, 4. oprávnění
+       Dřív stály tyhle dva kroky PŘED vstupy. Nebyla to díra, ale pořadí
+       v endpointu je podmínka, ne zvyk: kdo ho čte, má vždycky vědět,
+       kde hledat kontrolu práv. */
     $me = session_require();
     acl_require($me, 'manage_users');
 
-    $hledat = in_str('q', 64);
-    $limit  = max(1, min(500, in_int('limit') ?: 100));
-
+    /* 5. práce */
     $where = ''; $p = [];
     if ($hledat !== '') {
         $where = "WHERE us_name LIKE ? OR us_login LIKE ? OR us_email LIKE ?";
         $p = array_fill(0, 3, '%' . $hledat . '%');
     }
-    $rows = q_all("SELECT us_id, us_login, us_name, us_phone, us_email, us_acl, us_note, us_created
-                   FROM users $where ORDER BY us_name LIMIT $limit", $p);
+    /* total BEZ limitu, jinak by stránkování vidělo vždycky jednu stránku
+       a tlačítko „další" by nebylo nikdy vidět. */
+    $celkem = (int)q_val("SELECT COUNT(*) FROM users $where", $p);
+    $rows   = q_all("SELECT us_id, us_login, us_name, us_phone, us_email, us_acl, us_note, us_created
+                     FROM users $where ORDER BY us_name LIMIT $limit OFFSET $offset", $p);
 
-    api_out(['users' => $rows, 'acls' => q_all("SELECT ac_key, ac_name, ac_description FROM acls ORDER BY ac_sort")]);
+    /* 6. odpověď */
+    api_out(['users' => $rows, 'total' => $celkem,
+             'limit' => $limit, 'offset' => $offset]);
+}
+
+/* Číselník oprávnění. Samostatně, protože se nemění — tahat ho s každým
+   hledáním uživatelů je zbytečná práce a svádělo by to k překreslování
+   legendy při každém překreslení tabulky. */
+function ep_acls_list(): void {
+    $me = session_require();
+    acl_require($me, 'manage_users');
+    api_out(['acls' => q_all("SELECT ac_key, ac_name, ac_description FROM acls ORDER BY ac_sort")]);
 }
 
 /* Čtenáři pro výběr do filtru výpůjček.

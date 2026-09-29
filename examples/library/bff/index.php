@@ -105,6 +105,12 @@ function jmeno_ctenare(int $id): string {
     return (string)($r['readers'][0]['us_name'] ?? '');
 }
 
+/* Stav filtru uživatelů. Jen hledání a stránka — víc ta obrazovka
+   nepotřebuje a vymýšlet dopředu je horší než dopsat později. */
+function filtr_uzivatelu(): array {
+    return ['q' => in_str('q', 64), 'limit' => 50, 'offset' => in_int('offset')];
+}
+
 /* Stav filtru výpůjček.
  *
  *  $vychozi platí JEN při příchodu na obrazovku. Při odeslání formuláře
@@ -484,9 +490,21 @@ case 'statistics':
 
 /* ---- uživatelé -------------------------------------------------- */
 case 'users':
-    $r = api_call('users_list', ['q' => in_str('q', 64), 'limit' => 200]);
-    send_answer(jen_main('users', $r));
-    send_answer(['op' => 'history', 'url' => '#?function=users']);
+    /* Filtr a výsledky jsou dvě podokna, stejně jako u katalogu: při
+       hledání se překresluje jen tabulka a v poli zůstane fokus.
+       Číselník oprávnění se bere zvlášť — je to legenda k obrazovce,
+       ne součást výsledku, a při každém hledání by se tahal zbytečně. */
+    $uf = filtr_uzivatelu();
+    $a  = api_call('acls_list');
+    send_answer(jen_main('users', $a + ['args' => $uf]));
+    send_answer(['op' => 'history', 'url' => '#?function=users'
+                 . ($uf['q'] !== '' ? '&' . http_build_query(['q' => $uf['q']]) : '')]);
+    /* fallthrough do výsledků, ať obrazovka nenaskočí prázdná */
+case 'users_results':
+    $uf = $uf ?? filtr_uzivatelu();
+    $r  = api_call('users_list', $uf);
+    send_answer(['op' => 'html', 'sel' => '#users_results',
+                 'content' => frag('users_results', $r + ['args' => $uf])]);
     break;
 
 default:

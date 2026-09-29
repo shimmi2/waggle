@@ -1,26 +1,27 @@
-<?php /* @var array $users @var array $acls */ ?>
+<?php
+/* @var array $acls  číselník oprávnění pro legendu
+   @var array $args  filtr, jak ho sestavil dispatcher
+
+   Filtr a výsledky jsou DVA divy. Filtr pak zůstane stát i s fokusem
+   a překresluje se jen tabulka pod ním, takže se dá po odeslání rovnou
+   psát dál. Legenda oprávnění patří sem, ne do výsledků — je to popis
+   obrazovky, ne součást odpovědi, a při hledání se nemění. */
+$f_q = (string)($args['q'] ?? '');
+?>
 <div class="card">
   <h2>Uživatelé</h2>
   <p class="hint">Obsluha i čtenáři jsou <b>titíž uživatelé</b>. Liší se výhradně
      oprávněním — žádné dvě aplikace, žádné dvě přihlašovací obrazovky.</p>
-  <table>
-    <thead><tr><th>jméno</th><th>login</th><th>kontakt</th><th>oprávnění</th></tr></thead>
-    <tbody>
-    <?php foreach ($users as $u):
-        $prava = array_filter(explode(',', (string)$u['us_acl'])); ?>
-      <tr>
-        <td><?= esc($u['us_name']) ?></td>
-        <td><code><?= esc($u['us_login']) ?></code></td>
-        <td><small><?= esc($u['us_email']) ?><?= $u['us_phone'] ? ' · ' . esc($u['us_phone']) : '' ?></small></td>
-        <td>
-          <?php if (!$prava) echo badge('čtenář', 'neutral');
-                else foreach ($prava as $p) echo badge($p, 'ok') . ' '; ?>
-        </td>
-      </tr>
-    <?php endforeach; ?>
-    </tbody>
-  </table>
+  <form data-fw action="#?function=users_results" method="post" class="filter">
+    <input type="hidden" name="offset" value="0">
+    <div class="filter-row">
+      <label>Hledat<input type="text" name="q" value="<?= esc($f_q) ?>"
+             placeholder="jméno, login nebo e-mail"></label>
+      <button type="submit">Hledat</button>
+    </div>
+  </form>
 </div>
+<div id="users_results"></div>
 <div class="card">
   <h3>Co která oprávnění znamenají</h3>
   <table><thead><tr><th>klíč</th><th>název</th><th>popis</th></tr></thead><tbody>

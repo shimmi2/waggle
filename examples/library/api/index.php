@@ -66,6 +66,7 @@ case 'statistics':     ep_statistics();     break;
 /* ---- uživatelé -------------------------------------------------- */
 case 'readers_list':   ep_readers_list();   break;
 case 'users_list':     ep_users_list();     break;
+case 'acls_list':      ep_acls_list();      break;
 case 'user_save':      ep_user_save();      break;
 
 default:
