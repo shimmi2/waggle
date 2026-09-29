@@ -416,7 +416,11 @@ case 'reader_pick_results':
         break;
     }
     $q = in_str('q', 64);
-    $r = api_call('readers_list', ['q' => $q, 'limit' => 30]);
+    /* Stránkování překryvu si bere 'offset' ze stejného jména jako seznam
+       výpůjček pod ním. Nevadí to: fragment posílá dál jen open a overdue
+       a reader_choose stránkování stejně vrací na začátek, protože se
+       mění filtr. */
+    $r = api_call('readers_list', ['q' => $q, 'limit' => 20, 'offset' => in_int('offset')]);
     send_answer(['op' => 'html', 'sel' => '#reader_pick_results',
                  'content' => frag('reader_pick_results', $r + ['args' => $pf, 'q' => $q])]);
     break;

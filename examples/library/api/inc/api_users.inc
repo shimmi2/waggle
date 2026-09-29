@@ -128,9 +128,10 @@ function ep_users_list(): void {
  *  jménu od klienta. */
 function ep_readers_list(): void {
     /* 1. vstupy */
-    $id    = in_int('us_id');
-    $q     = in_str('q', 64);
-    $limit = max(1, min(100, in_int('limit') ?: 30));
+    $id     = in_int('us_id');
+    $q      = in_str('q', 64);
+    $limit  = max(1, min(100, in_int('limit') ?: 30));
+    $offset = max(0, in_int('offset'));
 
     /* 2. sémantika — prázdný filtr znamená „prvních pár", to je v pořádku */
 
@@ -138,19 +139,30 @@ function ep_readers_list(): void {
     $me = session_require();
     acl_require($me, 'see_all_rentals');
 
-    /* 5. práce */
+    /* 5. práce
+       Vyhledání jednoho podle id stránkování nepotřebuje — je to jiná
+       otázka („kdo je tohle"), ne seznam. */
     if ($id > 0) {
         $rows = q_all("SELECT us_id, us_name FROM users WHERE us_id=?", [$id]);
-    } elseif ($q !== '') {
-        $rows = q_all("SELECT us_id, us_name FROM users
-                       WHERE us_name LIKE ? OR us_login LIKE ?
-                       ORDER BY us_name LIMIT $limit", ['%' . $q . '%', '%' . $q . '%']);
-    } else {
-        $rows = q_all("SELECT us_id, us_name FROM users ORDER BY us_name LIMIT $limit");
+        api_out(['readers' => $rows, 'total' => count($rows),
+                 'limit' => $limit, 'offset' => 0]);
     }
 
+    $where = ''; $p = [];
+    if ($q !== '') {
+        $where = "WHERE us_name LIKE ? OR us_login LIKE ?";
+        $p = ['%' . $q . '%', '%' . $q . '%'];
+    }
+
+    /* total se počítá BEZ limitu, jinak by stránkování ukazovalo vždycky
+       jednu stránku a tlačítko „další" by nikdy nebylo vidět. */
+    $celkem = (int)q_val("SELECT COUNT(*) FROM users $where", $p);
+    $rows   = q_all("SELECT us_id, us_name FROM users $where
+                     ORDER BY us_name LIMIT $limit OFFSET $offset", $p);
+
     /* 6. odpověď */
-    api_out(['readers' => $rows, 'total' => count($rows)]);
+    api_out(['readers' => $rows, 'total' => $celkem,
+             'limit'   => $limit, 'offset' => $offset]);
 }
 
 function ep_user_save(): void {

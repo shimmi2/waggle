@@ -1,5 +1,8 @@
 <?php
 /* @var array $readers  us_id + us_name, nic víc
+   @var int   $total    kolik jich filtru odpovídá CELKEM, ne na stránce
+   @var int   $limit
+   @var int   $offset
    @var array $args     filtr výpůjček, aby ho výběr nezahodil
    @var string $q       co se hledalo
 
@@ -14,6 +17,8 @@ $nes = http_build_query([
 <?php if (!$readers): ?>
   <p class="hint">Nikdo takový tu není. Zkus jiné jméno<?= $q !== '' ? '' : ', nebo napiš aspoň kousek' ?>.</p>
 <?php else: ?>
+<p class="hint"><?= esc(pocet((int)$total, 'čtenář', 'čtenáři', 'čtenářů')) ?><?php
+   if ((int)$total > (int)$limit) echo ', zobrazeno ' . count($readers); ?></p>
 <table>
   <thead><tr><th>jméno</th><th class="r">id</th><th></th></tr></thead>
   <tbody>
@@ -28,4 +33,11 @@ $nes = http_build_query([
   <?php endforeach; ?>
   </tbody>
 </table>
+<?php /* Stránkování míří na reader_pick_results, tedy na tentýž div uvnitř
+         překryvu — překryv zůstane otevřený a překreslí se jen tabulka.
+         Hledání i filtr výpůjček jdou s odkazem dál. */ ?>
+<?= pager('reader_pick_results', (int)$total, (int)$limit, (int)$offset,
+          ['q'       => $q,
+           'open'    => $args['open']    ?? '',
+           'overdue' => $args['overdue'] ?? '']) ?>
 <?php endif; ?>
