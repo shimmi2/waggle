@@ -7,9 +7,6 @@
 <title>Knihovna</title>
 
 <!--
-  Táž aplikace jako v app/, jen v jiném kabátě. Jede nad TÝMŽ BFF a
-  fragmenty se nezměnily ani o řádek — mění se jen skořápka a CSS.
-
   POŘADÍ STYLŮ JE TU PODSTATNÉ, ne estetické. Bootstrap má
   `.modal { display: none }`, my `.modal { display: flex }`. Stejná
   specifičnost, takže rozhoduje pořadí: náš app.css musí být POSLEDNÍ,
@@ -28,16 +25,20 @@
   <div class="layout-container">
 
     <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
-      <div class="app-brand demo">
-        <span class="app-brand-logo demo"><i class="bx bx-book fs-3 text-primary"></i></span>
-        <span class="app-brand-text demo menu-text fw-bold ms-2">Knihovna</span>
+      <!-- Sneat sem ve svých ukázkách dává ještě třídu `demo`. Ta se
+           obsluhuje z assets/css/demo.css, což je styl JEJICH ukázkových
+           stránek, ne šablony — a ten nebalíme. Rozměry značky jsou proto
+           v našem app.css. -->
+      <div class="app-brand">
+        <span class="app-brand-logo"><i class="bx bx-book fs-3 text-primary"></i></span>
+        <span class="app-brand-text menu-text fw-bold ms-2">Knihovna</span>
         <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
           <i class="bx bx-chevron-left bx-sm align-middle"></i>
         </a>
       </div>
       <div class="menu-inner-shadow"></div>
-      <!-- Naše okno. Fragment menu.inc se nezměnil, takže tu zatím
-           vypadá jako v holé verzi — to je práce pro fázi 2. -->
+      <!-- Naše okno. Položky sem doplní fragment menu.inc z BFF, takže
+           při načtení stránky je prázdné. -->
       <div id="left_menu" class="menu-inner py-1"></div>
     </aside>
 

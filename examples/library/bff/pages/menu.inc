@@ -8,9 +8,13 @@ $m = me();
 $kde = in_str('function', 64) ?: 'index';
 $polozka = function (string $fn, string $ikona, string $popis) use ($kde) {
     $akt = $kde === $fn || strpos($kde, $fn . '_') === 0;
-    printf('<li class="menu-item%s"><a href="#?function=%s" data-fw class="menu-link">'
+    /* data-menu drží jméno obrazovky, aby BFF uměl přendat třídu active
+       jedním příkazem a nemusel kvůli zvýraznění překreslovat celé menu.
+       Viz menu_aktivni() v index.php. */
+    printf('<li class="menu-item%s" data-menu="%s">'
+         . '<a href="#?function=%s" data-fw class="menu-link">'
          . '<i class="menu-icon tf-icons bx %s"></i><div>%s</div></a></li>',
-           $akt ? ' active' : '', esc($fn), esc($ikona), esc($popis));
+           $akt ? ' active' : '', esc($fn), esc($fn), esc($ikona), esc($popis));
 };
 ?>
 <ul class="menu-inner py-1">

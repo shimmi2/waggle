@@ -94,6 +94,37 @@ Fw.on('afterReplace', function (el) {
     }
 });
 
+/* ---------------------------------------------------------------------
+ *  4) Sbalení menu
+ *
+ *  Šipka u nápisu Knihovna je ze šablony a main.js jí navěsí
+ *  Helpers.toggleCollapsed(). Jenže ta na velké obrazovce nedělá NIC:
+ *  vede na _setCollapsed() a celé jeho tělo je uvnitř
+ *  `if (this.isSmallScreen())`. Třídu layout-menu-collapsed v celém
+ *  helpers.js nikdo nezapisuje — jen čte v isCollapsed(). V plné
+ *  šabloně ji dopisuje template-customizer.js, což je jejich přepínač
+ *  vzhledu pro ukázkové stránky; ten v aplikaci nechceme.
+ *
+ *  Kliknutí tedy neudělalo nic a nic ani nevypsalo, což se hledá blbě.
+ *  CSS na sbalení je v core.css hotové, chybí jen ten, kdo tu třídu
+ *  nasadí. Pět řádků je lacinějších než tahat sem celý customizer.
+ * ------------------------------------------------------------------- */
+document.addEventListener('click', function (e) {
+    if (!e.target.closest || !e.target.closest('.layout-menu-toggle')) return;
+    e.preventDefault();
+    /* Malou obrazovku necháváme šabloně. Tam toggleCollapsed() funguje
+       (přepíná layout-menu-expanded) a druhá obsluha by ji vyrušila —
+       navíc třídu .layout-menu-toggle nese i hamburger v navbaru a
+       podkladová plocha pod vysunutým menu. */
+    var male = window.Helpers ? Helpers.isSmallScreen() : window.innerWidth < 1200;
+    if (male) return;
+
+    document.documentElement.classList.toggle('layout-menu-collapsed');
+    /* Scrollbar menu si drží spočítanou výšku obsahu; po změně šířky se
+       položky přelomí jinak a musí se přepočítat. */
+    try { window.Helpers && Helpers.mainMenu && Helpers.mainMenu.update(); } catch (er) {}
+});
+
 /* Adresa BFF přichází z config.js, který vyrobil instalák. Kdyby chyběl,
    je lepší to říct nahlas než tiše volat vlastní adresu a dostávat 404. */
 if (!window.LIB_BFF_URL) {

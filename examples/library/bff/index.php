@@ -82,11 +82,29 @@ function prubeh(string $text, ?int $pct = null): void {
    obrazovky by znamenalo překreslovat dvě třetiny stránky kvůli jedné
    tabulce — a v AdminLTE i znovu inicializovat šablonu. */
 function obrazovka(string $telo, array $vars = []): array {
-    return [
+    $cmds = [
         ['op' => 'html', 'sel' => 'left_menu', 'content' => frag('menu')],
         ['op' => 'html', 'sel' => 'top_frame', 'content' => frag('top')],
         ['op' => 'html', 'sel' => 'main',      'content' => frag($telo, $vars)],
     ];
+
+    /* Odběr push kanálu patří SEM, ne jen k přihlášení.
+
+       Sezení přežívá v localStorage, takže uživatel se typicky
+       nepřihlašuje — jen otevře stránku. Dokud se subscribe posílal jen
+       z do_login, měl push jedině ten, kdo zrovna vyplnil heslo; po
+       prvním reloadu průběh dlouhých operací tiše přestal chodit a
+       statistika se tvářila, že se po kliknutí neděje nic.
+
+       obrazovka() je na to správné místo: kreslí se při každé změně
+       stavu aplikace, tedy právě tehdy, kdy se mohl změnit i kanál.
+       Fw.subscribe() si předchozí odběr sám zavře, takže opakování
+       nevadí. Nepřihlášenému se neposílá nic — nemá kanál. */
+    if (me() !== null && NCHAN_SUB !== '' && NCHAN_PUB !== '')
+        $cmds[] = ['op' => 'subscribe', 'name' => 'main',
+                   'url' => NCHAN_SUB, 'token' => kanal()];
+
+    return $cmds;
 }
 
 /* Prázdná kniha. Jedno místo, kde jsou výchozí hodnoty — jinak se
@@ -140,8 +158,30 @@ function filtr_katalogu(string $prefix = ''): array {
 }
 
 /* BĚŽNÁ obrazovka — jen obsah. Tohle je ta, která se používá pořád. */
-function jen_main(string $telo, array $vars = []): array {
-    return [['op' => 'html', 'sel' => 'main', 'content' => frag($telo, $vars)]];
+function jen_main(string $telo, array $vars = [], ?string $menu = null): array {
+    return array_merge(
+        [['op' => 'html', 'sel' => 'main', 'content' => frag($telo, $vars)]],
+        menu_aktivni($menu ?? $telo));
+}
+
+/* Přendání zvýraznění v menu.
+ *
+ *  Menu se překresluje jen při přihlášení a odhlášení — jeho OBSAH plyne
+ *  z oprávnění a ta se uprostřed práce nemění. Zvýraznění ale není obsah,
+ *  mění se každou navigací. Dokud se posílalo jen s celým menu, ukazatel
+ *  zůstal viset na obrazovce, ze které uživatel dávno odešel.
+ *
+ *  Dvě operace class jsou levnější než překreslení menu a hlavně nezahodí
+ *  posluchače ani spočítanou výšku scrollbaru.
+ *
+ *  Jméno obrazovky se bere z názvu fragmentu, protože u všech pěti
+ *  položek menu je stejné. Kdyby se někdy rozešlo, má jen_main() třetí
+ *  parametr — ne aby se to hádalo z fragmentu. */
+function menu_aktivni(string $fn): array {
+    return [
+        ['op' => 'class', 'sel' => '#left_menu .menu-item', 'remove' => ['active']],
+        ['op' => 'class', 'sel' => '#left_menu [data-menu="' . $fn . '"]', 'add' => ['active']],
+    ];
 }
 
 switch ($function) {
@@ -167,10 +207,7 @@ case 'do_login':
     $SESSION = (string)$data['session'];
     cache_put($SESSION, $data['me']);
     send_answer([['op' => 'session', 'value' => $SESSION]]);   // musí být PRVNÍ
-    if (NCHAN_SUB !== '' && NCHAN_PUB !== '')
-        send_answer([['op' => 'subscribe', 'name' => 'main',
-                      'url' => NCHAN_SUB, 'token' => kanal()]]);
-    send_answer(obrazovka('intro'));
+    send_answer(obrazovka('intro'));                           // odběr push je v ní
     break;
 
 case 'do_logout':

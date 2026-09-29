@@ -12,6 +12,34 @@
  *  vlastní věci předponu fw-.
  * ===================================================================== */
 
+/* ---- značka v menu -------------------------------------------------
+ *  Sneat dává .app-brand rozměry až v assets/css/demo.css, tedy ve stylu
+ *  svých ukázkových stránek. Ten do aplikace nepatří (je to jejich
+ *  prezentace, ne šablona), takže se bez těchhle tří řádků nápis lepí
+ *  k hornímu okraji obrazovky i se šipkou.
+ *
+ *  Jméno .app-brand je šablony, ne naše — proto tu výjimečně není fw-.
+ *  Nepřebarvujeme, jen dodáváme, co v core.css chybí.
+ * ------------------------------------------------------------------- */
+.menu .app-brand { height: 4rem; margin-top: .75rem; }
+.menu .app-brand .app-brand-text { font-size: 1.375rem; letter-spacing: -.5px; }
+
+/*  Sbalené menu šipku zhasne (opacity: 0) a počítá s tím, že se menu při
+ *  najetí myší dočasně rozbalí přes třídu layout-menu-hover. Jenže tu
+ *  v téhle verzi šablony nikdo nenasazuje — obě větve jejího
+ *  _menuMouseEnter volají _setMenuHoverState(false) — a kdyby nasazoval,
+ *  platí .layout-menu-hover .layout-menu-toggle { display: none }.
+ *  Tak jako tak by šipka zmizela a menu by se nedalo vrátit: sbalení by
+ *  byla jednosměrka.
+ *
+ *  Dlouhý selektor je schválně. Jejich pravidlo má osm tříd a musíme ho
+ *  přebít specifičností, ne pořadím souborů — na pořadí už tahle
+ *  aplikace jednou doplatila (viz hlavička). */
+.layout-menu-fixed.layout-menu-collapsed:not(.layout-menu-offcanvas):not(.layout-menu-fixed-offcanvas)
+    .layout-menu.menu .app-brand .layout-menu-toggle { opacity: 1; }
+/* Sbaleno = šipka ukazuje na druhou stranu. */
+.layout-menu-collapsed .menu .app-brand .layout-menu-toggle i { transform: rotate(180deg); }
+
 /* ---- překryv -------------------------------------------------------
  *  Dialogy řídí server: pošle html do okna overlay, zavírá data-fw-clear.
  *  Bootstrapí .modal se schválně NEPOUŽÍVÁ — ten potřebuje JavaScript,
