@@ -1,17 +1,26 @@
-<div class="card">
-  <h2>Vítejte v knihovně</h2>
-  <p>Tohle je kickstart nad frameworkem Waggle. Tři vrstvy: tenhle frontend,
-     BFF, které řídí aplikaci, a backendové API, které jediné vidí data.</p>
-  <ul class="tiles">
-    <li><a href="#?function=books"   data-fw data-busy="Hledám v katalogu…"><b>Knihy</b><span>katalog, filtr, dostupnost</span></a></li>
-    <li><a href="#?function=rentals" data-fw data-busy="Načítám výpůjčky…"><b>Výpůjčky</b><span>co je venku a kdy se vrací</span></a></li>
-    <?php if (may('see_statistics')): ?>
-    <li><a href="#?function=statistics" data-fw data-busy="Strpení prosím, počítám statistiku…"><b>Statistika</b><span>pět přehledů, s ukazatelem postupu</span></a></li>
-    <?php endif; ?>
-  </ul>
-  <?php if (!may('rent_books')): ?>
-    <p class="hint">Jste přihlášen jako čtenář, takže vidíte jen svoje výpůjčky
-       a nemůžete půjčovat ani vracet. Zkuste konto obsluhy a porovnejte —
-       je to tatáž aplikace, liší se jen oprávnění.</p>
-  <?php endif; ?>
+<?php
+$dlazdice = [
+    ['books',   'bx-book',            'Katalog',    'Hledání v šedesáti knihách, filtr na žánr a dostupnost.'],
+    ['rentals', 'bx-transfer',        'Výpůjčky',   'Kdo co má, co je po termínu, vracení jedním kliknutím.'],
+    ['genres',  'bx-collection',      'Žánry',      'Číselník, na kterém stojí filtr katalogu.'],
+];
+if (may('see_statistics'))
+    $dlazdice[] = ['statistics', 'bx-bar-chart-alt-2', 'Statistika', 'Pět dotazů, průběh přes push.'];
+if (may('manage_users'))
+    $dlazdice[] = ['users', 'bx-user', 'Uživatelé', 'Obsluha i čtenáři, liší se jen oprávněním.'];
+?>
+<div class="row g-4">
+  <?php foreach ($dlazdice as [$fn, $ik, $nad, $pop]): ?>
+    <div class="col-md-6 col-xl-4">
+      <a href="#?function=<?= esc($fn) ?>" data-fw class="card h-100 text-decoration-none">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-2">
+            <span class="badge bg-label-primary p-2 me-2 rounded"><i class="bx <?= esc($ik) ?> fs-5"></i></span>
+            <h5 class="mb-0"><?= esc($nad) ?></h5>
+          </div>
+          <p class="text-muted mb-0 small"><?= esc($pop) ?></p>
+        </div>
+      </a>
+    </div>
+  <?php endforeach; ?>
 </div>

@@ -17,7 +17,7 @@ v jejich adresářích:
   Bootstrap         examples/basic_demo/app-adminlte/vendor/bootstrap/LICENSE        MIT
   Bootstrap Icons   examples/basic_demo/app-adminlte/vendor/bootstrap-icons/LICENSE  MIT
 
-  Sneat (free)      examples/library/app-sneat/vendor/LICENSE                        MIT
+  Sneat (free)      examples/library/app/vendor/LICENSE                        MIT
                     Copyright (c) 2022 ThemeSelection
                     https://github.com/themeselection/sneat-html-admin-template-free
 

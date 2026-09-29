@@ -199,12 +199,6 @@ if ($blok === null && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $povinne_
             'UNSAFE_DEMO'  => 'true',
         ]));
         file_put_contents(CFG_APP, "window.LIB_BFF_URL = '" . $base . "/bff/';\n");
-        /* Druhý frontend je tatáž aplikace v jiném kabátě a jede nad týmž
-           BFF, takže dostane tutéž adresu. Když adresář není, nic se
-           neděje — je to volitelný příklad, ne součást instalace. */
-        if (is_dir(KROK_DIR . '/app-sneat'))
-            file_put_contents(KROK_DIR . '/app-sneat/config.js',
-                              "window.LIB_BFF_URL = '" . $base . "/bff/';\n");
         @chmod(CFG_API, 0640); @chmod(CFG_BFF, 0640);
 
         /* ---- dosáhne BFF na API? ----------------------------------

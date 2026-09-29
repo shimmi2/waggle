@@ -1,29 +1,61 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="cs" class="layout-menu-fixed layout-compact"
+      data-assets-path="vendor/" data-template="vertical-menu-template-free">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Knihovna</title>
+
+<!--
+  Táž aplikace jako v app/, jen v jiném kabátě. Jede nad TÝMŽ BFF a
+  fragmenty se nezměnily ani o řádek — mění se jen skořápka a CSS.
+
+  POŘADÍ STYLŮ JE TU PODSTATNÉ, ne estetické. Bootstrap má
+  `.modal { display: none }`, my `.modal { display: flex }`. Stejná
+  specifičnost, takže rozhoduje pořadí: náš app.css musí být POSLEDNÍ,
+  jinak zmizí každý dialog — editace knihy i výběr čtenáře — a vypadá
+  to na chybu frameworku. Totéž, jen bez následků, platí pro .card,
+  .badge, .btn a .menu.
+-->
+<link rel="stylesheet" href="vendor/fonts/iconify-icons.css">
+<link rel="stylesheet" href="vendor/css/core.css">
+<link rel="stylesheet" href="vendor/libs/perfect-scrollbar/perfect-scrollbar.css">
 <link rel="stylesheet" href="app.css">
 </head>
-<!--
-  Skořápka je STATICKÁ a nikdy se nepřekresluje. Po drátě jdou jen
-  vnitřky pojmenovaných prvků.
 
-  Schválně bez AdminLTE a bez Bootstrapu. Není to proto, že by to
-  nešlo — examples/demo ukazuje obojí nad jedním API. Je to proto, že
-  tenhle kickstart má jít rozbalit na jakémkoli hostingu a vážit
-  desítky kilobajtů, ne deset megabajtů. Výměna šablony je změna
-  fragmentů, ne aplikace.
--->
 <body>
+<div class="layout-wrapper layout-content-navbar">
+  <div class="layout-container">
 
-<div class="app">
-  <aside id="left_menu"></aside>
-  <div class="content">
-    <header id="top_frame"></header>
-    <main id="main"></main>
+    <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+      <div class="app-brand demo">
+        <span class="app-brand-logo demo"><i class="bx bx-book fs-3 text-primary"></i></span>
+        <span class="app-brand-text demo menu-text fw-bold ms-2">Knihovna</span>
+        <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+          <i class="bx bx-chevron-left bx-sm align-middle"></i>
+        </a>
+      </div>
+      <div class="menu-inner-shadow"></div>
+      <!-- Naše okno. Fragment menu.inc se nezměnil, takže tu zatím
+           vypadá jako v holé verzi — to je práce pro fázi 2. -->
+      <div id="left_menu" class="menu-inner py-1"></div>
+    </aside>
+
+    <div class="layout-page">
+      <nav class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme">
+        <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+          <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+        </div>
+        <div id="top_frame" class="navbar-nav-right d-flex align-items-center w-100"></div>
+      </nav>
+
+      <div class="content-wrapper">
+        <div id="main" class="container-xxl flex-grow-1 container-p-y"></div>
+      </div>
+    </div>
+
   </div>
+  <div class="layout-overlay layout-menu-toggle"></div>
 </div>
 
 <!-- Okno pro komponenty v překryvu. Zavírá se na klientovi. -->
@@ -31,6 +63,16 @@
 
 <!-- Sem píše Fw.notify. Nesmí po startu zůstat viset prázdné. -->
 <div id="fw_error" style="display:none"></div>
+
+<script src="vendor/js/helpers.js"></script>
+<!-- Přejmenováno ze sneatího config.js: stejné jméno jako NAŠE konfigurace
+     instalace, a to plete instaláky i .gitignore. -->
+<script src="vendor/js/sneat-config.js"></script>
+<script src="vendor/libs/popper/popper.js"></script>
+<script src="vendor/js/bootstrap.js"></script>
+<script src="vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+<script src="vendor/js/menu.js"></script>
+<script src="vendor/js/main.js"></script>
 
 <script src="config.js"></script>
 <script src="fw.js"></script>

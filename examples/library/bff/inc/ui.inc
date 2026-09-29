@@ -45,7 +45,13 @@ function pocet(int $n, string $jedna, string $malo, string $mnoho): string {
    řádek se v delší tabulce čte špatně a při dvou stavech vedle sebe
    nejde rozeznat, který je který. */
 function badge(string $text, string $druh = 'neutral'): string {
-    return '<span class="badge badge-' . esc($druh) . '">' . esc($text) . '</span>';
+    /* Sneat používá „label" varianty — tlumené pozadí, čitelný text.
+       Mapa je tady, aby fragmenty psaly význam („danger"), ne třídu:
+       až se šablona zase vymění, přepíše se jediné místo. */
+    static $mapa = ['ok' => 'bg-label-success', 'warn' => 'bg-label-warning',
+                    'danger' => 'bg-label-danger', 'neutral' => 'bg-label-secondary'];
+    $tr = $mapa[$druh] ?? $mapa['neutral'];
+    return '<span class="badge ' . $tr . '">' . esc($text) . '</span>';
 }
 
 /* Stránkování. Vrací prázdno, když je co zobrazit na jednu stránku. */
@@ -57,11 +63,15 @@ function pager(string $fn, int $total, int $limit, int $offset, array $params = 
         $p = $params + ['offset' => $off];
         return '#?function=' . rawurlencode($fn) . '&' . http_build_query($p);
     };
-    $h = '<nav class="pager">';
-    if ($tato > 1)
-        $h .= '<a href="' . esc($q($offset - $limit)) . '" data-fw>‹ předchozí</a>';
-    $h .= '<span>strana ' . $tato . ' z ' . $stran . '</span>';
-    if ($tato < $stran)
-        $h .= '<a href="' . esc($q($offset + $limit)) . '" data-fw>další ›</a>';
-    return $h . '</nav>';
+    $h = '<nav class="mt-3"><ul class="pagination pagination-sm mb-0 justify-content-center">';
+    $h .= $tato > 1
+        ? '<li class="page-item"><a class="page-link" href="' . esc($q($offset - $limit))
+          . '" data-fw><i class="bx bx-chevron-left"></i></a></li>'
+        : '<li class="page-item disabled"><span class="page-link"><i class="bx bx-chevron-left"></i></span></li>';
+    $h .= '<li class="page-item active"><span class="page-link">' . $tato . ' / ' . $stran . '</span></li>';
+    $h .= $tato < $stran
+        ? '<li class="page-item"><a class="page-link" href="' . esc($q($offset + $limit))
+          . '" data-fw><i class="bx bx-chevron-right"></i></a></li>'
+        : '<li class="page-item disabled"><span class="page-link"><i class="bx bx-chevron-right"></i></span></li>';
+    return $h . '</ul></nav>';
 }

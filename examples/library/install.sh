@@ -20,7 +20,7 @@
 #    ./install.sh --app-dir=… --bff-dir=… --api-dir=… \
 #                 --app-url=… --bff-url=… --api-url=… \
 #                 --db-name=… --prov-user=root [--prov-pass=…] \
-#                 --admin-login=admin [--profil=mestska] [--skin=plain|sneat] [--force]
+#                 --admin-login=admin [--profil=mestska] [--force]
 #
 #  Soubor --conf je obyčejný shell: APP_DIR=..., BFF_URL=... a tak dál.
 # =====================================================================
@@ -29,10 +29,6 @@ set -u
 SRC="$(cd "$(dirname "$0")" && pwd)"
 
 APP_DIR=; BFF_DIR=; API_DIR=
-# Který kabát se nasadí. 'app' je holý a váží desítky kB, 'app-sneat'
-# přibaluje šablonu Sneat (Bootstrap 5) a váží přes megabajt. Aplikace je
-# v obou případech TÁŽ a jede nad týmž BFF — liší se jen skořápka a CSS.
-APP_SRC=app
 APP_URL=; BFF_URL=; API_URL=
 DB_HOST=localhost; DB_NAME=knihovna; DB_RUNTIME_USER=knihovna; DB_RUNTIME_PASS=
 PROV_USER=root; PROV_PASS=
@@ -57,7 +53,6 @@ for a in "$@"; do
     --redis-host=*)  REDIS_HOST="${a#*=}" ;;
     --cache-dir=*)   CACHE_DIR="${a#*=}" ;;
     --profil=*)      PROFIL="${a#*=}" ;;
-    --skin=*)        APP_SRC="${a#*=}" ;;
     --force)         FORCE=1 ;;
     -h|--help)       sed -n '2,30p' "$0"; exit 0 ;;
     *) echo "neznámý přepínač: $a" >&2; exit 2 ;;
@@ -68,14 +63,6 @@ zle() { echo "  !! $*" >&2; exit 1; }
 rek() { echo "  $*"; }
 
 # ---- kontroly ------------------------------------------------------
-case "$APP_SRC" in
-    app|app-sneat) ;;
-    plain)  APP_SRC=app ;;
-    sneat)  APP_SRC=app-sneat ;;
-    *) echo "neznámý --skin: $APP_SRC (plain nebo sneat)" >&2; exit 2 ;;
-esac
-[ -d "$SRC/$APP_SRC" ] || { echo "frontend $APP_SRC v balíku není" >&2; exit 2; }
-
 for v in APP_DIR BFF_DIR API_DIR APP_URL BFF_URL API_URL; do
   [ -n "${!v}" ] || zle "chybí --$(echo "$v" | tr 'A-Z_' 'a-z-')"
 done
@@ -146,7 +133,7 @@ rek "=== 4/6 kód do tří adresářů ==="
 # ale je to zbytečná nápověda o struktuře a po instalaci k ničemu.
 cp -r "$SRC/api/." "$API_DIR/" && rm -f "$API_DIR/config.inc" "$API_DIR/config.example.inc"
 cp -r "$SRC/bff/." "$BFF_DIR/" && rm -f "$BFF_DIR/config.inc" "$BFF_DIR/config.example.inc"
-cp -r "$SRC/$APP_SRC/." "$APP_DIR/" && rm -f "$APP_DIR/config.js" "$APP_DIR/config.example.js"
+cp -r "$SRC/app/." "$APP_DIR/" && rm -f "$APP_DIR/config.js" "$APP_DIR/config.example.js"
 mkdir -p "$API_DIR/../cronjobs" 2>/dev/null
 cp "$SRC/cronjobs/cleaner.php" "$API_DIR/../cronjobs/" 2>/dev/null \
   && rek "cleaner.php vedle API (mimo docroot)" \

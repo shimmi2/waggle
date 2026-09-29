@@ -1,99 +1,97 @@
 <?php
-/* @var array       $book    hodnoty k předvyplnění (u nové knihy výchozí)
-   @var array       $genres  seznam žánrů pro rozbalovátko
-   @var string      $op      'insert' nebo 'update'
-   @var string|null $err     hláška z backendu, pokud se uložení nepovedlo
-   @var array       $filtr   stav filtru katalogu, ať se po uložení vrátí týž seznam
+/* @var array $book  hodnoty k předvyplnění (u nové knihy výchozí)
+   @var array $genres
+   @var string $op   'insert' nebo 'update'
+   @var string|null $err
+   @var array $filtr stav filtru katalogu
 
-   JEDEN fragment pro editaci i přidání. Dva fragmenty by se rozešly —
-   do jednoho by se za měsíc přidalo pole a do druhého ne. Rozdíl mezi
-   „upravit" a „přidat" je jen v $op, v titulku a v tom, čím je $book
-   naplněné.
+   JEDEN fragment pro editaci i přidání. Dva by se rozešly — do jednoho
+   by se za měsíc přidalo pole a do druhého ne.
 
-   Kreslí se do okna overlay. Chyba z backendu se kreslí ZPÁTKY sem, se
-   vším, co uživatel napsal — proto jsou hodnoty polí vždy z $book a ne
-   z databáze. Kdyby se chyba vypsala jen jako notifikace, uživatel by
-   při překlepu v počtu kusů přišel o celý popis knihy.
-
-   Práva neřeší tenhle soubor. Jeho zobrazení je rozhodnutí o kreslení;
-   skutečné „smíš" hlídá backend a vrátí 403. */
-$b     = $book;
-$novy  = ($op === 'insert');
-$roky  = (int)date('Y') + 1;
+   Chyba z backendu se kreslí ZPÁTKY sem, se vším, co uživatel napsal.
+   Proto jsou hodnoty polí vždy z $book, ne z databáze. */
+$b    = $book;
+$novy = ($op === 'insert');
+$roky = (int)date('Y') + 1;
 ?>
-<div class="modal" data-fw-esc="overlay">
-  <div class="modal-box">
-    <h2><?= $novy ? 'Nová kniha' : 'Upravit knihu' ?></h2>
+<div class="fw-overlay" data-fw-esc="overlay">
+  <!-- Formulář JE ten box. Kdyby byl uvnitř, stal by se jediným flex
+       potomkem a hlavička s patičkou by přestaly držet svoje místo.
 
-    <?php if (!empty($err)): ?>
-      <p class="form-err"><?= esc($err) ?></p>
-    <?php endif; ?>
-
-    <!-- data-busy patří na FORMULÁŘ, ne na tlačítko: při odeslání dostane
-         busyBehem() právě formulář. A cíl musí být overlay, jinak by se
-         rozostřil katalog pod dialogem a ne dialog sám. -->
-    <form data-fw action="#?function=do_book_save" method="post" class="form"
-          data-busy="Ukládám…" data-busy-sel="overlay">
-      <!-- Záměr říkáme výslovně. Kdyby se rozhodoval podle toho, jestli
-           přišlo bo_id, ztracené id by znamenalo tiché založení duplikátu. -->
-      <input type="hidden" name="op"    value="<?= esc($op) ?>">
-      <input type="hidden" name="bo_id" value="<?= $novy ? 0 : (int)$b['bo_id'] ?>">
-
-      <!-- Stav filtru putuje s formulářem, aby se po uložení překreslil
-           týž seznam, na který uživatel kouká. Bez toho by se filtr při
-           každém uložení resetoval. -->
-      <?php foreach ($filtr as $k => $v): ?>
-        <input type="hidden" name="f_<?= esc($k) ?>" value="<?= esc((string)$v) ?>">
-      <?php endforeach; ?>
-
-      <label>Název <span class="req">*</span>
-        <input type="text" name="bo_name" maxlength="255" required autofocus
-               value="<?= esc($b['bo_name']) ?>">
-      </label>
-
-      <label>Autor
-        <input type="text" name="bo_author" maxlength="128"
-               value="<?= esc($b['bo_author']) ?>">
-      </label>
-
-      <div class="form-row">
-        <label>Žánr
-          <select name="bo_genre">
-            <option value="0">— bez žánru —</option>
-            <?php foreach ($genres as $g): ?>
-              <option value="<?= (int)$g['ge_id'] ?>"
-                <?= (int)$b['bo_genre'] === (int)$g['ge_id'] ? 'selected' : '' ?>>
-                <?= esc($g['ge_name']) ?></option>
-            <?php endforeach; ?>
-          </select>
-        </label>
-
-        <label>Rok vydání
-          <input type="number" name="bo_year" min="1" max="<?= $roky ?>"
-                 value="<?= (int)$b['bo_year'] ?: '' ?>">
-        </label>
+       data-busy patří na FORMULÁŘ, ne na tlačítko: při odeslání dostane
+       busyBehem() právě formulář. Cíl musí být overlay, jinak by se
+       rozostřil katalog pod dialogem a ne dialog sám. -->
+  <form data-fw action="#?function=do_book_save" method="post"
+        data-busy="Ukládám…" data-busy-sel="overlay" class="fw-overlay-box">
+      <div class="fw-overlay-head">
+        <h5 class="mb-0"><?= $novy ? 'Nová kniha' : 'Upravit knihu' ?></h5>
       </div>
 
-      <div class="form-row">
-        <label>Kusů v knihovně
-          <input type="number" name="bo_count" min="0" max="9999"
-                 value="<?= (int)$b['bo_count'] ?>">
-        </label>
+      <div class="fw-overlay-body">
+        <?php if (!empty($err)): ?>
+          <div class="alert alert-danger" role="alert"><?= esc($err) ?></div>
+        <?php endif; ?>
 
-        <label>Cena (Kč)
-          <input type="number" name="bo_price" min="0" step="0.01"
-                 value="<?= esc(number_format((float)$b['bo_price'], 2, '.', '')) ?>">
-        </label>
-      </div>
+        <!-- Záměr říkáme výslovně. Kdyby se rozhodoval podle přítomnosti
+             bo_id, ztracené id by tiše založilo duplikát. -->
+        <input type="hidden" name="op"    value="<?= esc($op) ?>">
+        <input type="hidden" name="bo_id" value="<?= $novy ? 0 : (int)$b['bo_id'] ?>">
+        <?php /* Stav filtru putuje s formulářem, aby se po uložení
+                 překreslil týž seznam. */
+        foreach ($filtr as $k => $v): ?>
+          <input type="hidden" name="f_<?= esc($k) ?>" value="<?= esc((string)$v) ?>">
+        <?php endforeach; ?>
 
-      <label>Popis
-        <textarea name="bo_description" rows="4" maxlength="4000"><?= esc($b['bo_description']) ?></textarea>
-      </label>
+        <div class="mb-3">
+          <label class="form-label" for="bo_name">Název <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="bo_name" name="bo_name"
+                 maxlength="255" required autofocus value="<?= esc($b['bo_name']) ?>">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="bo_author">Autor</label>
+          <input type="text" class="form-control" id="bo_author" name="bo_author"
+                 maxlength="128" value="<?= esc($b['bo_author']) ?>">
+        </div>
+        <div class="row">
+          <div class="col-sm-7 mb-3">
+            <label class="form-label" for="bo_genre">Žánr</label>
+            <select class="form-select" id="bo_genre" name="bo_genre">
+              <option value="0">— bez žánru —</option>
+              <?php foreach ($genres as $g): ?>
+                <option value="<?= (int)$g['ge_id'] ?>"
+                  <?= (int)$b['bo_genre'] === (int)$g['ge_id'] ? 'selected' : '' ?>>
+                  <?= esc($g['ge_name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="col-sm-5 mb-3">
+            <label class="form-label" for="bo_year">Rok vydání</label>
+            <input type="number" class="form-control" id="bo_year" name="bo_year"
+                   min="1" max="<?= $roky ?>" value="<?= (int)$b['bo_year'] ?: '' ?>">
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6 mb-3">
+            <label class="form-label" for="bo_count">Kusů v knihovně</label>
+            <input type="number" class="form-control" id="bo_count" name="bo_count"
+                   min="0" max="9999" value="<?= (int)$b['bo_count'] ?>">
+          </div>
+          <div class="col-sm-6 mb-3">
+            <label class="form-label" for="bo_price">Cena (Kč)</label>
+            <input type="number" class="form-control" id="bo_price" name="bo_price"
+                   min="0" step="0.01" value="<?= esc(number_format((float)$b['bo_price'], 2, '.', '')) ?>">
+          </div>
+        </div>
+        <div class="mb-0">
+          <label class="form-label" for="bo_description">Popis</label>
+          <textarea class="form-control" id="bo_description" name="bo_description"
+                    rows="4" maxlength="4000"><?= esc($b['bo_description']) ?></textarea>
+        </div>
+    </div>
 
-      <div class="modal-foot">
-        <button type="button" class="ghost" data-fw-clear="overlay">Zrušit</button>
-        <button type="submit"><?= $novy ? 'Založit' : 'Uložit' ?></button>
-      </div>
-    </form>
-  </div>
+    <div class="fw-overlay-foot">
+      <button type="button" class="btn btn-outline-secondary" data-fw-clear="overlay">Zrušit</button>
+      <button type="submit" class="btn btn-primary"><?= $novy ? 'Založit' : 'Uložit' ?></button>
+    </div>
+  </form>
 </div>

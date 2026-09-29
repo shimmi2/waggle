@@ -43,7 +43,6 @@ dosažitelné z internetu. Instalace o tom ví a nese o tom červený odznak
 
 ```bash
 ./install.sh --conf=nasazeni.conf
-./install.sh --conf=nasazeni.conf --skin=sneat    # s šablonou místo holého HTML
 ```
 
 Tahle cesta rozkopíruje kód do tří docrootů, založí databázový účet, který
@@ -89,12 +88,10 @@ v téhle aplikaci udělané.
 ## Co je kde
 
 ```
-app/          frontend — index.html, app.js, app.css, fw.js
+app/          frontend nad šablonou Sneat (Bootstrap 5)
               Nesahá na databázi ani na API. Zná jedinou adresu: BFF.
-app-sneat/    TÝŽ frontend v šabloně Sneat (Bootstrap 5), nad týmž BFF.
-              Fragmenty se nezměnily ani o řádek — jiná je jen skořápka
-              a CSS. Váží 1,3 MB proti desítkám kB holé verze, proto
-              stojí vedle, ne místo.
+  vendor/       podmnožina šablony, MIT — viz NOTICE
+  app.css       65 řádků: jen to, co šablona nemá
 bff/          řízení aplikace, mluví Waggle
   fw.inc        KNIHOVNA — protokol; io.inc si načítá sám
   io.inc        KNIHOVNA — hygiena vstupu a výstupu
@@ -116,25 +113,23 @@ v balíku nejsou — dvě stě tisíc řádků historie by ho utopilo.
 
 ---
 
-## Dva kabáty, jedna aplikace
+## Šablona
 
-`app/` je holé HTML s vlastním CSS o 139 řádcích. `app-sneat/` je táž
-aplikace v šabloně [Sneat](https://github.com/themeselection/sneat-html-admin-template-free)
-(MIT) nad **týmž BFF** — žádný fragment se nezměnil, mění se skořápka
-a styly. Vybírá se přepínačem `--skin`.
+Frontend stojí na [Sneatu](https://github.com/themeselection/sneat-html-admin-template-free)
+(Bootstrap 5, MIT). Přibalena je **podmnožina**: bez jQuery, bez grafů
+a s ikonami oříznutými z 2429 na 23, tedy 1,3 MB místo 14.
 
-Jedna věc je na tom podstatnější než vzhled a stojí za zapamatování:
+Fragmenty píšou rovnou bootstrapí markup — `card`, `table`, `form-control`,
+`badge bg-label-*`. Vyměnit šablonu znamená přepsat `bff/pages/*` a
+skořápku; aplikace, endpointy ani protokol se toho netýkají. Přesně to
+jsme udělali, když se holá verze měnila na tuhle.
 
-```html
-<link rel="stylesheet" href="vendor/css/core.css">   <!-- šablona -->
-<link rel="stylesheet" href="app.css">               <!-- náš, POSLEDNÍ -->
-```
-
-Bootstrap má `.modal { display: none }`, my `.modal { display: flex }`.
-Stejná specifičnost, takže rozhoduje pořadí. Při obráceném pořadí zmizí
-**každý dialog** — editace knihy i výběr čtenáře — bez jediné chybové
-hlášky, a vypadá to na chybu frameworku. Totéž, jen bez následků, platí
-pro `.card`, `.badge`, `.btn` a `.menu`.
+**Vlastní styly mají předponu `fw-` a je to pravidlo, ne zvyk.** V jedné
+mezifázi se jmenovaly `.modal`, `.card`, `.badge`, `.btn` a `.menu`, tedy
+stejně jako bootstrapí, a fungovalo to jen díky pořadí načtení souborů:
+Bootstrap má `.modal { display: none }`, my `display: flex`. Stačilo
+prohodit dva řádky a zmizel by **každý dialog** bez chybové hlášky.
+Vlastního zbylo 65 řádků CSS — překryv, bubliny a sloupcový graf.
 
 ## Co je v tom naschvál
 

@@ -1,25 +1,35 @@
-<?php /* Levé menu. Obsah plyne z oprávnění — proto se nemusí překreslovat
-         při běžné práci, jen při přihlášení a odhlášení.
+<?php
+/* Levé menu. Kreslí se JEN při přihlášení a odhlášení — jeho obsah plyne
+   z oprávnění, a ta se uprostřed práce nemění.
 
-         Co se tu NEkreslí, to není zakázané. Zákaz je na backendu; tady
-         se jen neukazuje, co by uživateli stejně nefungovalo. */
+   Kreslení není autorizace: kdo si položku podvrhne, dostane z datového
+   API 403. Tady se rozhoduje jen o tom, co má smysl nabízet. */
 $m = me();
-if ($m === null): ?>
-  <nav class="menu">
-    <a href="#?function=index" data-fw class="on">Přihlášení</a>
-  </nav>
-<?php return; endif; ?>
-<nav class="menu">
-  <a href="#?function=books"    data-fw data-busy="Hledám v katalogu…">Knihy</a>
-  <a href="#?function=genres"   data-fw>Žánry</a>
-  <a href="#?function=rentals"  data-fw data-busy="Načítám výpůjčky…">Výpůjčky</a>
-  <?php if (may('see_statistics')): ?>
-    <!-- Statistika je jediná obrazovka, kde se doopravdy čeká. Text
-         překryvu ukáže prohlížeč sám; procenta do něj doplní server. -->
-    <a href="#?function=statistics" data-fw data-busy="Strpení prosím, počítám statistiku…">Statistika</a>
-  <?php endif; ?>
-  <?php if (may('manage_users')): ?>
-    <a href="#?function=users" data-fw data-busy="Načítám uživatele…">Uživatelé</a>
-  <?php endif; ?>
-  <a href="#?function=do_logout" data-fw class="odhlasit">Odhlásit se</a>
-</nav>
+$kde = in_str('function', 64) ?: 'index';
+$polozka = function (string $fn, string $ikona, string $popis) use ($kde) {
+    $akt = $kde === $fn || strpos($kde, $fn . '_') === 0;
+    printf('<li class="menu-item%s"><a href="#?function=%s" data-fw class="menu-link">'
+         . '<i class="menu-icon tf-icons bx %s"></i><div>%s</div></a></li>',
+           $akt ? ' active' : '', esc($fn), esc($ikona), esc($popis));
+};
+?>
+<ul class="menu-inner py-1">
+<?php if ($m === null): ?>
+  <?php $polozka('index', 'bx-log-in', 'Přihlášení'); ?>
+<?php else: ?>
+  <?php
+    $polozka('index',   'bx-home-circle',     'Úvod');
+    $polozka('books',   'bx-book',            'Katalog');
+    $polozka('genres',  'bx-collection',      'Žánry');
+    $polozka('rentals', 'bx-transfer',        'Výpůjčky');
+    if (may('see_statistics')) $polozka('statistics', 'bx-bar-chart-alt-2', 'Statistika');
+    if (may('manage_users'))   $polozka('users',      'bx-user',            'Uživatelé');
+  ?>
+  <li class="menu-header small text-uppercase"><span class="menu-header-text">Účet</span></li>
+  <li class="menu-item">
+    <a href="#?function=do_logout" data-fw class="menu-link">
+      <i class="menu-icon tf-icons bx bx-log-out"></i><div>Odhlásit</div>
+    </a>
+  </li>
+<?php endif; ?>
+</ul>
