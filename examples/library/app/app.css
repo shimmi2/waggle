@@ -95,6 +95,10 @@ button, .btn, .btn-small {
 button:hover, .btn:hover, .btn-small:hover { filter: brightness(1.1); }
 .btn-small { padding: 3px 9px; font-size: .85em; }
 /* Druhotná akce. Zrušit má vypadat jako ústup, ne jako druhá nabídka. */
+input:disabled { background: color-mix(in srgb, var(--dim) 8%, transparent);
+                 color: var(--ink); cursor: default; }
+.btn-small.ghost { background: transparent; color: var(--dim);
+                   border: 1px solid var(--line); font-weight: 500; }
 button.ghost { background: transparent; color: var(--dim);
                border: 1px solid var(--line); font-weight: 500; }
 button.ghost:hover { filter: none; border-color: var(--accent); color: var(--ink); }

@@ -105,6 +105,29 @@ barvou řádku — obarvený řádek se v dlouhé tabulce čte špatně. Hodnoty
 se **předvyplňují z požadavku**, jinak tabulka filtruje a rozbalovátko tvrdí
 „všechny", což je ta nejhorší kombinace.
 
+**Výchozí hodnotu filtru nastav v dispatcheru, ne ve fragmentu.** Pevné
+`checked` v HTML je past ze dvou stran: při prvním příchodu tvrdí, že se
+filtruje, zatímco dotaz běží bez filtru — a po odškrtnutí se samo vrátí
+zpátky. Sestav filtr jednou a použij ho dvakrát, pro dotaz i pro
+vykreslení ovládání.
+
+A doplňuj výchozí hodnotu **jen při příchodu na obrazovku**. Při odeslání
+formuláře znamená chybějící zaškrtávátko, že si ho člověk odškrtl —
+výchozí hodnota by mu ho napořád vracela a odškrtnout by šlo jen na jedno
+kliknutí a hned zpátky:
+
+```php
+case 'vypujcky':
+    $f = filtr_vypujcek(true);                  // true = doplnit výchozí
+    send_answer(jen_main('vypujcky', ['args' => $f]));
+    /* fallthrough */
+case 'vypujcky_vysledky':
+    $args = $f ?? filtr_vypujcek(false);        // beze změny, co přišlo
+```
+
+V knihovně jsme na tuhle past narazili dvakrát — u katalogu knih i u
+výpůjček.
+
 ## Krok 7 — zápisová obrazovka
 
 Tohle je recept, který stačí přepsat jmény. Vzor v kódu: `ep_book_save()`,

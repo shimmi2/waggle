@@ -117,6 +117,42 @@ function ep_users_list(): void {
     api_out(['users' => $rows, 'acls' => q_all("SELECT ac_key, ac_name, ac_description FROM acls ORDER BY ac_sort")]);
 }
 
+/* Čtenáři pro výběr do filtru výpůjček.
+ *
+ *  Schválně NE ep_users_list(): ten je za manage_users a vrací telefon,
+ *  e-mail, poznámku i oprávnění. Kdo spravuje výpůjčky, potřebuje jméno
+ *  a id — a nic víc mu do ruky nepatří. Menší právo, menší odpověď.
+ *
+ *  Stejný endpoint umí i vyhledat jednoho podle id. Díky tomu si BFF
+ *  dokáže doplnit jméno k id, které přišlo v odkazu, a nemusí věřit
+ *  jménu od klienta. */
+function ep_readers_list(): void {
+    /* 1. vstupy */
+    $id    = in_int('us_id');
+    $q     = in_str('q', 64);
+    $limit = max(1, min(100, in_int('limit') ?: 30));
+
+    /* 2. sémantika — prázdný filtr znamená „prvních pár", to je v pořádku */
+
+    /* 3. sezení, 4. oprávnění */
+    $me = session_require();
+    acl_require($me, 'see_all_rentals');
+
+    /* 5. práce */
+    if ($id > 0) {
+        $rows = q_all("SELECT us_id, us_name FROM users WHERE us_id=?", [$id]);
+    } elseif ($q !== '') {
+        $rows = q_all("SELECT us_id, us_name FROM users
+                       WHERE us_name LIKE ? OR us_login LIKE ?
+                       ORDER BY us_name LIMIT $limit", ['%' . $q . '%', '%' . $q . '%']);
+    } else {
+        $rows = q_all("SELECT us_id, us_name FROM users ORDER BY us_name LIMIT $limit");
+    }
+
+    /* 6. odpověď */
+    api_out(['readers' => $rows, 'total' => count($rows)]);
+}
+
 function ep_user_save(): void {
     /* 1. vstupy */
     $op     = in_str('op', 16);

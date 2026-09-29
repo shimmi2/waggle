@@ -96,6 +96,15 @@ function prazdna_kniha(): array {
             'bo_year' => 0, 'bo_count' => 1, 'bo_price' => 0.0, 'bo_description' => ''];
 }
 
+/* Jméno čtenáře k jeho id. Prázdné id = bez omezení, tedy prázdné jméno.
+   Volá se jen tehdy, když je koho hledat, a jen pro toho, kdo na seznam
+   výpůjček vidí — datové API si totéž ověří samo. */
+function jmeno_ctenare(int $id): string {
+    if ($id < 1 || !may('see_all_rentals')) return '';
+    $r = api_call('readers_list', ['us_id' => $id]);
+    return (string)($r['readers'][0]['us_name'] ?? '');
+}
+
 /* Stav filtru výpůjček.
  *
  *  $vychozi platí JEN při příchodu na obrazovku. Při odeslání formuláře
@@ -368,11 +377,74 @@ case 'rentals':
     /* Výchozí filtr se nastaví tady, při příchodu na obrazovku, a putuje
        rovnou do fragmentu i do dotazu. */
     $vf = filtr_vypujcek(true);
-    send_answer(jen_main('rentals', ['args' => $vf]));
+    /* Jméno se DOPLNÍ z id, nevozí se v odkazu. Klient by ho mohl podvrhnout
+       a filtr by pak ukazoval jedno jméno a filtroval podle jiného id. */
+    send_answer(jen_main('rentals', ['args' => $vf, 'jmeno' => jmeno_ctenare($vf['user'])]));
     send_answer(['op' => 'history', 'url' => '#?function=rentals&open=' . rawurlencode($vf['open'])]);
     /* fallthrough do výsledků, se stejným filtrem */
 case 'rentals_results':
     $args = $vf ?? filtr_vypujcek(false);
+    $r = api_call('rentals_list', $args);
+    send_answer(['op' => 'html', 'sel' => '#rentals_results',
+                 'content' => frag('rentals_results', $r + ['args' => $args])]);
+    break;
+
+/* ---------------------------------------------------------------------
+ *  Výběr čtenáře do filtru výpůjček.
+ *
+ *  Čte se, nezapisuje — proto sezení stačí z cache. Vynucené ověření
+ *  (me(true)) je pro zápisové dialogy, kde by člověk přišel o vyplněné;
+ *  tady nepřijde o nic.
+ * ------------------------------------------------------------------- */
+case 'reader_pick':
+    /* 1. vstupy */
+    $pf = filtr_vypujcek();
+    /* 2. sémantika — není co */
+    /* 4. oprávnění: kreslit výběr, který k ničemu nevede, je lež */
+    if (!may('see_all_rentals')) {
+        send_answer(['op' => 'error', 'code' => 403, 'message' => 'Cizí výpůjčky vidí jen obsluha']);
+        break;
+    }
+    /* 5. + 6. */
+    send_answer(['op' => 'html', 'sel' => 'overlay',
+                 'content' => frag('reader_pick', ['args' => $pf, 'q' => in_str('q', 64)])]);
+    /* fallthrough do výsledků, ať překryv nenaskočí prázdný */
+case 'reader_pick_results':
+    $pf = $pf ?? filtr_vypujcek();
+    if (!may('see_all_rentals')) {
+        send_answer(['op' => 'error', 'code' => 403, 'message' => 'Cizí výpůjčky vidí jen obsluha']);
+        break;
+    }
+    $q = in_str('q', 64);
+    $r = api_call('readers_list', ['q' => $q, 'limit' => 30]);
+    send_answer(['op' => 'html', 'sel' => '#reader_pick_results',
+                 'content' => frag('reader_pick_results', $r + ['args' => $pf, 'q' => $q])]);
+    break;
+
+case 'reader_choose':
+    /* 1. vstupy */
+    $id = in_int('us_id');
+    /* 4. oprávnění */
+    if (!may('see_all_rentals')) {
+        send_answer(['op' => 'error', 'code' => 403, 'message' => 'Cizí výpůjčky vidí jen obsluha']);
+        break;
+    }
+    /* 5. práce: jméno se bere z API, ne z odkazu */
+    $jmeno = jmeno_ctenare($id);
+    if ($id > 0 && $jmeno === '') {
+        send_answer(['op' => 'error', 'code' => 404, 'message' => 'Takový čtenář tu není']);
+        break;
+    }
+    /* 6. odpověď: doplnit pole, zavřít překryv, ukázat změnu.
+       Filtr se mění, takže stránkování zpátky na začátek. */
+    $args = filtr_vypujcek();
+    $args['user']   = $id;
+    $args['offset'] = 0;
+    send_answer([
+        ['op' => 'value', 'sel' => '#f_user',      'value' => $id > 0 ? (string)$id : ''],
+        ['op' => 'value', 'sel' => '#f_user_name', 'value' => $jmeno],
+        ['op' => 'html',  'sel' => 'overlay',      'content' => ''],
+    ]);
     $r = api_call('rentals_list', $args);
     send_answer(['op' => 'html', 'sel' => '#rentals_results',
                  'content' => frag('rentals_results', $r + ['args' => $args])]);
