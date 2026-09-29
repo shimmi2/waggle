@@ -43,6 +43,7 @@ dosažitelné z internetu. Instalace o tom ví a nese o tom červený odznak
 
 ```bash
 ./install.sh --conf=nasazeni.conf
+./install.sh --conf=nasazeni.conf --skin=sneat    # s šablonou místo holého HTML
 ```
 
 Tahle cesta rozkopíruje kód do tří docrootů, založí databázový účet, který
@@ -90,6 +91,10 @@ v téhle aplikaci udělané.
 ```
 app/          frontend — index.html, app.js, app.css, fw.js
               Nesahá na databázi ani na API. Zná jedinou adresu: BFF.
+app-sneat/    TÝŽ frontend v šabloně Sneat (Bootstrap 5), nad týmž BFF.
+              Fragmenty se nezměnily ani o řádek — jiná je jen skořápka
+              a CSS. Váží 1,3 MB proti desítkám kB holé verze, proto
+              stojí vedle, ne místo.
 bff/          řízení aplikace, mluví Waggle
   fw.inc        KNIHOVNA — protokol; io.inc si načítá sám
   io.inc        KNIHOVNA — hygiena vstupu a výstupu
@@ -110,6 +115,26 @@ install.sh     instalace do tří domén
 v balíku nejsou — dvě stě tisíc řádků historie by ho utopilo.
 
 ---
+
+## Dva kabáty, jedna aplikace
+
+`app/` je holé HTML s vlastním CSS o 139 řádcích. `app-sneat/` je táž
+aplikace v šabloně [Sneat](https://github.com/themeselection/sneat-html-admin-template-free)
+(MIT) nad **týmž BFF** — žádný fragment se nezměnil, mění se skořápka
+a styly. Vybírá se přepínačem `--skin`.
+
+Jedna věc je na tom podstatnější než vzhled a stojí za zapamatování:
+
+```html
+<link rel="stylesheet" href="vendor/css/core.css">   <!-- šablona -->
+<link rel="stylesheet" href="app.css">               <!-- náš, POSLEDNÍ -->
+```
+
+Bootstrap má `.modal { display: none }`, my `.modal { display: flex }`.
+Stejná specifičnost, takže rozhoduje pořadí. Při obráceném pořadí zmizí
+**každý dialog** — editace knihy i výběr čtenáře — bez jediné chybové
+hlášky, a vypadá to na chybu frameworku. Totéž, jen bez následků, platí
+pro `.card`, `.badge`, `.btn` a `.menu`.
 
 ## Co je v tom naschvál
 

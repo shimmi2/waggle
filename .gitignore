@@ -8,6 +8,7 @@ examples/basic_demo/bff/data/*.json
 examples/library/api/config.inc
 examples/library/bff/config.inc
 examples/library/app/config.js
+examples/library/app-sneat/config.js
 
 # Prohlížitelná dokumentace se generuje: php doc/build.php
 doc/index.html

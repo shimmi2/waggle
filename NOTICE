@@ -9,10 +9,19 @@ nástroje a dokumentace.
 --------------------------------------------------------------------------
 Kód třetích stran
 
-Příklad app2/ přibaluje pro pohodlí knihovny třetích stran. Nejsou
+Dva příklady přibalují pro pohodlí knihovny třetích stran. Nejsou
 součástí Waggle a platí pro ně jejich vlastní licence, které zůstávají
 v jejich adresářích:
 
-  AdminLTE          app2/vendor/adminlte/LICENSE          MIT
-  Bootstrap         app2/vendor/bootstrap/LICENSE         MIT
-  Bootstrap Icons   app2/vendor/bootstrap-icons/LICENSE   MIT
+  AdminLTE          examples/basic_demo/app-adminlte/vendor/adminlte/LICENSE         MIT
+  Bootstrap         examples/basic_demo/app-adminlte/vendor/bootstrap/LICENSE        MIT
+  Bootstrap Icons   examples/basic_demo/app-adminlte/vendor/bootstrap-icons/LICENSE  MIT
+
+  Sneat (free)      examples/library/app-sneat/vendor/LICENSE                        MIT
+                    Copyright (c) 2022 ThemeSelection
+                    https://github.com/themeselection/sneat-html-admin-template-free
+
+Ze Sneatu je přibalena PODMNOŽINA: bez jQuery, apex-charts, masonry
+a highlight, které skořápka nepotřebuje, a se souborem ikon oříznutým
+z 2429 položek na jedenáct. Bootstrap a Boxicons jsou uvnitř jeho
+core.css a iconify-icons.css, tedy pod toutéž licencí MIT.
