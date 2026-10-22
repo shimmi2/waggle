@@ -14,6 +14,31 @@ Aplikace zná jedinou adresu: `Fw.init({bff: '…'})`. Nic víc. Proto může
 Při rozdělení na hosty je potřeba CORS — `fw_boot()` odbaví preflight
 a `fw_cors()` odráží `Origin`. Zvaž, jestli origin neomezit na seznam.
 
+### Adresa je kořen, parametry jsou v dotazu
+
+BFF i datové API mají **jednu základní adresu** a všechno ostatní jde
+parametry v dotazu: `https://api.example.cz/?fn=books_list&bk_id=7`.
+Cesta za adresou se nečte — žádné `/books/7`, žádný router podle
+adresářů, žádný rewrite ve webserveru.
+
+* Instalace je `index.php` v kořeni (nebo v libovolném adresáři) a víc
+  nic. Funguje stejně pod Apache, nginx i vestavěným serverem PHP,
+  přesun nevyžaduje změnu konfigurace.
+* Jméno operace je v `fn`, takže dispatcher je `switch` a v logu je
+  na první pohled vidět, co se volalo.
+* Verze v cestě (`/v1/`) se nedělá. Nekompatibilní změna dostane nové
+  jméno operace; stará zůstává, dokud ji někdo volá.
+
+Výjimkou jsou jen cizí protokoly, které cestu předepisují samy —
+třeba klient OpenAI si k základní adrese přidá `/chat/completions`.
+Takový obal je samostatný vstupní bod ve vlastním adresáři a
+přesměrování do něj je jediný řádek konfigurace webserveru.
+
+**Víc základních adres** dává smysl až u rozsáhlé instalace: moduly
+na různých hostech nebo paralelní instance v cloudu. Pak klient
+nehádá adresy z cesty, ale dostane je z **manifestu** (mapa modul →
+základní adresa). Každá adresa sama dál dodržuje pravidlo výše.
+
 ## Produkční checklist
 
 | | |

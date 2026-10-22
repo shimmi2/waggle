@@ -36,7 +36,8 @@ stavovým kódem. V `examples/library` je postavené podle datových API
 z firemních projektů autora, takže je záměrně nudné a poznáte ho na
 první pohled. Striktní REST to není — endpoint se volá jménem
 (`?fn=books_list`), ne cestou ke zdroji; na způsobu práce s ním to ale
-nic nemění.
+nic nemění. Proč a co s tím souvisí, je v
+[11 — Nasazení](11-nasazeni.md#adresa-je-kořen-parametry-jsou-v-dotazu).
 
 **„Backend" není název vrstvy.** Jako volné označení pro „všechno na
 serveru" projde, ale nikdy jako jméno patra: u dvouvrstvé aplikace by
