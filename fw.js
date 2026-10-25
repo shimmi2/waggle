@@ -121,18 +121,33 @@ Fw.register('remove', function (c) {
 
 /* Atributy, kterými se dá spustit kód. attr je kreslení, ne spouštění —
    kdo chce spustit funkci, má na to call a její registraci. Platí pro
-   VŠECHNY transporty včetně odpovědi serveru: teprve tím je pravda, co
-   dokumentace tvrdí, totiž že příkaz na vyhodnocení kódu neexistuje. */
+   VŠECHNY transporty včetně odpovědi serveru, protože hodnota často
+   pochází od uživatele (web v profilu do href). attr a text jsou tedy
+   bezpečné i s cizími daty; html a append nejsou a nikdy nebyly.
+
+   U URL se schéma POVOLUJE, nezakazuje, a rozhoduje o něm parser
+   prohlížeče, ne náš regex. Dřív tu byl regex na javascript:, jenže
+   prohlížeč z URL vyhodí tabulátory a konce řádků kdekoli, takže
+   "java\tscript:" regexem prošlo a prohlížeč ho spustil. Vlastní regex
+   se s parserem rozejde vždycky; parser sám se sebou nikdy.
+   Seznam schválně nejde rozšířit — do atributu jde v praxi jen tohle. */
 var ATTR_ZAKAZANE = /^on/i;                              // onclick, onerror, …
-var ATTR_URL      = /^(href|src|action|formaction|xlink:href)$/i;
-var URL_ZAKAZANE  = /^[\s\u0000-\u001f]*(javascript|vbscript|data)\s*:/i;
+var ATTR_URL      = /^(href|src|action|formaction|xlink:href|data)$/i;
+var URL_SCHEMATA  = ['http:', 'https:', 'mailto:', 'tel:'];
+
+/* Relativní adresa (/x, ./x, #f, ?a=1) dostane schéma stránky, projde.
+   Nečitelná URL se zakazuje — selhat se má zavřeně. */
+function urlPovolena(v) {
+    try { return URL_SCHEMATA.indexOf(new URL(String(v), location.href).protocol) >= 0; }
+    catch (e) { return false; }
+}
 
 Fw.register('attr', function (c) {
     var jm = String(c.name || '');
     if (ATTR_ZAKAZANE.test(jm) || jm.toLowerCase() === 'srcdoc') {
         Fw.warn('attr: atribut ' + jm + ' je zakázaný'); return;
     }
-    if (c.value !== null && ATTR_URL.test(jm) && URL_ZAKAZANE.test(String(c.value))) {
+    if (c.value !== null && ATTR_URL.test(jm) && !urlPovolena(c.value)) {
         Fw.warn('attr: nepovolené schéma v ' + jm); return;
     }
     Fw.nodes(c.sel).forEach(function (el) {

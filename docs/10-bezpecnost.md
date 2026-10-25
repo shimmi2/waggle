@@ -362,7 +362,20 @@ Fw.access = {                     // výchozí, ve frameworku
 **V nepodepsané sadě schválně není `html`.** `innerHTML` sice nespustí
 `<script>`, ale `<img src=x onerror=…>` ano — `html` přes push nebo
 broadcast je tedy spuštění kódu, ne kreslení. Ze stejného důvodu tam není
-`attr` (umí `onclick`), `url`, `call`, `session` ani `subscribe`.
+`attr` (přepíše `href` odkazu, na který uživatel klikne), `url`, `call`,
+`session` ani `subscribe`.
+
+### Cizí data do atributu
+
+`attr` a `text` jsou bezpečné i s hodnotou od uživatele, `html` a `append`
+ne. `attr` odmítne atributy `on*` a `srcdoc` a u atributů s adresou (`href`,
+`src`, `action`, `formaction`, `xlink:href`, `data`) pustí jen schémata
+`http:`, `https:`, `mailto:`, `tel:` a relativní adresu. Seznam nejde
+rozšířit.
+
+O schématu rozhoduje parser prohlížeče (`new URL`), ne regulární výraz.
+Prohlížeč z adresy vyhodí tabulátory a konce řádků kdekoli, takže
+`java⇥script:` je pro něj `javascript:` — dřívější regex to pustil.
 
 ### Rozšíření patří do konfigurace instalace
 

@@ -120,7 +120,7 @@ Fw.init({ bff: '…', access: { broadcast: ['value', 'text', 'class', 'notify', 
 V nepodepsané sadě schválně **není `html`**: `innerHTML` sice nespustí
 `<script>`, ale `<img src=x onerror=…>` ano. `html` přes push nebo
 broadcast je tedy spuštění kódu, ne kreslení. Ze stejného důvodu tam není
-`attr` (umí `onclick`) ani `url`, `call`, `session` a `subscribe`.
+`attr` (přepíše `href` odkazu) ani `url`, `call`, `session` a `subscribe`.
 
 ### Podepsaná dávka
 
