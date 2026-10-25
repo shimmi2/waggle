@@ -25,11 +25,15 @@ Prázdný řádek nebo řádek samých mezer klient **zahodí** — toho využí
 | SSE přes nchan | server → klient, asynchronně | `push` |
 | `Fw.local()` | v rámci okna | `local` |
 
-Odesílání je **vždy** POST. Push je jen jednosměrný, server → klient.
+Klient posílá **vždy** POST. Server ale čte `$_REQUEST`, takže přijme
+i GET — záměrně, kvůli projektům, které na BFF odkazují obyčejným odkazem
+nebo ho volají `curl`em. Co nesmí do access logu (hesla, tokeny), patří
+do těla POST nebo do hlavičky, nikdy do URL. Push je jen jednosměrný,
+server → klient.
 
 ## Požadavek
 
-`POST` na `Fw.cfg.api`, tělo je `FormData` (takže `<input type=file>`
+`POST` na `Fw.cfg.bff`, tělo je `FormData` (takže `<input type=file>`
 funguje zadarmo). Povinné pole `function`, zbytek jsou parametry.
 
 | hlavička | význam |

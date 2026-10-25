@@ -18,5 +18,5 @@ define('AUTH_TTL',    3600);
 define('STREAM_SUB_PORT', 8443);                              // veřejně, TLS
 define('STREAM_PUB_URL',  'http://127.0.0.1:8081/nchan/pub'); // jen localhost
 define('STREAM_TTL',      3600);
-define('STREAM_PHP',      '/usr/bin/php8.4');                 // web jede na 7.4, worker ne
+define('STREAM_PHP',      '/usr/bin/php8.4');                 // interpret pro workera na pozadí
 define('STREAM_STORE',    __DIR__ . '/data/tokens.json');

@@ -153,7 +153,9 @@ kolize() {
     [ -n "$jmena" ] || return 0
     while IFS= read -r f; do
         [ -n "$f" ] || continue
-        hit="$(grep -rlE "^function +$f *\(" "$moje" --include='*.inc' --include='*.php' 2>/dev/null \
+        # Odsazená deklarace (uvnitř if (!function_exists(…)) {…}) kolidovat
+        # umí taky, a jména funkcí jsou v PHP bez ohledu na velikost písmen.
+        hit="$(grep -rliE "^[[:space:]]*function +$f *\(" "$moje" --include='*.inc' --include='*.php' 2>/dev/null \
                | grep -vE '/(io|fw)\.inc$' | while IFS= read -r h; do
                      for c in $cizi; do case "$h" in "$c"/*) continue 2 ;; esac; done
                      echo "$h"

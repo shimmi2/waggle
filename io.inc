@@ -61,7 +61,13 @@ function utf8_rez(string $v, int $max): string {
 }
 
 function in_int(string $name): int     { return intval(in_str($name, 32));   }
-function in_float(string $name): float { return floatval(in_str($name, 64)); }
+/* '1e999' je pro floatval() INF a INF ani NAN json_encode() neumí — celá
+   odpověď by pak odešla prázdná. Nekonečno z formuláře nikdo nemyslí
+   vážně, takže se bere jako nevyplněné. */
+function in_float(string $name): float {
+    $f = floatval(in_str($name, 64));
+    return is_finite($f) ? $f : 0.0;
+}
 
 /* "slovo" — bezpečné pro názvy funkcí a části cest. Čistý strspn, 41 ns.
    Pozor na jméno: is_* NIC NEČTE, jen odpoví ano/ne nad hodnotou, kterou
@@ -158,6 +164,12 @@ function json_text(array $data): string {
     $t = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
                           | JSON_INVALID_UTF8_SUBSTITUTE);
     if ($t !== false) { error_log('[fw] json_text: neplatné UTF-8 nahrazeno'); return $t; }
-    error_log('[fw] json_text selhal: ' . json_last_error_msg());
-    return '';
+    /* Poslední pokus: co nejde zakódovat (INF, NAN, rekurze), nahradí
+       json_encode nulou a zbytek odejde. Neúplná odpověď se ladí líp
+       než prázdná. */
+    $chyba = json_last_error_msg();
+    $t = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+                          | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR);
+    error_log('[fw] json_text: ' . $chyba . ($t !== false ? ' — odesláno částečně' : ''));
+    return $t === false ? '' : $t;
 }
