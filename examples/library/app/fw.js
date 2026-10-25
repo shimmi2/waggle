@@ -195,9 +195,16 @@ Fw.register('session', function (c) {
     Fw.debug('session ' + (Fw.session ? 'nastavena' : 'zrušena'));
 });
 
+/* Do historie jde ADRESA, kterou poslal server, ne požadavek, který
+   odpověď vyvolal. Dřív se ukládalo ctx.fn: akce, která skončila
+   vykreslením obrazovky (do_delete propadne do case 'books'), se tak
+   zapsala sama sebe a tlačítko Zpět ji poslalo znovu — bez data-confirm.
+   Teď o tom, kam se smí vracet, rozhoduje jen server. */
 Fw.register('history', function (c, ctx) {
     if (!ctx || ctx.history === false) { Fw.debug('history přeskočena'); return; }
-    history.pushState({ fw: { fn: ctx.fn, params: ctx.params } }, '', c.url || location.href);
+    var t = Fw.parseTarget(c.url);
+    if (!t.fn) { Fw.warn('history: url bez function — ' + c.url); return; }
+    history.pushState({ fw: { fn: t.fn, params: t.params } }, '', c.url);
 });
 
 /* call volá JEN to, co si aplikace sama zaregistrovala. Dřív se jméno

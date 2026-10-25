@@ -243,7 +243,7 @@ na kterou stejně nikdo nechce klikat:
 | op | pole | co dělá |
 |---|---|---|
 | `session` | `value` | nastaví token; `null` = odhlášení |
-| `history` | `url` | `pushState`; po submitu formuláře se ignoruje |
+| `history` | `url` | `pushState` adresy obrazovky; Zpět pošle tuhle adresu; po submitu formuláře se ignoruje |
 | `call` | `fn`, `args[]` | zavolá funkci z `Fw.callable` |
 | `subscribe` | `name`, `url`, `token`, `key` | otevře push kanál; `key` ověřuje podpis |
 | `unsubscribe` | `name` | zavře kanál; bez `name` všechny |

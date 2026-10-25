@@ -86,14 +86,18 @@ místě, a funguje to pod přísnou CSP. `Fw.send()` zůstává jako úniková c
 
 `X-App-Serial` se drží v `localStorage` i v cookie. Když neexistuje, vyrobí
 se z `crypto.randomUUID()`, případně z `getRandomValues`, v nouzi z času
-a náhody. Demo na něj váže session, takže odcizený token na jiném zařízení
-neprojde.
+a náhody. `basic_demo` na něj váže session — volitelná, spíš paranoidní technika,
+viz [10 — Bezpečnost](10-bezpecnost.md).
 
 ## Historie
 
-Příkaz `history` udělá `pushState` s popisem požadavku. Při `popstate` se
-požadavek **přehraje**. Po odeslání formuláře se `history` ignoruje —
-přehrávat POST tlačítkem Zpět je vždycky špatně.
+Příkaz `history` udělá `pushState` s adresou, kterou poslal server
+(`#?function=books&q=x`). Při `popstate` se pošle **tahle adresa**, ne
+požadavek, který odpověď vyvolal. Server tím sám určuje, na co se smí
+tlačítkem Zpět vracet: `history` patří k obrazovkám, nikdy do ní nedávej
+akci (`do_delete`). Akce, která skončí vykreslením obrazovky, se tak do
+historie zapíše jako ta obrazovka. Po odeslání formuláře se `history`
+ignoruje — přehrávat POST tlačítkem Zpět je vždycky špatně.
 
 ## Mezi okny
 
