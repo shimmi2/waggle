@@ -225,6 +225,12 @@ RedirectMatch 404 (?i)/\.(git|svn|hg|bzr)(/|$)
 <FilesMatch "^\.">
     Require all denied
 </FilesMatch>
+
+# bezpečnostní hlavičky, potřebuje mod_headers; CSP a proč takhle
+# viz 11 — Nasazení, Doporučené hlavičky
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "same-origin"
+Header always set Content-Security-Policy "frame-ancestors 'self'"
 ```
 
 **Po nasazení vždy ověř**, že soubor s přístupy vrací 403, ne 200:
@@ -253,6 +259,12 @@ location ~ \.php$ {
     include snippets/fastcgi-php.conf;
     fastcgi_pass unix:/var/run/php/php8.4-fpm.sock;
 }
+
+# bezpečnostní hlavičky; CSP a proč takhle viz 11 — Nasazení.
+# add_header v location {} ruší tyhle ze server {} — pak je zopakuj.
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "same-origin" always;
+add_header Content-Security-Policy "frame-ancestors 'self'" always;
 ```
 
 Kde direktivu nasadit nejde (cizí hosting, `AllowOverride None`), je jediná

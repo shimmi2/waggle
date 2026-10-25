@@ -55,6 +55,49 @@ základní adresa). Každá adresa sama dál dodržuje pravidlo výše.
 | tokeny kanálů | demo má JSON bez zamykání → Redis nebo databáze |
 | `STREAM_PHP` | pin na konkrétní binárku |
 | HTTPS | povinné, jinak nepůjde push |
+| hlavičky | doporučené, viz níže — rozhoduje správce nasazení |
+
+## Doporučené hlavičky
+
+Framework žádné bezpečnostní hlavičky nevynucuje. Stránka aplikace je
+statická, posílá ji webserver, a jen správce ví, jestli se má smět vložit
+do jiného portálu nebo odkud se načítají skripty. Tohle je doporučení:
+
+| hlavička | co dělá | proti čemu |
+|---|---|---|
+| `X-Content-Type-Options: nosniff` | prohlížeč nehádá typ souboru, platí `Content-Type` | nahraný „obrázek", který je ve skutečnosti HTML nebo JS |
+| `Content-Security-Policy: frame-ancestors 'self'` | stránku nesmí cizí web vložit do `<iframe>` | clickjacking — průhledná aplikace pod cizím tlačítkem potvrdí `data-confirm` |
+| `Content-Security-Policy: script-src 'self'` | spustí se jen skripty ze souborů na vlastním serveru | XSS — vložený `<script>` ani `onerror=` se neprovede; u tokenu v `localStorage` je to nejsilnější ochrana |
+| `Referrer-Policy: same-origin` | adresa stránky neodchází na cizí weby | hash s parametry v `Referer` |
+
+Waggle sám přísné `script-src` snese: `data-fw` místo `onclick`, `call`
+místo `<script>` ve fragmentu, `Fw.init()` patří do souboru (`app.js`),
+ne do `<script>` v HTML. Styly jsou jiná věc — `fw.js` vkládá element
+`<style>` pro překryv `busy` a fragmenty běžně nesou `style=`, takže
+`style-src` potřebuje `'unsafe-inline'`. Pro bezpečnost to podstatné
+není: CSS samo kód nespustí.
+
+`connect-src` musí pustit BFF a nchan, leží-li na jiném hostu.
+
+```apache
+# ve VirtualHost aplikace; potřebuje mod_headers (a2enmod headers)
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "same-origin"
+Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://bff.priklad.cz https://push.priklad.cz:8443; frame-ancestors 'self'"
+```
+
+```nginx
+# v server bloku aplikace. POZOR: add_header v location {} ruší všechny
+# add_header ze server {} — kdo ho v location má, musí je zopakovat.
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "same-origin" always;
+add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://bff.priklad.cz https://push.priklad.cz:8443; frame-ancestors 'self'" always;
+```
+
+Než CSP zapneš naostro, pusť ji jako `Content-Security-Policy-Report-Only`:
+prohlížeč nic neblokuje, jen do konzole vypíše, co by zablokoval.
+Šablony jako AdminLTE nebo Sneat občas vkládají vlastní inline skript —
+to se ukáže tady, ne až u uživatele.
 
 ## Apache
 
@@ -67,14 +110,14 @@ přes `progress_run` poskakuje po ~4 s. PHP přitom posílá dávky přesně po
 Oprava vyžaduje zásah do konfigurace:
 
 ```apache
-<Proxy "unix:/var/run/php/php7.4-fpm.sock|fcgi://framework-stream/">
+<Proxy "unix:/var/run/php/php8.4-fpm.sock|fcgi://framework-stream/">
     ProxySet flushpackets=on
 </Proxy>
 ```
 ```apache
 # .htaccess v adresáři, který streamuje
 <FilesMatch "\.php$">
-    SetHandler "proxy:unix:/var/run/php/php7.4-fpm.sock|fcgi://framework-stream"
+    SetHandler "proxy:unix:/var/run/php/php8.4-fpm.sock|fcgi://framework-stream"
 </FilesMatch>
 ```
 
