@@ -9,6 +9,10 @@ examples/library/api/config.inc
 examples/library/bff/config.inc
 examples/library/app/config.js
 
+# Povolení webového instaláku — vytváří ho ručně správce serveru,
+# instalák ho po sobě smaže. V repozitáři nemá co dělat.
+examples/library/INSTALL_ALLOWED
+
 # Prohlížitelná dokumentace se generuje: php doc/build.php
 doc/index.html
 

@@ -31,8 +31,10 @@ Dvě cesty a dělí je to, jestli mají být vrstvy **doopravdy** oddělené.
 
 ### `install.php` — z webu, do místa
 
-Nahraj adresář na hosting, otevři `install.php` v prohlížeči, vyplň přístup
-k databázi. Zprovozní to, co jsi nahrál: vytvoří schéma, naplní data,
+Nahraj adresář na hosting, vytvoř v něm prázdný soubor `INSTALL_ALLOWED`
+(`touch INSTALL_ALLOWED`, nebo přes FTP), otevři `install.php` v prohlížeči
+a vyplň přístup k databázi. Bez toho souboru instalák odmítne běžet — je to
+pojistka, aby čerstvě nahranou instalaci nedokončil někdo cizí. Zprovozní to, co jsi nahrál: vytvoří schéma, naplní data,
 napíše tři konfigurace, zkontroluje se a **smaže se**.
 
 Všechny tři vrstvy zůstanou pod jednou doménou, takže datové API je

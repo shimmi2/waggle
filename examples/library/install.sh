@@ -145,8 +145,8 @@ php -r '
 [$_, $sab, $cil, $json] = $argv;
 $t = file_get_contents($sab);
 foreach (json_decode($json, true) as $k => $v)
-    $t = preg_replace("/define\(\x27" . preg_quote($k, "/") . "\x27,\s*[^)]*\)/",
-                      "define(\x27$k\x27, " . var_export($v, true) . ")", $t, 1);
+    $t = preg_replace_callback("/define\(\x27" . preg_quote($k, "/") . "\x27,\s*[^)]*\)/",
+                      fn() => "define(\x27$k\x27, " . var_export($v, true) . ")", $t, 1);
 file_put_contents($cil, $t);
 ' "$SRC/api/config.example.inc" "$API_DIR/config.inc" "$(php -r '
 echo json_encode(["DB_DSN"=>"mysql:host=".$argv[1].";dbname=".$argv[2].";charset=utf8mb4",
@@ -157,8 +157,8 @@ php -r '
 [$_, $sab, $cil, $json] = $argv;
 $t = file_get_contents($sab);
 foreach (json_decode($json, true) as $k => $v)
-    $t = preg_replace("/define\(\x27" . preg_quote($k, "/") . "\x27,\s*[^)]*\)/",
-                      "define(\x27$k\x27, " . var_export($v, true) . ")", $t, 1);
+    $t = preg_replace_callback("/define\(\x27" . preg_quote($k, "/") . "\x27,\s*[^)]*\)/",
+                      fn() => "define(\x27$k\x27, " . var_export($v, true) . ")", $t, 1);
 file_put_contents($cil, $t);
 ' "$SRC/bff/config.example.inc" "$BFF_DIR/config.inc" "$(php -r '
 echo json_encode(["API_URL"=>rtrim($argv[1],"/"),"FRONTEND_URL"=>rtrim($argv[2],"/"),

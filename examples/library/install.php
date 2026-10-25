@@ -15,9 +15,15 @@
  *  Tenhle soubor umí založit databázi a admina. Dokud leží ve webu, je
  *  to vzdálené převzetí serveru pro kohokoli, kdo na něj trefí. Proto:
  *
+ *    - odmítne běžet, dokud vedle něj neleží soubor INSTALL_ALLOWED —
+ *      ten vytvoří jen ten, kdo má k serveru přístup (SSH, FTP, správce
+ *      souborů hostingu), takže čerstvou instalaci nedokončí cizí,
  *    - odmítne běžet, když už config.inc existuje (instalace hotova),
- *    - odmítne běžet bez HTTPS, protože se do něj píše heslo k databázi,
- *    - po dokončení se sám smaže a ověří si to stažením přes HTTP.
+ *    - po dokončení smaže INSTALL_ALLOWED i sám sebe a ověří si to
+ *      stažením přes HTTP.
+ *
+ *  HTTPS nevynucuje. Jak se k serveru přenáší heslo, je věc nasazení
+ *  a toho, kdo server spravuje — instalák mu do toho nemluví.
  *
  *  Přístupové údaje pro vytvoření schématu se NIKAM nezapisují. Žijí jen
  *  v té jedné POST proměnné a do config.inc se nedostanou.
@@ -30,6 +36,7 @@ const KROK_DIR  = __DIR__;
 const CFG_API   = KROK_DIR . '/api/config.inc';
 const CFG_BFF   = KROK_DIR . '/bff/config.inc';
 const CFG_APP   = KROK_DIR . '/app/config.js';
+const POVOLENI  = KROK_DIR . '/INSTALL_ALLOWED';
 
 /* Escapování z knihovny. Instalák měl vlastní, pojmenované jedním
    písmenem, a nemělo ENT_SUBSTITUTE — bez něj vrací htmlspecialchars()
@@ -54,12 +61,15 @@ if (is_file(CFG_API))
           . 'Jestli chceš instalovat znovu, smaž ho ručně; tenhle instalák '
           . 'hotovou instalaci nepřepíše, aby ji nešlo přepsat zvenčí.';
 
-$https = ($_SERVER['HTTPS'] ?? '') !== '' || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
-         || in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true);
-if ($blok === null && !$https)
-    $blok = 'Tohle spojení není zabezpečené. Do formuláře se píše heslo k databázi '
-          . 'a po nezašifrovaném spojení ho přečte každý po cestě. '
-          . 'Zprovozni HTTPS, nebo instaluj z localhostu.';
+/* Důkaz, že instalaci spouští správce serveru, a ne první, kdo na
+   install.php trefí. Soubor se nedá vytvořit z webu, jen přístupem
+   k disku; obsah je jedno, stačí prázdný. */
+if ($blok === null && !is_file(POVOLENI))
+    $blok = 'Instalace není povolená. Vytvoř v adresáři příkladu prázdný soubor '
+          . '<code>INSTALL_ALLOWED</code> (třeba <code>touch INSTALL_ALLOWED</code>, '
+          . 'nebo ho nahraj přes FTP či správce souborů hostingu) a obnov tuhle stránku. '
+          . 'Je to pojistka, aby čerstvě nahranou instalaci nedokončil někdo cizí. '
+          . 'Po instalaci se soubor smaže sám.';
 
 /* ---- prostředí ----------------------------------------------------- */
 $kontroly = [
@@ -176,15 +186,27 @@ if ($blok === null && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $povinne_
               . ($_SERVER['HTTP_HOST'] ?? 'localhost')
               . rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/');
         $sab = fn(string $f) => (string)file_get_contents($f);
+        /* Hodnota jde do PHP přes var_export() a do šablony přes callback.
+           Dřív se escapoval jen apostrof a hodnota šla do náhradního
+           řetězce preg_replace: heslo končící \ rozbilo config.inc
+           (parse error) a z hesla ab$1cd se tiše stalo abcd. */
         $nahrad = function (string $t, array $m): string {
             foreach ($m as $k => $v)
-                $t = preg_replace("/define\('" . preg_quote($k, '/') . "',\s*[^)]*\)/",
-                                  "define('$k', " . $v . ")", $t, 1);
+                $t = preg_replace_callback("/define\('" . preg_quote($k, '/') . "',\s*[^)]*\)/",
+                                           fn() => "define('$k', $v)", $t, 1);
             return $t;
         };
-        $s = fn(string $v) => "'" . str_replace("'", "\\'", $v) . "'";
+        $s = fn(string $v) => var_export($v, true);
+        /* Config, který nejde načíst, je horší než žádný: aplikace spadne
+           a nikdo neví proč. Proto se ověří dřív, než se zapíše. */
+        $zapis = function (string $f, string $t): void {
+            try { token_get_all($t, TOKEN_PARSE); }
+            catch (ParseError $e) { throw new RuntimeException('Vygenerovaný ' . basename(dirname($f)) . '/'
+                                    . basename($f) . ' nejde načíst: ' . $e->getMessage()); }
+            file_put_contents($f, $t);
+        };
 
-        file_put_contents(CFG_API, $nahrad($sab(KROK_DIR . '/api/config.example.inc'), [
+        $zapis(CFG_API, $nahrad($sab(KROK_DIR . '/api/config.example.inc'), [
             'DB_DSN'  => $s("mysql:host=$host;dbname=$dbnam;charset=utf8mb4"),
             'DB_USER' => $s($duser),
             'DB_PASS' => $s($dpass),
@@ -192,7 +214,7 @@ if ($blok === null && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $povinne_
             'BFF_URL' => $s("$base/bff"),
             'UNSAFE_DEMO' => 'true',
         ]));
-        file_put_contents(CFG_BFF, $nahrad($sab(KROK_DIR . '/bff/config.example.inc'), [
+        $zapis(CFG_BFF, $nahrad($sab(KROK_DIR . '/bff/config.example.inc'), [
             'API_URL'      => $s("$base/api"),
             'FRONTEND_URL' => $s("$base/app"),
             'BFF_CACHE_DIR'=> $s(sys_get_temp_dir() . '/knihovna-sessions'),
@@ -230,6 +252,7 @@ if ($blok === null && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $povinne_
         }
 
         /* ---- a teď sám sebe --------------------------------------- */
+        @unlink(POVOLENI);
         @unlink(__FILE__);
         $kod = zkus_stahnout(basename(__FILE__));
         $smazan = ($kod !== null && $kod >= 400) || !is_file(__FILE__);
