@@ -414,13 +414,16 @@ znovu. U kreslení je to neškodné, u `session` by to byla podvržená session.
 
 ## CORS
 
-`fw_cors()` odráží **jakýkoli** Origin, dokud se nenastaví `FW_CORS`:
+Ve výchozím stavu (`FW_CORS = ''`) framework žádné CORS hlavičky
+neposílá: aplikace a BFF na stejném původu je nepotřebují. Při rozdělení
+na hosty se CORS zapíná v konfiguraci, buď seznamem adres, nebo `'*'`:
 
 ```php
 define('FW_CORS', 'https://app.priklad.cz,https://admin.priklad.cz');
+define('FW_CORS', '*');      // odrazí jakýkoli Origin
 ```
 
-Výchozí `'*'` je kvůli zpětné kompatibilitě, ne proto, že by byla správná.
+`'*'` posílá i `Access-Control-Allow-Credentials: true`, stejně jako seznam.
 Sama o sobě to díra není: token sezení jde hlavičkou a leží v
 `localStorage`, takže cizí stránka se k němu nedostane a dostane jen
 přihlašovací obrazovku. U aplikace, která se drží cookie — typicky

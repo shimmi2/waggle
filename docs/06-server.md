@@ -221,7 +221,7 @@ hodnoty tím, že si je nadefinuje **před** načtením `fw.inc`:
 |---|---|---|
 | `FW_V` | `1` | verze protokolu |
 | `FW_MAXLEN` | `65536` | **tvrdý** strop délky pole; `in_str()` si o víc říct nemůže |
-| `FW_CORS` | `'*'` | `'*'` odrazí jakýkoli Origin, nebo seznam adres oddělený čárkami |
+| `FW_CORS` | `''` | `''` žádné CORS (stejný původ), `'*'` odrazí jakýkoli Origin, nebo seznam adres oddělený čárkami |
 | `FW_DEBUG` | `false` | chybová hláška prozradí cesty |
 | `FW_STREAM_PAD` | `8192` | výplň pro `fw_stream_start()` |
 

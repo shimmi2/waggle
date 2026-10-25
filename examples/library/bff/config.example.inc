@@ -17,6 +17,11 @@ define('API_URL', 'https://api.mojedomena.cz');
    Adresa frontendu, kvůli CORS. Jedna konkrétní, nikdy '*'. */
 define('FRONTEND_URL', 'https://www.mojedomena.cz');
 
+/* Z frontendu jen původ (schéma, host, port): Origin cestu nenese,
+   a instalák do FRONTEND_URL cestu píše (…/app). Leží-li frontend
+   na stejném původu jako BFF, CORS se vůbec neuplatní. */
+define('FW_CORS', preg_replace('~^([a-z][a-z0-9+.-]*://[^/]+).*$~i', '$1', FRONTEND_URL));
+
 /* ---- krátká paměť na to, kdo je přihlášen --------------------------
    BFF si na chvíli pamatuje id, jméno a oprávnění, aby se backendu
    neptal při každém kliknutí. Ušetří to jedno HTTP volání na klik.

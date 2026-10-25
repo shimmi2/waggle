@@ -25,9 +25,10 @@ require_once __DIR__ . '/io.inc';
 
 defined('FW_RELEASE')    || define('FW_RELEASE', '1.9.1');
 defined('FW_V')          || define('FW_V', 1);
-/* '*' = odrazit jakýkoli Origin (jak to bylo vždycky), nebo seznam adres
-   oddělený čárkami: 'https://app.priklad.cz,https://admin.priklad.cz'. */
-defined('FW_CORS')       || define('FW_CORS', '*');
+/* '' = žádné CORS, BFF je na stejném původu jako aplikace (výchozí);
+   '*' = odrazit jakýkoli Origin; nebo seznam adres oddělený čárkami:
+   'https://app.priklad.cz,https://admin.priklad.cz'. */
+defined('FW_CORS')       || define('FW_CORS', '');
 defined('FW_DEBUG')      || define('FW_DEBUG', false);    // true = chyby prozradí cesty
 defined('FW_STREAM_PAD') || define('FW_STREAM_PAD', 8192); // viz fw_stream_start()
 
@@ -63,17 +64,20 @@ function fw_start_output(): void {
 
 /* CORS — aby BFF mohlo v produkci žít na jiném hostu než frontend.
  *
- *  FW_CORS je buď '*' (odrazí jakýkoli Origin), nebo seznam adres
- *  oddělený čárkami. Výchozí je '*', protože to tak framework dělal
- *  odjakživa a zúžení by rozbilo běžící projekty — ale na produkci to
- *  patří vyplnit. Díra to sama o sobě není: token sezení jde hlavičkou
- *  a leží v localStorage, takže cizí stránka se k němu nedostane a
- *  dostane jen přihlašovací obrazovku. U aplikace, která se drží cookie
- *  (typicky migrovaný monolit), je to ale zásadní rozdíl.
+ *  FW_CORS je '' (žádné CORS), '*' (odrazí jakýkoli Origin), nebo seznam
+ *  adres oddělený čárkami. Výchozí je '': dokud aplikace a BFF leží na
+ *  stejném původu, CORS není potřeba a nemá se otevírat. Kdo je rozdělí
+ *  na hosty, CORS zapne vědomě — '*' nebo seznamem.
  *
- *  Odpovědnost se tím přenáší na toho, kdo nasazuje, a to je správně —
- *  jen on ví, kolik hostů má a jak se jmenují. */
+ *  '*' sama o sobě díra není: token sezení jde hlavičkou a leží
+ *  v localStorage, takže cizí stránka se k němu nedostane a dostane jen
+ *  přihlašovací obrazovku. U aplikace, která se drží cookie (typicky
+ *  migrovaný monolit), je to ale zásadní rozdíl — tam patří seznam.
+ *
+ *  Při '' se hlavičky nesahají vůbec, ani se neodebírají: projekt, který
+ *  si CORS skládá sám, tím nepřijde o své. */
 function fw_cors(): void {
+    if (FW_CORS === '') return;
     $o = in_header('Origin');
     if ($o === '') return;
 

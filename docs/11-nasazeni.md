@@ -11,8 +11,11 @@ push navíc `EventSource`, synchronizace mezi okny `BroadcastChannel`.
 Aplikace zná jedinou adresu: `Fw.init({bff: '…'})`. Nic víc. Proto může
 `/app` a `/api` ležet kdekoli, i na jiných hostech.
 
-Při rozdělení na hosty je potřeba CORS — `fw_boot()` odbaví preflight
-a `fw_cors()` odráží `Origin`. Zvaž, jestli origin neomezit na seznam.
+Při rozdělení na hosty je potřeba CORS a ten je ve výchozím stavu
+vypnutý. Zapíná se v konfiguraci projektu — `define('FW_CORS', '*')`,
+nebo raději seznamem adres. `fw_boot()` pak odbaví preflight a
+`fw_cors()` odráží `Origin`. Bez toho prohlížeč volání z jiného hostu
+zablokuje a v konzoli ohlásí chybu CORS.
 
 ### Adresa je kořen, parametry jsou v dotazu
 

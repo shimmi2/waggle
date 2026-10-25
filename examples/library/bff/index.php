@@ -23,28 +23,9 @@ require __DIR__ . '/inc/ui.inc';
 
 fw_boot();
 
-/* CORS zúžený na jedinou adresu.
- *
- *  fw_cors() ve frameworku odráží jakýkoli Origin. Díra to není — token
- *  sezení jde hlavičkou a leží v localStorage, takže cizí stránka se
- *  k němu nedostane a dostane jen přihlašovací obrazovku. Ale je to
- *  volnější, než je tu potřeba: frontend má jednu adresu a nikdo jiný
- *  tohle BFF z prohlížeče volat nemá.
- *
- *  header() se stejným jménem předchozí hodnotu přepíše, takže stačí
- *  zavolat ji po fw_boot().
- */
-$origin = in_header('Origin');
-if ($origin !== '') {
-    if ($origin === rtrim(FRONTEND_URL, '/')) {
-        header('Access-Control-Allow-Origin: ' . $origin);
-    } else {
-        /* Nic neposlat je správná odpověď: prohlížeč spojení zablokuje
-           sám a my nemusíme řešit, jestli vrátit 403 nebo mlčet. */
-        header_remove('Access-Control-Allow-Origin');
-        header_remove('Access-Control-Allow-Credentials');
-    }
-}
+/* CORS řeší fw_cors() podle FW_CORS z config.inc — tam je odvozený
+   z FRONTEND_URL, takže sem smí jen frontend. Vlastní hlavičky by
+   nepomohly: preflight odbaví už fw_boot() a sem nedojde. */
 
 $SESSION  = in_header('X-App-Session');
 $function = in_str('function', 64);
