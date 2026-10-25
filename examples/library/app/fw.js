@@ -597,12 +597,16 @@ Fw.text = function (txt, ctx) {
     }, Promise.resolve());
 };
 
-/* Ověření podpisu dávky. Vrací promise, protože WebCrypto je asynchronní.
-   Bez crypto.subtle (nezabezpečený kontext) se NEOVĚŘUJE a dávka propadne
-   na nepodepsanou sadu — selhat se má zavřeně, ne otevřeně. */
+/* Umí tenhle prohlížeč podpis vůbec ověřit? crypto.subtle je jen
+   v zabezpečeném kontextu (https, localhost) — na http:// chybí. */
+Fw.canVerify = function () {
+    return typeof crypto !== 'undefined' && !!crypto.subtle && typeof TextEncoder !== 'undefined';
+};
+
+/* Ověření podpisu dávky. Vrací promise, protože WebCrypto je asynchronní. */
 Fw.verify = function (key, data, sigHex) {
-    var c = (typeof crypto !== 'undefined') && crypto.subtle;
-    if (!key || !sigHex || !c || typeof TextEncoder === 'undefined') return Promise.resolve(false);
+    var c = Fw.canVerify() && crypto.subtle;
+    if (!key || !sigHex || !c) return Promise.resolve(false);
     var enc = new TextEncoder();
     return c.importKey('raw', enc.encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
         .then(function (k) { return c.sign('HMAC', k, enc.encode(data)); })
@@ -625,9 +629,25 @@ Fw.line = function (line, ctx) {
     try { batch = JSON.parse(line); }
     catch (e) { Fw.error('Neplatná odpověď serveru'); Fw.debug('parse fail', line); return Promise.resolve(); }
 
-    /* Podepsaná dávka: cmds přišly jako řetězec v p, podepsaný je právě on. */
+    /* Podepsaná dávka: cmds přišly jako řetězec v p, podepsaný je právě on.
+
+       Dvě různá selhání, dvě různé odpovědi:
+         - podpis NEJDE ověřit (http:// bez crypto.subtle, nebo klíč
+           nedorazil) — dávka propadne na NEPODEPSANOU sadu. Nic tím
+           neotevřeme: tutéž sadu dostane kdokoli i bez podpisu.
+         - podpis NESEDÍ — dávka je podvržená nebo pokažená, zahodí se.
+       Dřív se zahazovalo v obou případech, takže na http:// zmizel
+       každý podepsaný push beze stopy, ačkoli dokumentace slibovala
+       propadnutí. */
     if (batch && typeof batch.p === 'string') {
         var klic = (ctx && ctx.sub) ? Fw.subKeys[ctx.sub] : null;
+        if (!klic || !Fw.canVerify()) {
+            var nc;
+            try { nc = JSON.parse(batch.p); }
+            catch (e) { Fw.error('Neplatná odpověď serveru'); return Promise.resolve(); }
+            Fw.debug('<- podepsaná dávka bez ověření, jako nepodepsaná (' + nc.length + ' příkazů)', nc);
+            return Fw.dispatch({ v: batch.v, cmds: nc }, ctx);
+        }
         return Fw.verify(klic, batch.p, batch.sig).then(function (ok) {
             if (!ok) { Fw.warn('dávka s neplatným podpisem zahozena'); return; }
             var cmds;

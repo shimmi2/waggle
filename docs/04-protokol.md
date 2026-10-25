@@ -149,7 +149,8 @@ neprojde.
 
 Ověřuje se HMAC-SHA256 přes WebCrypto. Bez `crypto.subtle` (tedy mimo
 zabezpečený kontext) se neověřuje a dávka propadne na nepodepsanou sadu —
-selhat se má zavřeně.
+selhat se má zavřeně. Totéž, když klíč ke kanálu nedorazil.
+Dávka, jejíž podpis ověřit jde a **nesedí**, se zahodí celá.
 
 I podepsaná sada je **užší než `response`**: nejsou v ní `session`,
 `call`, `url` ani `subscribe`. Push jde přes broker, takže odchycenou
