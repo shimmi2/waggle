@@ -136,6 +136,25 @@ require "$PAGES/$function.inc";           // původní soubor beze změny
 finish_direct_answer();                   // buffer -> příkaz html
 ```
 
+## Hluboké odkazy
+
+Klient s `deepLinks: true` pošle při startu do `index` parametr `fw_route`
+s obsahem hashe (`function=books&q=x`). Hash napíše kdokoli, kdo uživateli
+pošle odkaz, takže se otevře jen obrazovka, kterou BFF **výslovně
+vyjmenuje**:
+
+```php
+if ($function === 'index' && ($r = fw_route(['books', 'genres', 'rentals']))) {
+    [$function, $p] = $r;
+    $_REQUEST = $p + $_REQUEST;
+}
+```
+
+`fw_route()` vrátí `[funkce, parametry]`, nebo `null`, když odkaz chybí nebo
+míří mimo seznam — pak se pokračuje úvodní obrazovkou. Akce (`do_delete`)
+do seznamu nepatří nikdy: odkaz zvenku by ji provedl jménem toho, kdo na něj
+klikl. Server bez seznamu `fw_route` prostě nečte a chová se jako dřív.
+
 ## Stream
 
 ```php
@@ -239,3 +258,4 @@ hodnoty tím, že si je nadefinuje **před** načtením `fw.inc`:
 | `fw_stream_start()` | zahájení streamu |
 | `fw_busy()`, `fw_busy_done()`, `fw_busy_off()` | překryv „pracuji" |
 | `fw_publish()` | publikace do push kanálu |
+| `fw_route()` | hluboký odkaz jen na vyjmenované obrazovky |

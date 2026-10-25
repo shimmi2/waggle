@@ -173,6 +173,28 @@ function fw_stream_start(): void {
  *  až s ní.
  * ------------------------------------------------------------------- */
 
+/* Hluboký odkaz. Klient s deepLinks posílá při startu do index parametr
+ * fw_route — obsah hashe z adresy, např. "function=books&q=x". Hash ale
+ * může napsat kdokoli, kdo uživateli pošle odkaz, takže se otevře JEN
+ * obrazovka, kterou BFF výslovně vyjmenuje. Akce (do_delete…) do seznamu
+ * nepatří nikdy: odkaz zvenku by ji provedl jménem toho, kdo klikl.
+ *
+ *     if ($function === 'index' && ($r = fw_route(['books', 'genres']))) {
+ *         [$function, $p] = $r;
+ *         $_REQUEST = $p + $_REQUEST;
+ *     }
+ *
+ * Vrací [funkce, parametry], nebo null, když odkaz chybí nebo míří jinam. */
+function fw_route(array $obrazovky): ?array {
+    $r = in_str('fw_route', 2048);
+    if ($r === '') return null;
+    parse_str($r, $p);
+    $fn = $p['function'] ?? '';
+    if (!is_string($fn) || !is_word($fn) || !in_array($fn, $obrazovky, true)) return null;
+    unset($p['function'], $p['fw_route']);
+    return [$fn, $p];
+}
+
 function fw_busy(string $sel, string $text = '', ?int $pct = null): array {
     $c = ['op' => 'busy', 'sel' => $sel];
     if ($text !== '')     $c['text'] = $text;

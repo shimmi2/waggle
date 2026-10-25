@@ -135,7 +135,9 @@ if (!window.LIB_BFF_URL) {
         '<code>config.example.js</code> a doplň ji, nebo pusť instalák.</p></div></div>';
 } else {
     Fw.init({ bff: window.LIB_BFF_URL,
-              access: window.LIB_FW_ACCESS || undefined });
+              access: window.LIB_FW_ACCESS || undefined,
+              restore:   window.LIB_FW_RESTORE !== false,
+              deepLinks: window.LIB_FW_DEEPLINKS === true });
 }
 
 })();

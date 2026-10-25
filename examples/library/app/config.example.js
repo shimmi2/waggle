@@ -35,3 +35,21 @@ window.LIB_BFF_URL = 'https://backend.mojedomena.cz/';
  *  Zakomentovaný příklad: povolit mezi okny i html.
  * ------------------------------------------------------------------- */
 // window.LIB_FW_ACCESS = { broadcast: ['value', 'text', 'class', 'notify', 'html'] };
+
+/* ---------------------------------------------------------------------
+ *  Co se stane po reloadu a s odkazem zvenku
+ *
+ *  LIB_FW_RESTORE — po F5 nebo návratu do záložky se otevře obrazovka,
+ *  na které uživatel byl. Výchozí zapnuto. Vypni, kde má každé otevření
+ *  začít nanovo (bankovnictví, kiosek).
+ *
+ *  LIB_FW_DEEPLINKS — odkaz poslaný kolegovi (#?function=books&q=…)
+ *  otevře tu obrazovku. Výchozí vypnuto.
+ *
+ *  POZOR: obrazovky, které smí odkaz zvenku otevřít, je třeba EXPLICITNĚ
+ *  vyjmenovat v BFF — v bff/index.php seznam HLUBOKE_ODKAZY. Co tam není,
+ *  skončí na úvodní obrazovce. Akce tam nepatří nikdy: odkaz by ji
+ *  provedl jménem toho, kdo na něj klikne.
+ * ------------------------------------------------------------------- */
+// window.LIB_FW_RESTORE   = false;
+// window.LIB_FW_DEEPLINKS = true;

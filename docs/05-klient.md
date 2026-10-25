@@ -18,15 +18,30 @@ Fw.init({
     api:     '../api/',            // jediná povinná informace
     debug:   true,                 // logování do konzole
     params:  { skin: 'lte' },      // přidá se ke KAŽDÉMU požadavku
-    channel: 'fw:moje-app'         // kanál mezi okny; false = vypnout
+    channel: 'fw:moje-app',        // kanál mezi okny; false = vypnout
+    restore:   true,               // po reloadu otevřít poslední obrazovku
+    deepLinks: false               // odkaz zvenku poslat serveru jako fw_route
 });
 ```
+
+**Po reloadu a s odkazem zvenku.** S `restore` (výchozí zapnuto) pošle
+`init()` místo `index` obrazovku z `history.state` — tu tam zapsal příkaz
+`history`, tedy server, a je to vždy adresa obrazovky, nikdy akce. Vypíná
+se tam, kde má každé otevření začít nanovo, typicky bankovnictví.
+
+Odkaz zvenku (záložka, odkaz od kolegy) stav nemá, jen hash v adrese — a ten
+napíše kdokoli. Proto se s `deepLinks` **neposílá jako funkce**: odejde do
+`index` jako parametr `fw_route` a server rozhodne sám. Obrazovky, které
+smí odkaz otevřít, **musí BFF výslovně vyjmenovat** — `fw_route()` ve
+[06 — Server](06-server.md). Akce do seznamu nepatří nikdy: odkaz
+`#?function=do_delete&id=42` by ji provedl jménem toho, kdo na něj klikl.
 
 Bez `channel` se použije `'fw:' + location.pathname`, aby si dvě aplikace
 na stejném hostu nepřepisovaly stav.
 
 `init()` vyprázdní a schová `#fw_error`, vyzvedne sériové číslo instalace,
-obnoví session z `localStorage`, naváže posluchače a pošle `index`.
+obnoví session z `localStorage`, naváže posluchače a pošle `index`
+(nebo obrazovku podle `restore`, viz výše).
 
 ## Odesílání
 

@@ -32,6 +32,18 @@ $function = in_str('function', 64);
 if ($function === '') $function = 'index';
 if (!is_word($function)) throw_http_error(400, 'Neplatný název obrazovky');
 
+/* Hluboké odkazy: obrazovky, které smí otevřít odkaz zvenku (záložka,
+   odkaz od kolegy). JEN obrazovky, nikdy akce — do_return v seznamu by
+   znamenal, že odkaz vrátí knihu jménem toho, kdo na něj klikne.
+   Klient je posílá, jen když má v config.js zapnuté LIB_FW_DEEPLINKS.
+   Nepřihlášený zůstane na index, tedy na přihlašovací obrazovce — jinak
+   by místo ní dostal holé 401 obrazovky, na kterou nemá. */
+const HLUBOKE_ODKAZY = ['books', 'genres', 'rentals', 'statistics', 'users'];
+if ($function === 'index' && ($r = fw_route(HLUBOKE_ODKAZY)) && me() !== null) {
+    [$function, $p] = $r;
+    $_REQUEST = $p + $_REQUEST;
+}
+
 /* ---------------------------------------------------------------------
  *  Kanál pro push. Odvozuje se ze tokenu sezení a nikde se neukládá —
  *  dvě hodnoty s vlastní životností by se rozešly a projevilo by se to

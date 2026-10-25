@@ -24,7 +24,8 @@ var RELEASE  = '1.9.2';    // vydání knihovny, mění se nezávisle na protoko
 
 var Fw = {
     release: RELEASE,
-    cfg:     { bff: '../bff/', debug: false, channel: null, params: null },
+    cfg:     { bff: '../bff/', debug: false, channel: null, params: null,
+               restore: true, deepLinks: false },
     session: null,        // token; server ho mění příkazem {"op":"session"}
     serial:  null,        // trvalá identifikace instalace v prohlížeči
     ops:     {},          // registr operací
@@ -204,7 +205,11 @@ Fw.register('history', function (c, ctx) {
     if (!ctx || ctx.history === false) { Fw.debug('history přeskočena'); return; }
     var t = Fw.parseTarget(c.url);
     if (!t.fn) { Fw.warn('history: url bez function — ' + c.url); return; }
-    history.pushState({ fw: { fn: t.fn, params: t.params } }, '', c.url);
+    var st = { fw: { fn: t.fn, params: t.params } };
+    /* První obrazovka po init() záznam nepřidává, jen přepíše ten, na
+       kterém stránka stojí — jinak by po reloadu bylo Zpět o krok delší. */
+    if (ctx.history === 'replace') history.replaceState(st, '', c.url);
+    else                           history.pushState(st, '', c.url);
 });
 
 /* call volá JEN to, co si aplikace sama zaregistrovala. Dřív se jméno
@@ -560,7 +565,8 @@ Fw.send = function (fn, params, opts) {
     /* Parametry aplikace se přidají ke každému požadavku (skin, tenant, jazyk). */
     for (var pk in Fw.cfg.params) if (!body.has(pk)) body.set(pk, Fw.cfg.params[pk]);
     var ctx = { origin: 'response', seq: ++Fw._seq, fn: fn,
-                params: Fw.fromFormData(body), history: opts.history !== false };
+                params: Fw.fromFormData(body),
+                history: opts.history === undefined ? true : opts.history };
     Fw.debug('-> ' + fn, ctx.params);
     return fetch(Fw.cfg.bff, { method: 'POST', body: body, headers: Fw.headers(),
                                credentials: 'same-origin' })
@@ -921,7 +927,26 @@ Fw.init = function (cfg) {
     Fw.busyStyle();
     Fw.bind();
     Fw.debug('init, serial=' + Fw.serial + ', session=' + (Fw.session ? 'ano' : 'ne'));
-    return Fw.send('index', {}, { history: false });
+
+    /* Kam se po startu vrátit.
+
+       restore — po reloadu (F5) nebo návratu do záložky se pošle obrazovka
+       z history.state. Ten zapsal příkaz history, tedy SERVER, a je v něm
+       jen adresa obrazovky, nikdy akce — přehrát ho je stejně bezpečné
+       jako tlačítko Zpět. Vypíná se tam, kde má každé otevření začít
+       nanovo (bankovnictví).
+
+       deepLinks — odkaz zvenku (záložka, odkaz od kolegy) stav nemá, jen
+       hash. Ten může napsat kdokoli, takže se NEPOSÍLÁ jako funkce: odejde
+       do index jako parametr fw_route a server sám rozhodne, jestli je to
+       obrazovka, kterou smí otevřít (fw_route() ve fw.inc). Jinak by
+       odkaz #?function=do_delete&id=42 provedl akci jménem toho, kdo na
+       něj klikl. */
+    var st = Fw.cfg.restore && history.state && history.state.fw;
+    if (st && st.fn) return Fw.send(st.fn, st.params || {}, { history: 'replace' });
+    var p = {}, h = location.hash.replace(/^#\??/, '');
+    if (Fw.cfg.deepLinks && Fw.parseTarget(location.hash).fn) p.fw_route = h;
+    return Fw.send('index', p, { history: 'replace' });
 };
 
 global.Fw = Fw;
