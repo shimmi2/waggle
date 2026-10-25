@@ -913,10 +913,14 @@ Fw.init = function (cfg) {
     var box = document.getElementById('fw_error');
     if (box) { box.textContent = ''; box.style.display = 'none'; }
 
-    /* Kanál mezi okny: implicitně podle cesty aplikace, ať si dvě různé
-       aplikace na stejném hostu nepřepisují stav. cfg.channel=false vypne. */
+    /* Kanál mezi okny: implicitně podle ADRESÁŘE aplikace. Jiná doména je
+       oddělená sama (BroadcastChannel nepřekročí origin), v rámci domény
+       rozhoduje adresář — /app/ a /app/index.html jsou tatáž aplikace
+       a jeden kanál. Dvě stránky v jednom adresáři (app1.html, app2.html)
+       kanál sdílejí, i se stejnými id prvků; kdo to nechce, dá jim
+       cfg.channel. cfg.channel=false kanál vypne. */
     if (Fw.cfg.channel !== false)
-        Fw.openChannel(Fw.cfg.channel || ('fw:' + location.pathname));
+        Fw.openChannel(Fw.cfg.channel || ('fw:' + location.pathname.replace(/[^\/]*$/, '')));
     try {
         var k = Fw.storeKey();
         Fw.session = localStorage.getItem(k) || null;

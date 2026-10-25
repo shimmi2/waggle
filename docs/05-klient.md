@@ -36,8 +36,13 @@ smí odkaz otevřít, **musí BFF výslovně vyjmenovat** — `fw_route()` ve
 [06 — Server](06-server.md). Akce do seznamu nepatří nikdy: odkaz
 `#?function=do_delete&id=42` by ji provedl jménem toho, kdo na něj klikl.
 
-Bez `channel` se použije `'fw:' + location.pathname`, aby si dvě aplikace
-na stejném hostu nepřepisovaly stav.
+Bez `channel` se kanál jmenuje podle **adresáře** aplikace (`fw:/app/`).
+Jiná doména je oddělená sama, protože `BroadcastChannel` nepřekročí origin.
+V rámci domény jsou `/app/` a `/app/index.html` tatáž aplikace a jeden
+kanál. Dvě stránky v jednom adresáři (`app1.html`, `app2.html`) kanál
+**sdílejí** — `value` a `text` míří na prvek podle `id`, takže pole `#q`
+v jedné přepíše `#q` ve druhé. Někdy je to žádoucí, jindy ne; kdo je chce
+oddělit, dá každé vlastní `channel`.
 
 `init()` vyprázdní a schová `#fw_error`, vyzvedne sériové číslo instalace,
 obnoví session z `localStorage`, naváže posluchače a pošle `index`
