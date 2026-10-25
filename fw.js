@@ -742,6 +742,11 @@ Fw.bind = function () {
     document.addEventListener('click', function (ev) {
         var el = ev.target.closest && ev.target.closest('[data-fw]');
         if (!el || el.tagName === 'FORM') return;
+        /* Ctrl/Cmd/Shift/Alt nebo jiné než levé tlačítko: uživatel chce
+           novou záložku či okno, ať to udělá prohlížeč. Nová záložka se
+           otevře jako odkaz zvenku — obrazovku ze seznamu fw_route() otevře,
+           akci neprovede nikdy. */
+        if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey || ev.button) return;
         ev.preventDefault();
         /* data-confirm="text" — dotaz před odesláním. Prázdná hodnota
            použije obecný text. */
