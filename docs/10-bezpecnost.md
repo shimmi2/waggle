@@ -325,8 +325,17 @@ Token jde v hlavičce `X-App-Session`, **nikdy v URL**. V URL by skončil
 v access logu, v `Referer` při odchodu na cizí web, v historii prohlížeče
 a v cache proxy.
 
-Demo váže token na `X-App-Serial`, takže odcizený token na jiném zařízení
-neprojde.
+Možnou technikou pro zvýšení zabezpečení je vázat token na
+`X-App-Serial`, tedy na trvalou identifikaci instalace v prohlížeči.
+`basic_demo` to ukazuje: serial je součástí podepsaného tokenu, takže token
+zkopírovaný **bez** serialu — z logu, ze snímku obrazovky, z tiketu — na
+jiném zařízení neprojde.
+
+Je to technika spíš paranoidní a běžně se nepoužívá, protože chrání jen
+proti úzkému případu. Proti XSS nepomůže: serial leží ve stejném
+`localStorage` (a v cookie čitelné z JS) jako token, takže skript ve
+stránce si vezme obojí. Referenční knihovna (`examples/library`) ji proto
+nemá.
 
 Trade-off: token v `localStorage` není chráněný proti XSS tak jako
 `HttpOnly` cookie. Protiváhou je důsledné `esc()` na výstupu a možnost
