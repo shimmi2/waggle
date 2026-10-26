@@ -54,7 +54,7 @@ základní adresa). Každá adresa sama dál dodržuje pravidlo výše.
 | session | demo má podepsaný token; reálná aplikace chce úložiště |
 | tokeny kanálů | demo má JSON bez zamykání → Redis nebo databáze |
 | `STREAM_PHP` | pin na konkrétní binárku |
-| HTTPS | povinné, jinak nepůjde push |
+| HTTPS | silně doporučené; framework ho nevynucuje. Bez něj push chodí, ale podpis dávek se neověří (propadnou na nepodepsanou sadu) |
 | hlavičky | doporučené, viz níže — rozhoduje správce nasazení |
 
 ## Doporučené hlavičky

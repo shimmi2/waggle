@@ -116,6 +116,17 @@ V_IO="$(vydani "$SRC/io.inc")"
 [ "$V_IO" = "$V_SRC" ] || {
     echo "zdroj se rozešel: fw.inc je $V_SRC, io.inc $V_IO" >&2; exit 1; }
 
+# Příklady v repu nesou vlastní kopie knihovny (knihovna má io.inc dvakrát,
+# v bff/ i v api/inc/). Srovnávají se ručně a jedna už zastarala o tři
+# verze, aniž si toho kdo všiml. Kontroluje se jen při rozvozu z pracovní
+# kopie — stažené vydání příklady nemá.
+if [ -z "$REF" ] && [ -d "$SRC/examples" ]; then
+    while IFS= read -r k; do
+        z="$SRC/$(basename "$k")"
+        cmp -s "$z" "$k" || echo "  !! kopie v příkladech se liší od zdroje: ${k#$SRC/} ($(vydani "$k"), zdroj $V_SRC)"
+    done <<< "$(find "$SRC/examples" \( -name fw.inc -o -name io.inc -o -name fw.js \) -not -path '*/vendor/*' 2>/dev/null)"
+fi
+
 # Nová verze knihovny může přinést funkci, kterou si projekt už dávno
 # napsal sám. PHP na dvojí deklaraci spadne fatální chybou a celé API
 # začne vracet 500 — a pozná se to až po nasazení. Proto se to hlídá

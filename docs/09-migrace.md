@@ -13,8 +13,11 @@ který se překresluje, dostane `id` a vyprázdní se.
 <div id="top_frame"></div>
 <div id="main"></div>
 <script src="fw.js"></script>
-<script>Fw.init({ bff: '/bff/' });</script>
+<script src="app.js"></script>   <!-- Fw.init({ bff: '/bff/' }); -->
 ```
+
+`Fw.init()` dej do vlastního souboru, ne do `<script>` v HTML — pak projde
+i přísná CSP, viz [11 — Nasazení](11-nasazeni.md#doporučené-hlavičky).
 
 ## Krok 2 — API jako obálka kolem starých souborů
 

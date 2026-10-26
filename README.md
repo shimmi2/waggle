@@ -202,8 +202,11 @@ něco nového.
 ```html
 <div id="left_menu"></div><div id="top_frame"></div><div id="main"></div>
 <script src="../fw.js"></script>
-<script>Fw.init({ bff: '../bff/' });</script>
+<script src="app.js"></script>   <!-- Fw.init({ bff: '../bff/' }); -->
 ```
+
+`Fw.init()` patří do souboru, ne do `<script>` v HTML — jinak nepůjde
+přísná CSP (`script-src 'self'`), viz [11 — Nasazení](docs/11-nasazeni.md).
 
 ```php
 require __DIR__ . '/config.inc';
