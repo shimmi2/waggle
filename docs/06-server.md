@@ -146,9 +146,13 @@ obrazovka, kterou BFF **výslovně vyjmenuje**:
 ```php
 if ($function === 'index' && ($r = fw_route(['books', 'genres', 'rentals']))) {
     [$function, $p] = $r;
-    $_REQUEST = $p + $_REQUEST;
+    $_REQUEST += $p;     // skutečný požadavek vyhrává
 }
 ```
+
+Parametry z odkazu se jen **doplní** — co poslal klient sám (`Fw.init`
+`params`: skin, jazyk, tenant), odkaz nepřepíše. `fw_route()` z odkazu bere
+jen obyčejné hodnoty, žádná vnořená pole.
 
 `fw_route()` vrátí `[funkce, parametry]`, nebo `null`, když odkaz chybí nebo
 míří mimo seznam — pak se pokračuje úvodní obrazovkou. Akce (`do_delete`)

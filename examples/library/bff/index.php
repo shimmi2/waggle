@@ -42,7 +42,7 @@ const HLUBOKE_ODKAZY = ['books', 'genres', 'rentals', 'statistics', 'users'];
 $RAMEC = false;     // kreslí se celý rámec, ne jen #main — viz jen_main()
 if ($function === 'index' && ($r = fw_route(HLUBOKE_ODKAZY)) && me() !== null) {
     [$function, $p] = $r;
-    $_REQUEST = $p + $_REQUEST;
+    $_REQUEST += $p;     // z odkazu se jen doplní; co poslal klient, vyhrává
     $RAMEC = true;
 }
 

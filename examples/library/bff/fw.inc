@@ -181,8 +181,11 @@ function fw_stream_start(): void {
  *
  *     if ($function === 'index' && ($r = fw_route(['books', 'genres']))) {
  *         [$function, $p] = $r;
- *         $_REQUEST = $p + $_REQUEST;
+ *         $_REQUEST += $p;     // skutečný požadavek vyhrává
  *     }
+ *
+ * Pořadí je důležité: parametry z odkazu se jen DOPLNÍ. Co poslal klient
+ * sám (Fw.init params — skin, jazyk, tenant), odkaz nepřepíše.
  *
  * Vrací [funkce, parametry], nebo null, když odkaz chybí nebo míří jinam. */
 function fw_route(array $obrazovky): ?array {
@@ -191,6 +194,9 @@ function fw_route(array $obrazovky): ?array {
     parse_str($r, $p);
     $fn = $p['function'] ?? '';
     if (!is_string($fn) || !is_word($fn) || !in_array($fn, $obrazovky, true)) return null;
+    /* Z cizího odkazu jen obyčejné hodnoty: vnořená pole (a[b]=…) by
+       podstrčila data tam, kde server čte in_rows(). */
+    $p = array_filter($p, 'is_string');
     unset($p['function'], $p['fw_route']);
     return [$fn, $p];
 }
