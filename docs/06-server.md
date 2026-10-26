@@ -138,10 +138,10 @@ finish_direct_answer();                   // buffer -> příkaz html
 
 ## Hluboké odkazy
 
-Klient s `deepLinks: true` pošle při startu do `index` parametr `fw_route`
-s obsahem hashe (`function=books&q=x`). Hash napíše kdokoli, kdo uživateli
-pošle odkaz, takže se otevře jen obrazovka, kterou BFF **výslovně
-vyjmenuje**:
+Klient posílá při startu vždy `index`. Po reloadu (`restore`) nebo s odkazem
+zvenku (`deepLinks`) k němu přiloží parametr `fw_route` s adresou obrazovky
+(`function=books&q=x`). Odkaz zvenku napíše kdokoli, takže se otevře jen
+obrazovka, kterou BFF **výslovně vyjmenuje**:
 
 ```php
 if ($function === 'index' && ($r = fw_route(['books', 'genres', 'rentals']))) {
@@ -154,6 +154,10 @@ if ($function === 'index' && ($r = fw_route(['books', 'genres', 'rentals']))) {
 míří mimo seznam — pak se pokračuje úvodní obrazovkou. Akce (`do_delete`)
 do seznamu nepatří nikdy: odkaz zvenku by ji provedl jménem toho, kdo na něj
 klikl. Server bez seznamu `fw_route` prostě nečte a chová se jako dřív.
+
+Obrazovka otevřená takhle přichází **místo `index`**, tedy na prázdnou
+stránku: musí nakreslit i menu, lištu a přihlásit push, ne jen `#main`.
+Knihovna to řeší příznakem, který `jen_main()` přepne na celý rámec.
 
 ## Stream
 

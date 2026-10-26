@@ -46,10 +46,10 @@ window.LIB_BFF_URL = 'https://backend.mojedomena.cz/';
  *  LIB_FW_DEEPLINKS — odkaz poslaný kolegovi (#?function=books&q=…)
  *  otevře tu obrazovku. Výchozí vypnuto.
  *
- *  POZOR: obrazovky, které smí odkaz zvenku otevřít, je třeba EXPLICITNĚ
- *  vyjmenovat v BFF — v bff/index.php seznam HLUBOKE_ODKAZY. Co tam není,
- *  skončí na úvodní obrazovce. Akce tam nepatří nikdy: odkaz by ji
- *  provedl jménem toho, kdo na něj klikne.
+ *  POZOR: obojí funguje jen pro obrazovky, které BFF EXPLICITNĚ vyjmenuje
+ *  — v bff/index.php seznam HLUBOKE_ODKAZY. Co tam není, skončí na úvodní
+ *  obrazovce. Akce tam nepatří nikdy: odkaz by ji provedl jménem toho,
+ *  kdo na něj klikne.
  * ------------------------------------------------------------------- */
 // window.LIB_FW_RESTORE   = false;
 // window.LIB_FW_DEEPLINKS = true;

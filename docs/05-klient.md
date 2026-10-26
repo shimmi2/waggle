@@ -24,14 +24,21 @@ Fw.init({
 });
 ```
 
-**Po reloadu a s odkazem zvenku.** S `restore` (výchozí zapnuto) pošle
-`init()` místo `index` obrazovku z `history.state` — tu tam zapsal příkaz
-`history`, tedy server, a je to vždy adresa obrazovky, nikdy akce. Vypíná
-se tam, kde má každé otevření začít nanovo, typicky bankovnictví.
+**Po reloadu a s odkazem zvenku.** `init()` posílá vždy `index` — jen ten
+kreslí rámec aplikace a ověří přihlášení. Kam se má jít, jen přiloží jako
+parametr `fw_route` a rozhodne server:
 
-Odkaz zvenku (záložka, odkaz od kolegy) stav nemá, jen hash v adrese — a ten
-napíše kdokoli. Proto se s `deepLinks` **neposílá jako funkce**: odejde do
-`index` jako parametr `fw_route` a server rozhodne sám. Obrazovky, které
+- s `restore` (výchozí zapnuto) je to adresa z `history.state` po reloadu
+  nebo návratu do záložky. Zapsal ji příkaz `history`, tedy server, a je to
+  vždy obrazovka. Vypíná se tam, kde má každé otevření začít nanovo,
+  typicky bankovnictví;
+- s `deepLinks` (výchozí vypnuto) je to hash odkazu zvenku (záložka, odkaz
+  od kolegy). Ten napíše kdokoli, a proto o něm rozhoduje server podle
+  svého seznamu.
+
+BFF, které `fw_route` nečte, se chová jako dřív a otevře úvodní obrazovku.
+Obrazovka otevřená přes `fw_route` přijde na prázdnou stránku, takže musí
+nakreslit celý rámec, ne jen `#main` — v knihovně to dělá `jen_main()`. Obrazovky, které
 smí odkaz otevřít, **musí BFF výslovně vyjmenovat** — `fw_route()` ve
 [06 — Server](06-server.md). Akce do seznamu nepatří nikdy: odkaz
 `#?function=do_delete&id=42` by ji provedl jménem toho, kdo na něj klikl.

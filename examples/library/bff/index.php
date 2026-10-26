@@ -39,9 +39,11 @@ if (!is_word($function)) throw_http_error(400, 'Neplatný název obrazovky');
    Nepřihlášený zůstane na index, tedy na přihlašovací obrazovce — jinak
    by místo ní dostal holé 401 obrazovky, na kterou nemá. */
 const HLUBOKE_ODKAZY = ['books', 'genres', 'rentals', 'statistics', 'users'];
+$RAMEC = false;     // kreslí se celý rámec, ne jen #main — viz jen_main()
 if ($function === 'index' && ($r = fw_route(HLUBOKE_ODKAZY)) && me() !== null) {
     [$function, $p] = $r;
     $_REQUEST = $p + $_REQUEST;
+    $RAMEC = true;
 }
 
 /* ---------------------------------------------------------------------
@@ -152,9 +154,13 @@ function filtr_katalogu(string $prefix = ''): array {
 
 /* BĚŽNÁ obrazovka — jen obsah. Tohle je ta, která se používá pořád. */
 function jen_main(string $telo, array $vars = [], ?string $menu = null): array {
-    return array_merge(
-        [['op' => 'html', 'sel' => 'main', 'content' => frag($telo, $vars)]],
-        menu_aktivni($menu ?? $telo));
+    /* Obrazovka otevřená po reloadu nebo odkazem zvenku (fw_route) přijde
+       místo index, tedy na prázdnou stránku: musí nakreslit i menu a lištu
+       a přihlásit push — to všechno dělá obrazovka(). */
+    global $RAMEC;
+    $hlavni = $RAMEC ? obrazovka($telo, $vars)
+                     : [['op' => 'html', 'sel' => 'main', 'content' => frag($telo, $vars)]];
+    return array_merge($hlavni, menu_aktivni($menu ?? $telo));
 }
 
 /* Přendání zvýraznění v menu.

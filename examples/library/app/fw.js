@@ -939,23 +939,28 @@ Fw.init = function (cfg) {
 
     /* Kam se po startu vrátit.
 
-       restore — po reloadu (F5) nebo návratu do záložky se pošle obrazovka
-       z history.state. Ten zapsal příkaz history, tedy SERVER, a je v něm
-       jen adresa obrazovky, nikdy akce — přehrát ho je stejně bezpečné
-       jako tlačítko Zpět. Vypíná se tam, kde má každé otevření začít
-       nanovo (bankovnictví).
+       Start je VŽDY index: jen ten kreslí rámec aplikace (menu, lištu),
+       ověří přihlášení a přihlásí odběr pushe. Obrazovka sama kreslí jen
+       #main — kdyby se po reloadu poslala rovnou, zůstalo by menu prázdné
+       a nepřihlášený by místo přihlášení dostal 401.
 
-       deepLinks — odkaz zvenku (záložka, odkaz od kolegy) stav nemá, jen
-       hash. Ten může napsat kdokoli, takže se NEPOSÍLÁ jako funkce: odejde
-       do index jako parametr fw_route a server sám rozhodne, jestli je to
-       obrazovka, kterou smí otevřít (fw_route() ve fw.inc). Jinak by
-       odkaz #?function=do_delete&id=42 provedl akci jménem toho, kdo na
-       něj klikl. */
-    var st = Fw.cfg.restore && history.state && history.state.fw;
-    if (st && st.fn) return Fw.send(st.fn, st.params || {}, { history: 'replace' });
-    var p = {}, h = location.hash.replace(/^#\??/, '');
-    if (Fw.cfg.deepLinks && Fw.parseTarget(location.hash).fn) p.fw_route = h;
-    return Fw.send('index', p, { history: 'replace' });
+       Kam se má jít, proto jen PŘILOŽÍ parametr fw_route a rozhodne server
+       (fw_route() ve fw.inc, obrazovky vyjmenované v BFF). BFF, které
+       fw_route nečte, se chová jako dřív — úvodní obrazovka.
+
+       restore — po reloadu nebo návratu do záložky adresa z history.state.
+       Zapsal ji server příkazem history, je to vždy obrazovka.
+       deepLinks — odkaz zvenku stav nemá, jen hash; ten napíše kdokoli,
+       ale protože rozhoduje server podle svého seznamu, akci neprovede. */
+    var st = Fw.cfg.restore && history.state && history.state.fw, route = '';
+    if (st && st.fn) {
+        var q = new URLSearchParams(); q.set('function', st.fn);
+        for (var pk2 in (st.params || {})) q.set(pk2, st.params[pk2]);
+        route = q.toString();
+    } else if (Fw.cfg.deepLinks && Fw.parseTarget(location.hash).fn) {
+        route = location.hash.replace(/^#\??/, '');
+    }
+    return Fw.send('index', route ? { fw_route: route } : {}, { history: 'replace' });
 };
 
 global.Fw = Fw;
