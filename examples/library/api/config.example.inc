@@ -34,8 +34,9 @@ define('SESSION_TTL', 3600);
 /* ---- ochrana přihlašování ------------------------------------------
    Hlavní důvod není uhádnuté heslo, ale cena ověření: bcrypt trvá kolem
    150 ms, přičtení v Redisu 0,07 ms. Bez škrtiče stačí šest útočníků
-   k vytížení jádra. Dva klíče zvlášť; podle jména samotného to nejde,
-   protože by šlo zamknout účet právoplatnému uživateli. */
+   k vytížení jádra. Dva klíče: adresa celkem (PER_IP) a adresa na jedno
+   jméno (PER_USER). Podle jména samotného ne — šlo by zamknout účet
+   právoplatnému uživateli z jakékoli adresy. */
 define('LOGIN_FAIL_WINDOW',   900);
 define('LOGIN_FAIL_PER_IP',    20);
 define('LOGIN_FAIL_PER_USER',   5);

@@ -12,11 +12,15 @@
  *  zahlcení se tak nedotkne ani databáze.
  *
  *  Dva klíče zvlášť:
- *    ip:1.2.3.4   Podle IP samotné to nejde: za jednou adresou sedí
- *                 celá firemní síť i celý mobilní operátor.
- *    user:jmeno   Podle jména samotného je to HORŠÍ NEŽ NIC: útočník
- *                 pětkrát selže na 'admin' a zamkne ho právoplatnému
- *                 uživateli.
+ *    ip:1.2.3.4         Kolik zkouší jedna adresa, na jakákoli jména.
+ *                       Vyšší limit: za jednou adresou sedí celá
+ *                       firemní síť i celý mobilní operátor.
+ *    ipuser:1.2.3.4|jm  Kolik zkouší jedna adresa na jedno jméno.
+ *                       Podle jména SAMOTNÉHO to být nesmí — útočník
+ *                       by pětkrát selhal na 'admin' z čehokoli a zamkl
+ *                       ho právoplatnému uživateli, donekonečna. Takhle
+ *                       si zamkne jen svou dvojici; admin z jiné adresy
+ *                       se přihlásí.
  *
  *  Účet se proto NIKDY nezamyká natrvalo, jen se odmítá v okně. Po něm
  *  je to samo zpátky, bez zásahu správce.
@@ -48,7 +52,11 @@ function klient_ip(): string {
 }
 
 function throttle_keys(string $login): array {
-    return ['ip:' . klient_ip(), 'user:' . mb_strtolower($login)];
+    /* Dvojice se hashuje: IPv6 (45 znaků) a jméno (64) by se do lf_key
+       VARCHAR(64) nevešly a useknuté klíče by se pomíchaly. */
+    $ip = klient_ip();
+    return ['ip:' . $ip,
+            'ipuser:' . substr(hash('sha256', $ip . '|' . mb_strtolower($login)), 0, 40)];
 }
 
 function throttle_check(string $login): void {
