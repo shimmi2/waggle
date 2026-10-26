@@ -62,7 +62,7 @@ Bez argumentů vypíše, co všechno chce.
 | PHP | **8.1** nebo novější |
 | `pdo_mysql` | povinné |
 | `curl` | povinné — BFF s ním volá API |
-| `redis` | volitelné; bez něj jdou sezení do MySQL |
+| `redis` | volitelné; bez něj jdou sezení do MySQL. Nastavený a nedostupný Redis = 503, ne přepnutí na MySQL |
 | nchan | volitelné; bez něj jen nejde push |
 
 ---
@@ -174,6 +174,12 @@ pro klienta, který BFF nikdy neviděl.
 **Oprávnění jsou řádky v číselníku** `acls` plus `us_acl` jako seznam
 oddělený čárkami. Primitivní schválně: přehledné a bez jointů. `ep_user_save()`
 ukládá jen ta práva, která v číselníku opravdu jsou.
+
+**Změna práv nebo hesla ruší otevřená sezení.** Blok v sezení nese práva
+z doby přihlášení, takže bez toho by odebrané právo platilo do odhlášení.
+`ep_user_save()` proto zavolá `session_store_kill_user()`; správci, který
+mění sám sebe, jen přepíše blok. Podrobně v
+[10 — Bezpečnost](../../docs/10-bezpecnost.md#změna-oprávnění-a-otevřená-sezení).
 
 **Zápis říká záměr výslovně.** `book_save`, `genre_save` i `user_save`
 dostávají `op=insert|update` a server ověří, že si to s id neodporuje.

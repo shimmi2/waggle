@@ -243,7 +243,8 @@ function ep_user_save(): void {
 
     /* 5. práce */
     if ($op === 'update') {
-        if (!q_val("SELECT us_id FROM users WHERE us_id=?", [$id])) api_error(404, 'Takové konto tu není');
+        $byl = q_one("SELECT us_acl FROM users WHERE us_id=?", [$id]);
+        if (!$byl) api_error(404, 'Takové konto tu není');
         $jiny = q_val("SELECT us_id FROM users WHERE us_login=? AND us_id<>?", [$login, $id]);
         if ($jiny) api_error(400, 'Přihlašovací jméno už někdo má');
         q("UPDATE users SET us_login=?, us_name=?, us_phone=?, us_email=?, us_note=?, us_acl=?
@@ -251,6 +252,20 @@ function ep_user_save(): void {
         if ($pass !== '')
             q("UPDATE users SET us_password=?, us_pwcrypttype='bcrypt' WHERE us_id=? LIMIT 1",
               [password_hash($pass, PASSWORD_DEFAULT), $id]);
+
+        /* Změněná práva nebo heslo ruší otevřená sezení toho uživatele.
+           Blok v sezení nese práva z doby přihlášení; bez tohohle by
+           odebrané právo platilo, dokud se dotyčný sám neodhlásí, a nové
+           heslo by nevyhodilo toho, kdo znal staré. Viz docs/10, Session.
+
+           Vlastní sezení správce, který mění sám sebe, se neruší, jen se
+           mu přepíše blok — jinak by se změnou vlastního hesla odhlásil. */
+        if ($pass !== '' || $acl !== (string)$byl['us_acl']) {
+            $sam = ((int)$me['us_id'] === $id);
+            session_store_kill_user($id, $sam ? $me['session'] : '');
+            if ($sam) session_store_put($me['session'], session_block(
+                q_one("SELECT us_id, us_name, us_acl FROM users WHERE us_id=?", [$id])));
+        }
     } else {
         if (q_val("SELECT us_id FROM users WHERE us_login=?", [$login]))
             api_error(400, 'Přihlašovací jméno už někdo má');

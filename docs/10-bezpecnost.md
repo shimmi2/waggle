@@ -337,6 +337,43 @@ Token jde v hlavičce `X-App-Session`, **nikdy v URL**. V URL by skončil
 v access logu, v `Referer` při odchodu na cizí web, v historii prohlížeče
 a v cache proxy.
 
+### Změna oprávnění a otevřená sezení
+
+Sezení si obvykle nese práva z doby přihlášení — tak to dělá i referenční
+knihovna, blok `us_id`/`us_name`/`us_acl` se skládá při loginu. Odebrané
+právo pak platí dál, dokud se dotyčný sám neodhlásí nebo mu sezení
+nevyprší, a s pravidlem „čtyři kroky v každém endpointu" to nic nenadělá:
+krok 4 se ptá sezení, a sezení lže.
+
+Proto: **každý endpoint, který mění oprávnění nebo heslo, je povinen
+otevřená sezení toho uživatele buď zrušit, nebo jim práva přepsat.** Jedno
+z toho, ne nic. Totéž platí pro zablokování a smazání konta.
+
+| způsob | kdy |
+|---|---|
+| zrušit sezení | výchozí volba; dotyčný se přihlásí znovu a dostane nová práva |
+| přepsat blok v sezení | vlastní sezení správce, který mění sám sebe — jinak by se změnou vlastního hesla odhlásil |
+| číst práva z databáze při každém volání | když se práva mění často; dotaz navíc u každého požadavku |
+
+Knihovna (`ep_user_save()`) ruší sezení při změně práv nebo hesla
+a vlastní sezení správce jen přepíše. Úložiště proto umí zrušit všechna
+sezení jednoho uživatele (`session_store_kill_user()`) — v MySQL podle
+sloupce `se_us_id`, v Redisu podle množiny `ses.u.<id>`. Úložiště, které
+neumí najít sezení podle uživatele, tuhle povinnost splnit nedokáže;
+na to je třeba myslet při návrhu, ne až při auditu.
+
+Krátká cache v BFF (šedesát sekund) tomu nevadí: rozhoduje datové API
+a to se sezení ptá u každého volání. BFF podle cache jen o minutu déle
+nakreslí položku menu, kterou API odmítne.
+
+Pozor na **přepínání úložiště za běhu**. Když se při výpadku Redisu
+sezení tiše přesunou do MySQL, odhlášení nebo zrušení za výpadku smaže
+jen řádek v tabulce a klíč v Redisu přežije. Až Redis naběhne, zrušený
+token zase platí. Knihovna proto při nastaveném a nedostupném Redisu
+odpovídá 503, nepřepíná.
+
+### Vazba tokenu na serial
+
 Možnou technikou pro zvýšení zabezpečení je vázat token na
 `X-App-Serial`, tedy na trvalou identifikaci instalace v prohlížeči.
 `basic_demo` ukazuje princip: serial je součástí podepsaného tokenu a server

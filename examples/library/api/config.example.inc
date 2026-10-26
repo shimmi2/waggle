@@ -21,7 +21,9 @@ define('DB_PASS', '');
 /* ---- Redis (volitelné) ---------------------------------------------
    Prázdný host = sezení a počítadla přihlášení jdou do MySQL. Funguje
    to stejně, jen se o úklid musí postarat cronjobs/cleaner.php.
-   Redis si klíče maže sám podle TTL. */
+   Redis si klíče maže sám podle TTL. Nastavený, ale nedostupný Redis
+   znamená 503 — API na MySQL za běhu nepřepíná, rozdělilo by sezení
+   do dvou úložišť (viz docs/10, Session). */
 define('REDIS_HOST',   '');          // '127.0.0.1'
 define('REDIS_PORT',   6379);
 define('REDIS_PREFIX', 'lib.');

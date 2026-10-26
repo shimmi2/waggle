@@ -99,17 +99,26 @@ function q_val(string $sql, array $p = [])         { $r = q($sql, $p)->fetch(PDO
  *
  *  Prázdný REDIS_HOST znamená, že se session drží v MySQL. Volající to
  *  nepozná — rozhoduje se jen tady a v api_session.inc.
+ *
+ *  Nastavený, ale nedostupný Redis je chyba 503, NE přepnutí na MySQL.
+ *  Dřív se přepínalo, a to rozdělí úložiště na dvě: odhlášení nebo
+ *  zrušení sezení za výpadku smaže řádek v MySQL, ale klíč v Redisu
+ *  zůstane — a až Redis naběhne, odhlášený token zase platí. Totéž
+ *  počítadla přihlášení: výpadek by je vynuloval. Výpadek úložiště
+ *  sezení je výpadek přihlašování, nic míň.
  * ------------------------------------------------------------------- */
 
 function redis(): ?Redis {
     static $r = false;
     if ($r !== false) return $r;
     $r = null;
-    if (REDIS_HOST === '' || !class_exists('Redis')) return $r;
+    if (REDIS_HOST === '') return $r;
+    if (!class_exists('Redis'))
+        api_error(503, 'Služba je dočasně nedostupná', 'redis: REDIS_HOST je nastavený, ale rozšíření redis chybí');
     try {
         $c = new Redis();
         if ($c->connect(REDIS_HOST, (int)REDIS_PORT, 1.0)) $r = $c;
-        else error_log('[library-api] redis: connect selhal, jedu na MySQL');
     } catch (Throwable $e) { error_log('[library-api] redis: ' . $e->getMessage()); }
+    if ($r === null) api_error(503, 'Služba je dočasně nedostupná', 'redis: spojení selhalo');
     return $r;
 }
