@@ -23,8 +23,12 @@ Nepřepisuj stránky. Nech je vypisovat HTML jako dosud a jen zachyť výstup:
 ```php
 if (strncmp($function, 'page_', 5) === 0) {
     if (!is_word($function)) throw_http_error(400, 'Neplatný název');
+    /* Starý router (index.php) ověřoval přihlášení PŘED includem stránky
+       a stránky samy obvykle nic nekontrolují. Tenhle řádek je ta kontrola
+       — bez něj je přes page_* každá stránka přístupná komukoli. */
+    if (!$prihlasen) throw_http_error(401, 'Nejste přihlášen');
     start_direct_answer(['sel' => 'main']);
-    require "$PAGES/$function.inc";        // původní soubor, beze změny
+    require "$PAGES/$function.inc";        // původní soubor, zatím beze změny
     finish_direct_answer();
     finish_answer();
     exit;
@@ -33,6 +37,19 @@ if (strncmp($function, 'page_', 5) === 0) {
 
 Od téhle chvíle je každá stará stránka dostupná jako `function=page_xxx`
 a doručí se do `#main` bez reloadu.
+
+**Přihlášení zkontroluj tady, ne ve stránkách.** Než obal nasadíš, podívej
+se, kde starý router ověřoval session a oprávnění (`session_check()`,
+`acl_check()`), a přenes to sem. Že stránka „funguje beze změny", ještě
+neznamená, že je chráněná — chránil ji kód, který se teď nevolá.
+
+**Odpověď platí, až když formálně skončí.** Obal je API: co stránka
+vypsala, odejde až v `finish_direct_answer()`. Stránka, která skončí
+`exit` nebo `die` dřív, nedoručí nic, ani mezivýsledek — klient dostane
+prázdnou odpověď. A `header('Location: …')` v API nemá co dělat: `fetch`
+přesměrování tiše následuje a klient pak dostane HTML místo NDJSON.
+Obojí musí při přepisu najít ten, kdo stránky prochází, člověk nebo agent
+— viz [Na co narazíš](#na-co-narazíš).
 
 ## Krok 3 — odkazy
 
@@ -218,8 +235,9 @@ kombinace práv a záznamů — se nemá hlásit jako ověřené.
 |---|---|
 | `<script>` uvnitř staré stránky | `innerHTML` ho neprovede → příkaz `call` |
 | stránka vypisuje `<html>` a `<head>` | ořež na obsah; hlavička patří do shellu |
-| přesměrování `header('Location:')` | nahraď příkazem `html` nebo `history` |
-| `exit`/`die` uprostřed stránky | ukončí i odpověď → nahraď návratem |
+| přesměrování `header('Location:')` | v API nemá co dělat — `fetch` ho tiše následuje a dostane HTML; nahraď příkazem `html` nebo obrazovkou, kam se mělo jít |
+| `exit`/`die` uprostřed stránky | odpověď formálně neskončí a odejde prázdná → nahraď návratem (`return` z includu) |
+| kontrola přihlášení jen ve starém routeru | stránka přes `page_*` není chráněná → kontrola do obalu, viz krok 2 |
 | relativní cesty k obrázkům | teď se počítají od stránky aplikace, ne od skriptu |
 | tlačítko Zpět | přidej příkaz `history` u navigací |
 
