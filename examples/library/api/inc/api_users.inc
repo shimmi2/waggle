@@ -37,14 +37,24 @@ function ep_do_login(): void {
        odpovíme o 150 ms dřív a tím prozradíme, která konta existují.
 
        MUSÍ to být PLATNÝ bcrypt hash se STEJNOU cenou, jakou používá
-       PASSWORD_DEFAULT (dnes $2y$12$). Neplatný řetězec password_verify()
-       odmítne za desetinu milisekundy a obrana je pak k ničemu — ověřeno
-       měřením, ne odhadem. Ta atrapa není tajná, je to návnada; heslo
-       k ní neexistuje.
+       PASSWORD_DEFAULT. Neplatný řetězec password_verify() odmítne za
+       desetinu milisekundy a obrana je pak k ničemu — ověřeno měřením,
+       ne odhadem. Atrapy nejsou tajné, jsou to návnady; hesla k nim
+       neexistují.
 
-       Kdyby PHP jednou zvedlo výchozí cenu, je potřeba ji tu zvednout
-       taky, jinak se časy zas rozejdou. */
-    static $atrapa = '$2y$12$WP.jo0WHflQeUf5jeBKx/ueWSUzKnqneMLd1alpmK9eufsfuwX4Pa';
+       Cena se liší podle verze PHP: do 8.3 je výchozí 10, od 8.4 je 12.
+       Pevná atrapa s cenou 12 tak na PHP 8.1–8.3 trvala déle než ověření
+       skutečného účtu a enumerace fungovala naopak. Proto tabulka podle
+       PASSWORD_BCRYPT_DEFAULT_COST. Hash se tu schválně nepočítá za běhu:
+       static v PHP-FPM platí jen pro jeden požadavek, takže neexistující
+       účet by dělal hash i ověření, tedy dvojnásobný čas. */
+    $atrapy = [
+        10 => '$2y$10$jzDrD2bGcB8OZ7/kVgYk.OX72K2LCCdMC6l..d8IhYnVFMMjwDFYW',
+        11 => '$2y$11$k6BbG1e1G6hc2hY1qwrBb.jlHovMTXpu5GfWptBLhY.WEojlgrRKW',
+        12 => '$2y$12$btztmXl0BmwMMDjaf0yNsuk7jfFde5AYMUTMDFtP0tGd1WPSRnHgC',
+        13 => '$2y$13$PN1ijDkL..Y62jHPmS0kpO4QNfyVQblL6pxX2Wv1FrT7sLR3IkHJu',
+    ];
+    $atrapa = $atrapy[PASSWORD_BCRYPT_DEFAULT_COST] ?? $atrapy[12];
     $ok = false;
     if ($u === null) {
         password_verify($pass, $atrapa);
@@ -65,6 +75,13 @@ function ep_do_login(): void {
     }
 
     throttle_ok($login);
+
+    /* Hash se starší cenou (účet z doby před upgradem PHP) se přepočítá.
+       Jinak by trval kratší dobu než atrapa a prozradil, že účet existuje. */
+    if ($u['us_pwcrypttype'] !== 'plain'
+        && password_needs_rehash((string)$u['us_password'], PASSWORD_DEFAULT))
+        q("UPDATE users SET us_password=?, us_pwcrypttype='bcrypt' WHERE us_id=?",
+          [password_hash($pass, PASSWORD_DEFAULT), (int)$u['us_id']]);
 
     /* Sezení se zakládá tady, ale BLOK skládá session_block() — tedy
        to samé místo, které ho vrací i při session_check. Proto se
