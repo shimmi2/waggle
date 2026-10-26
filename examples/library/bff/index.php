@@ -194,7 +194,12 @@ case 'index':
 case 'do_login':
     $login = in_str('login', 64);
     $pass  = in_str('password', 256);
-    [$code, $data] = api_raw('do_login', ['login' => $login, 'password' => $pass]);
+    /* IP klienta jde s sebou: API ji potřebuje pro škrtič, jinak by
+       počítal pokusy podle adresy BFF — jeden klíč pro všechny. Stojí-li
+       před BFF proxy, je REMOTE_ADDR její adresa a patří sem to, co
+       proxy spolehlivě předává. */
+    [$code, $data] = api_raw('do_login', ['login' => $login, 'password' => $pass,
+                                         'client_ip' => (string)($_SERVER['REMOTE_ADDR'] ?? '')]);
     if ($code !== 200) {
         /* Hláška z backendu se předá tak, jak je — ten ví, jestli je to
            špatné heslo (401) nebo příliš mnoho pokusů (429). */

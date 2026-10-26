@@ -22,9 +22,33 @@
  *  je to samo zpátky, bez zásahu správce.
  * ===================================================================== */
 
+/* IP klienta, ne BFF.
+
+   Ve třívrstvém nasazení volá tohle API jen BFF, takže REMOTE_ADDR je
+   vždy adresa BFF. Klíč ip: by pak byl jeden pro všechny: dvacet
+   neúspěchů na libovolná jména a každé přihlášení kohokoli vrací 429,
+   donekonečna a bez účtu. BFF proto posílá IP klienta parametrem
+   client_ip vedle jména a hesla.
+
+   Parametr se bere JEN od BFF. Kdo na API dosáhne přímo (instalace pod
+   jednou doménou), by si ho jinak nastavil sám a škrtiči utekl. BFF se
+   pozná podle adresy: na stejném stroji je to loopback nebo vlastní
+   adresa serveru, jinak to, co je v BFF_IPS. Od kohokoli jiného platí
+   REMOTE_ADDR. */
+function klient_ip(): string {
+    $remote = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+    $bff = (defined('BFF_IPS') && BFF_IPS !== '')
+         ? array_map('trim', explode(',', BFF_IPS))
+         : ['127.0.0.1', '::1', (string)($_SERVER['SERVER_ADDR'] ?? '')];
+    if ($remote !== '' && in_array($remote, $bff, true)) {
+        $ip = in_str('client_ip', 45);
+        if (filter_var($ip, FILTER_VALIDATE_IP) !== false) return $ip;
+    }
+    return $remote !== '' ? $remote : '0.0.0.0';
+}
+
 function throttle_keys(string $login): array {
-    $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
-    return ['ip:' . $ip, 'user:' . mb_strtolower($login)];
+    return ['ip:' . klient_ip(), 'user:' . mb_strtolower($login)];
 }
 
 function throttle_check(string $login): void {

@@ -46,6 +46,14 @@ define('LOGIN_FAIL_PER_USER',   5);
    z cizí stránky nemá tohle API co volat. */
 define('BFF_URL', 'https://backend.mojedomena.cz');
 
+/* ---- odkud smí přijít IP klienta ---------------------------------
+   BFF posílá při přihlášení IP klienta (client_ip), aby škrtič počítal
+   pokusy podle klienta, ne podle BFF. Věří se jí jen od BFF. Běží-li BFF
+   na stejném stroji, pozná se sám (loopback, vlastní adresa serveru)
+   a tohle zůstane zakomentované. Jinak sem patří adresa, ze které BFF
+   volá — ne jeho jméno, ale IP, kterou tu uvidíš v REMOTE_ADDR. */
+// define('BFF_IPS', '10.0.0.5');
+
 /* ---- příznak nebezpečné instalace ---------------------------------
    Nastaví instalák, když zjistí, že vrstvy nejsou oddělené. Aplikace
    pak svítí červeným odznakem. Nevypínej to ručně — tím ten problém
