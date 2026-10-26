@@ -67,6 +67,9 @@ function busy_kanal(?array $user, string $session): array {
  * ------------------------------------------------------------------- */
 if (strncmp($function, 'page_', 5) === 0) {
     if (!is_word($function)) throw_http_error(400, 'Neplatný název stránky');
+    /* Totéž, co radí migrační návod: stránky samy přihlášení nekontrolují,
+       kontrola patří do obalu. */
+    if ($user === null) throw_http_error(401, 'Nejste přihlášen');
 
     start_direct_answer(['sel' => 'main']);
     if     (is_file("$PAGES/$function.html")) readfile("$PAGES/$function.html");
