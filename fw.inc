@@ -23,7 +23,7 @@
    ležet VEDLE tohohle; rozváží ho tools/fwdeploy.sh spolu s ním. */
 require_once __DIR__ . '/io.inc';
 
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.10.0');
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.10.1');
 defined('FW_V')          || define('FW_V', 1);
 /* '' = žádné CORS, BFF je na stejném původu jako aplikace (výchozí);
    '*' = odrazit jakýkoli Origin; nebo seznam adres oddělený čárkami:
