@@ -339,9 +339,15 @@ a v cache proxy.
 
 Možnou technikou pro zvýšení zabezpečení je vázat token na
 `X-App-Serial`, tedy na trvalou identifikaci instalace v prohlížeči.
-`basic_demo` to ukazuje: serial je součástí podepsaného tokenu, takže token
-zkopírovaný **bez** serialu — z logu, ze snímku obrazovky, z tiketu — na
-jiném zařízení neprojde.
+`basic_demo` ukazuje princip: serial je součástí podepsaného tokenu a server
+ho porovná s hlavičkou `X-App-Serial`, takže token z jiného prohlížeče
+s jiným serialem neprojde.
+
+Jak to `basic_demo` dělá, je ale jen ukázka. Serial v jeho tokenu leží
+**čitelně** — payload je obyčejné base64 `{"u":…,"s":…,"exp":…}` — takže
+kdo má token, přečte si z něj i serial a pošle ho v hlavičce. Ochrana proti
+tokenu zkopírovanému z logu nebo tiketu by chtěla serial do tokenu vůbec
+nedávat, jen ho zahrnout do podpisu.
 
 Je to technika spíš paranoidní a běžně se nepoužívá, protože chrání jen
 proti úzkému případu. Proti XSS nepomůže: serial leží ve stejném
