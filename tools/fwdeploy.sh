@@ -217,6 +217,9 @@ poloz() {
     tmp="$(dirname "$cil")/.fwdeploy.$$.$(basename "$cil")"
     cp -f "$zdroj" "$tmp" || { rm -f "$tmp"; return 1; }
     chmod --reference="$cil" "$tmp" 2>/dev/null || true
+    # Vlastníka taky: běží-li web pod jiným uživatelem a soubor má práva
+    # 640, root:root by znamenalo 500 na celém projektu.
+    chown --reference="$cil" "$tmp" 2>/dev/null || true
     mv -f "$tmp" "$cil" || { rm -f "$tmp"; return 1; }
 }
 
@@ -251,6 +254,8 @@ for root in "${CILE[@]}"; do
                 cil="$(dirname "$cil_fw")/io.inc"
                 echo "      ${cil#$root/} — chybí, zakládám vedle fw.inc"
                 [ $CHECK -eq 1 ] && continue
+                # Nový soubor nemá podle čeho převzít práva — vezme je od fw.inc.
+                cp -p "$cil_fw" "$cil" 2>/dev/null
                 poloz "$SRC/io.inc" "$cil" && echo "        založeno na $V_SRC" || CHYBY=1
                 continue
             fi
