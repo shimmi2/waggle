@@ -5,7 +5,7 @@
 > safe and simple apps. Apps where data flows in parallel, asynchronous
 > motion, like bees in a waggle dance.
 
-Vydání **1.10.1**, protokol **v1**.
+Vydání **1.10.2**, protokol **v1**.
 
 ## Proč vznikl
 
@@ -157,8 +157,8 @@ něco brát, koukni, do které patří — ušetří to spoustu zbytečných ot�
 | **dema** | `examples/basic_demo/bff/pages/*`, `examples/basic_demo/app/*`, `examples/basic_demo/app-adminlte/*` | **nikdy** — jen se čtou |
 
 **Knihovna jsou tři soubory.** V reálném projektu je to zlomek celku:
-`fw.inc` (protokol) 10 kB, `io.inc` (hygiena vstupu a výstupu) 7 kB,
-`fw.js` 30 kB proti megabajtům šablony. Nikdy se needitují v projektu —
+`fw.inc` (protokol) 15 kB, `io.inc` (hygiena vstupu a výstupu) 9 kB,
+`fw.js` 45 kB proti megabajtům šablony. Nikdy se needitují v projektu —
 každá změna patří do nové verze Waggle.
 
 `fw.inc` si `io.inc` načítá sám a musí ležet **vedle** něj; rozváží je
@@ -180,13 +180,15 @@ fw.js       knihovna, klient
 fw.inc      knihovna, server — protokol Waggle (referenční implementace v PHP)
 io.inc      knihovna, server — hygiena vstupu a výstupu, o protokolu neví
 examples/
-  bff/            demo BFF — jeden dispatcher, dvě sady fragmentů
-  app/            demo BEZ AdminLTE — holé HTML a vlastní CSS
-  app-adminlte/   demo S AdminLTE 4 — týž kód, jiný markup
-  library/        KNIHOVNA: frontend + BFF + datové API, MySQL, instalák
+  basic_demo/
+    bff/          demo BFF — jeden dispatcher, dvě sady fragmentů
+    app/          demo BEZ AdminLTE — holé HTML a vlastní CSS
+    app-adminlte/ demo S AdminLTE 4 — týž kód, jiný markup
+  library/        KOSTRA: frontend + BFF + datové API, MySQL, instalák
+  async_sender/   odesílač dávky do prohlížeče mimo HTTP odpověď (cron, démon)
 docs/       dokumentace, 14 kapitol
 doc/        generátor prohlížitelné dokumentace
-tools/      rozvoz knihovny do projektů + odesílač do prohlížeče
+tools/      rozvoz knihovny do projektů
 .claude/    skilly pro práci s Waggle
 LICENSE     Apache License 2.0, plné znění
 NOTICE      copyright a licence přibaleného cizího kódu
@@ -248,7 +250,7 @@ odpověď na otázku „musím kvůli frameworku používat AdminLTE" — nemus�
 používat vůbec nic.
 
 Přihlášení do dem: `tomas` / `heslo`. Před ostrým nasazením změň
-`AUTH_SECRET` v `api/config.inc` a `FW_DEBUG` přepni na `false` —
+`AUTH_SECRET` v `examples/basic_demo/bff/config.inc` a `FW_DEBUG` přepni na `false` —
 s `true` chybová hláška prozradí cesty na disku.
 
 ## Dokumentace
@@ -297,7 +299,7 @@ každého projektu vidět, na jaké verzi frameworku běží.
 ```bash
 ./tools/fwdeploy.sh --check            # co kde běží
 ./tools/fwdeploy.sh <cesta>...         # rozvoz z tohohle stromu
-./tools/fwdeploy.sh --from v1.10.1 …    # rozvoz z vydání na GitHubu
+./tools/fwdeploy.sh --from v1.10.2 …    # rozvoz z vydání na GitHubu
 ```
 
 Bez `--from` se bere tenhle strom, takže to jede i bez sítě. S `--from`
@@ -329,7 +331,7 @@ kterou lze předat člověku i modelu se stejným výsledkem. Fork, který
 potichu změní protokol a nechá si jméno, tuhle hodnotu zničí — a přesně
 proto je tu Apache a ne MIT.
 
-Knihovnou jsou **`io.inc`, `fw.inc` a `fw.js`**; oba nesou licenční hlavičku,
+Knihovnou jsou **`io.inc`, `fw.inc` a `fw.js`**; všechny tři nesou licenční hlavičku,
 protože se kopírují do cizích projektů a musí být poznat, odkud jsou.
 Příklad `examples/basic_demo/app-adminlte/` přibaluje AdminLTE, Bootstrap a Bootstrap Icons — všechno
 MIT, každý se svou licencí ve svém adresáři. Součástí Waggle nejsou.

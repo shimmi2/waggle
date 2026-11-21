@@ -20,7 +20,7 @@
 
 var RE_WORD  = /^[A-Za-z0-9_-]+$/;
 var FW_V     = 1;          // verze protokolu na drátě
-var RELEASE  = '1.10.1';    // vydání knihovny, mění se nezávisle na protokolu
+var RELEASE  = '1.10.2';    // vydání knihovny, mění se nezávisle na protokolu
 
 var Fw = {
     release: RELEASE,
@@ -770,14 +770,15 @@ Fw.bind = function () {
     });
 
     /* Prvek s data-fw-sync rozešle svou hodnotu do ostatních oken.
-       Je to transport, ne aplikační logika, proto to patří sem. */
+       Je to transport, ne aplikační logika, proto to patří sem.
+       Jen value a text: obojí je ve výchozím access.broadcast. Co chce
+       projekt poslat navíc, rozešle si sám vlastním posluchačem. */
     document.addEventListener('input', function (ev) {
         var el = ev.target;
         if (!el.id || !el.matches || !el.matches('[data-fw-sync]')) return;
         Fw.broadcast([
             { op: 'value', sel: '#' + el.id,          value: el.value },
-            { op: 'text',  sel: '#' + el.id + '_out', content: el.value },
-            { op: 'sync_note' }
+            { op: 'text',  sel: '#' + el.id + '_out', content: el.value }
         ]);
     });
 

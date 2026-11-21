@@ -24,10 +24,11 @@
     <input type="text" class="form-control" id="t1" data-fw-sync placeholder="pište a dívejte se do druhé záložky">
   </div>
   <div class="card-footer small text-secondary">
-    Jeden posun posuvníku = dávka tří příkazů:
-    <code>value</code> na posuvník, <code>html</code> na popisek a projektová
-    operace <code>sync_note</code>, která podle <code>ctx.origin</code> pozná,
-    jestli změna přišla z tohohle okna, nebo z jiného.
+    Jeden posun posuvníku = dávka dvou příkazů z knihovny:
+    <code>value</code> na posuvník a <code>text</code> na popisek. Projekt
+    k tomu sám rozešle operaci <code>sync_note</code>, která podle
+    <code>ctx.origin</code> pozná, jestli změna přišla z tohohle okna, nebo
+    z jiného — a kterou si musel povolit v <code>access.broadcast</code>.
   </div>
 </div>
 </div></div>

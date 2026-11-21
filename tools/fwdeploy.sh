@@ -1,9 +1,10 @@
 #!/bin/bash
 # Rozvoz Waggle do projektů, které ho používají.
 #
-# Knihovna jsou dva soubory: fw.inc (server) a fw.js (klient). Nic víc se
+# Knihovna jsou tři soubory: fw.inc (protokol), io.inc (hygiena vstupu,
+# fw.inc ho načítá zpoza sebe) a fw.js (klient). Nic víc se
 # nikdy nekopíruje — kostra api/ se bere jednou při zrodu projektu ručně,
-# dema app/ a app2/ se nekopírují vůbec.
+# dema (examples/basic_demo) se nekopírují vůbec.
 #
 # Proč kopírovat a ne symlinkovat: fw.inc je soubor, jehož chyba znamená,
 # že projekt nejede vůbec. Se symlinkem by šla změna do všech projektů
@@ -22,7 +23,8 @@
 # tím se dá rozvážet i na server, kde Waggle nemá pracovní kopii.
 #
 # Cíl je kořen projektu. Skript v něm sám najde, kam co patří:
-#   fw.inc  ->  lib/fw.inc, api/fw.inc nebo fw.inc
+#   fw.inc  ->  lib/fw.inc, api/fw.inc, bff/fw.inc nebo fw.inc
+#   io.inc  ->  totéž a navíc _core/io.inc (datové API s moduly, glitcher)
 #   fw.js   ->  fw.js, app/fw.js nebo public/fw.js
 # Nic, co tam ještě není, nezakládá — jinak by překlep v cestě vyrobil
 # nový soubor místo hlášky.
@@ -182,7 +184,7 @@ kolize() {
 
 najdi() {    # najdi $1=kořen projektu, $2=jméno souboru -> vypiš existující cíl
     local root="$1" f="$2" k
-    for k in "lib/$f" "api/$f" "bff/$f" "$f" "app/$f" "public/$f"; do
+    for k in "lib/$f" "api/$f" "bff/$f" "_core/$f" "$f" "app/$f" "public/$f"; do
         [ -f "$root/$k" ] && { echo "$root/$k"; return 0; }
     done
     return 1

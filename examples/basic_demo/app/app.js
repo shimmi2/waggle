@@ -9,4 +9,13 @@ Fw.register('sync_note', function (c, ctx) {
                   ? 'změna přišla z jiného okna' : 'měníte v tomhle okně';
 });
 
-Fw.init({ bff: '../bff/', debug: true, params: { skin: 'plain' } });
+/* Poznámku rozesílá projekt sám — knihovna o ní nic neví. Do jiného okna
+   projde jen díky rozšíření access.broadcast níže; výchozí tabulka vlastní
+   operace z broadcastu nepouští. Fw.broadcast ji provede i tady (local). */
+document.addEventListener('input', function (ev) {
+    var el = ev.target;
+    if (el.matches && el.matches('[data-fw-sync]')) Fw.broadcast([{ op: 'sync_note' }]);
+});
+
+Fw.init({ bff: '../bff/', debug: true, params: { skin: 'plain' },
+          access: { broadcast: ['value', 'text', 'class', 'notify', 'sync_note'] } });

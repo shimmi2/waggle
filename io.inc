@@ -1,6 +1,12 @@
 <?php
 /* =====================================================================
  *  io.inc — hygiena vstupu a výstupu. Knihovna, needituj v projektu.
+ *  https://github.com/shimmi2/waggle
+ *
+ *  Copyright 2026 Tomáš Šimek
+ *  SPDX-License-Identifier: Apache-2.0
+ *  Plné znění licence: soubor LICENSE, nebo
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  *  Tenhle soubor o Waggle neví nic a vědět nemá. Čte se z $_REQUEST,
  *  escapuje se do HTML, kóduje se JSON — věci, které potřebuje každá
@@ -27,7 +33,7 @@
  *  a nikdo už nikdy nezjistí, jak se ten člověk jmenuje.
  * ------------------------------------------------------------------- */
 
-defined('FW_RELEASE')    || define('FW_RELEASE', '1.10.1');
+defined('FW_RELEASE')    || define('FW_RELEASE', '1.10.2');
 
 /* Tvrdý strop délky jednoho pole. Volající si smí říct o méně, o víc ne —
    jinak by jedno zapomenuté $max znamenalo, že si někdo pošle megabajty. */

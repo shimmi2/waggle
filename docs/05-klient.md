@@ -15,7 +15,7 @@ aniž by se dotkla jádra.
 
 ```js
 Fw.init({
-    api:     '../api/',            // jediná povinná informace
+    bff:     '../bff/',            // jediná povinná informace
     debug:   true,                 // logování do konzole
     params:  { skin: 'lte' },      // přidá se ke KAŽDÉMU požadavku
     channel: 'fw:moje-app',        // kanál mezi okny; false = vypnout

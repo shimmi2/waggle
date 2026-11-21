@@ -3,7 +3,7 @@ Copyright 2026 Tomáš Šimek
 
 Licencováno podle Apache License, Version 2.0 — viz soubor LICENSE.
 
-Knihovnou jsou soubory fw.inc a fw.js. Zbytek repozitáře jsou příklady,
+Knihovnou jsou soubory fw.inc, io.inc a fw.js. Zbytek repozitáře jsou příklady,
 nástroje a dokumentace.
 
 --------------------------------------------------------------------------
